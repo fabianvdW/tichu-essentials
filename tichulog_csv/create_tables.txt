@@ -1,0 +1,45 @@
+create table tichu.zugfolge (
+ spiel mediumint not null,
+ runde tinyint not null,
+ zug tinyint not null,
+ kombination varchar(20),
+ zuglaenge tinyint,
+ beteiligte varchar(20),
+ zuege varchar(255),
+ primary key(spiel, runde, zug)
+);
+
+create table tichu.runde (
+ spiel mediumint not null,
+ runde tinyint not null,
+ spieler tinyint not null,
+ ansage varchar(20),
+ rang tinyint,
+ punkte smallint,
+ ergebnis smallint,
+ vorsprung smallint,
+ 8karten char(8),
+ 14karten varchar(20),
+ wegschupfen char(3),
+ zugeschupft char(3),
+ startkarten varchar(20),
+ kategorie char(10),
+ primary key(spiel, runde, spieler)
+);
+
+create table tichu.spiel (
+ spiel mediumint not null,
+ spielername varchar(30),
+ spieler tinyint,
+ sieg tinyint(1),
+ tichu tinyint,
+ tichuOK tinyint,
+ gtichu	tinyint,
+ gtichuOK tinyint,
+ kartenpunkte smallint,
+ extrapunkte smallint,
+ rundenplatz varchar(30),
+ doppelsieg tinyint,
+ teampunkte smallint,
+ primary key(spiel, spieler)
+);
