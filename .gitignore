@@ -1,1 +1,4 @@
 *.csv
+target
+.idea
+*.lock
