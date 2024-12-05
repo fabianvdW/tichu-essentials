@@ -3,6 +3,9 @@ use phf::phf_map;
 
 // Generic trait each datastructure for a Tichu Hand should implement
 pub trait TichuHand {
+    fn contains_straight_bomb(&self) -> bool;
+
+    fn contains_four_of_kind_bomb(&self) -> bool;
     fn pretty_print(&self) -> String;
     fn debug_print(&self) -> String;
 }
@@ -21,6 +24,7 @@ macro_rules! hand {
         }
    };
 }
+// ----------------------- Cards and CardIndex -------------------
 pub type CardIndex = usize;
 
 pub const YELLOW: CardIndex = 0;
@@ -32,8 +36,6 @@ pub const DOG: CardIndex = 0;
 pub const PHOENIX: CardIndex = 16;
 pub const DRAGON: CardIndex = 32;
 pub const MAHJONG: CardIndex = 48;
-
-pub const SPECIAL_CARDS: Hand = hand!(DOG, PHOENIX, DRAGON, MAHJONG);
 
 pub const TWO: CardIndex = 1;
 pub const THREE: CardIndex = 2;
@@ -49,6 +51,35 @@ pub const QUEEN: CardIndex = 11;
 pub const KING: CardIndex = 12;
 pub const ACE: CardIndex = 13;
 
+pub const fn get_color(card: CardIndex) -> CardIndex {
+    debug_assert!((1u64 << card) & MASK_SPECIAL_CARDS == 0u64); //Special cards don't really have a color
+    (card >> 4) * 16
+}
+
+pub const fn get_card_type(card: CardIndex) -> CardIndex {
+    debug_assert!((1u64 << card) & MASK_SPECIAL_CARDS == 0u64); //Special cards have card type 0 which does not allow for distinguishment
+    card & 0b1111
+}
+
+//----------------------------Masks----------------------
+pub const MASK_SPECIAL_CARDS: Hand = hand!(DOG, PHOENIX, DRAGON, MAHJONG);
+pub const MASK_NORMAL_CARDS: Hand = !MASK_SPECIAL_CARDS;
+
+pub const MASK_TWOS: Hand = hand!(TWO + YELLOW, TWO + BLUE, TWO + GREEN, TWO + RED);
+pub const MASK_THREES: Hand = hand!(THREE + YELLOW, THREE + BLUE, THREE + GREEN, THREE + RED);
+pub const MASK_FOURS: Hand = hand!(FOUR + YELLOW, FOUR + BLUE, FOUR + GREEN, FOUR + RED);
+pub const MASK_FIVES: Hand = hand!(FIVE + YELLOW, FIVE + BLUE, FIVE + GREEN, FIVE + RED);
+pub const MASK_SIXS: Hand = hand!(SIX + YELLOW, SIX + BLUE, SIX + GREEN, SIX + RED);
+pub const MASK_SEVENS: Hand = hand!(SEVEN + YELLOW, SEVEN + BLUE, SEVEN + GREEN, SEVEN + RED);
+pub const MASK_EIGHTS: Hand = hand!(EIGHT + YELLOW, EIGHT + BLUE, EIGHT + GREEN, EIGHT + RED);
+pub const MASK_NINES: Hand = hand!(NINE + YELLOW, NINE + BLUE, NINE + GREEN, NINE + RED);
+pub const MASK_TENS: Hand = hand!(TEN + YELLOW, TEN + BLUE, TEN + GREEN, TEN + RED);
+pub const MASK_JACKS: Hand = hand!(JACK + YELLOW, JACK + BLUE, JACK + GREEN, JACK + RED);
+pub const MASK_QUEENS: Hand = hand!(QUEEN + YELLOW, QUEEN + BLUE, QUEEN + GREEN, QUEEN + RED);
+pub const MASK_KINGS: Hand = hand!(KING + YELLOW, KING + BLUE, KING + GREEN, KING + RED);
+pub const MASK_ACES: Hand = hand!(ACE + YELLOW, ACE + BLUE, ACE + GREEN, ACE + RED);
+
+//--------------------------------------------------------------------------
 static TICHU_ONE_ENCODING: phf::Map<char, CardIndex> = phf_map! {
     '6' => DRAGON,
     '5' => PHOENIX,
@@ -115,9 +146,8 @@ pub fn tichu_one_str_to_hand(hand_str: &str) -> Hand {
     }
     hand
 }
-//TODO Ideas: Magic bitboards for street detection
+//TODO Ideas: Magic bitboards for determining which street bomb in case of bombs
 // For Bomb detection: Be smart about special cards(they don't influence bombs) (52 choose 14) + (52 choose 13) + ... + (52 choose 10) << (56 choose 14).
-// Serialization for Hand's
 
 static CARD_TO_CHAR: phf::Map<u32, &'static str> = phf_map! {
     0u32 => "↺",
@@ -139,7 +169,7 @@ static CARD_TO_CHAR: phf::Map<u32, &'static str> = phf_map! {
     13u32 => "A"
 };
 pub fn card_to_colored_string(card: CardIndex) -> String {
-    if (1u64 << card) & SPECIAL_CARDS != 0u64 {
+    if (1u64 << card) & MASK_SPECIAL_CARDS != 0u64 {
         CARD_TO_CHAR[&(card as u32)].to_string()
     } else {
         let card_in_char = CARD_TO_CHAR[&(get_card_type(card) as u32)];
@@ -153,22 +183,33 @@ pub fn card_to_colored_string(card: CardIndex) -> String {
     }
 }
 
-pub const fn get_color(card: CardIndex) -> CardIndex {
-    debug_assert!((1u64 << card) & SPECIAL_CARDS == 0u64); //Special cards don't really have a color
-    (card >> 4) * 16
-}
-
-pub const fn get_card_type(card: CardIndex) -> CardIndex {
-    debug_assert!((1u64 << card) & SPECIAL_CARDS == 0u64); //Special cards have card type 0 which does not allow for distinguishment
-    card & 0b1111
-}
-
 impl TichuHand for Hand {
+    fn contains_straight_bomb(&self) -> bool {
+        let straight_cards = self & MASK_NORMAL_CARDS;
+        (straight_cards & (straight_cards << 1) & (straight_cards << 2) & (straight_cards << 3) & (straight_cards << 4)) != 0u64
+    }
+
+    fn contains_four_of_kind_bomb(&self) -> bool {
+        (self & MASK_TWOS).count_ones() == 4
+            || (self & MASK_THREES).count_ones() == 4
+            || (self & MASK_FOURS).count_ones() == 4
+            || (self & MASK_FIVES).count_ones() == 4
+            || (self & MASK_SIXS).count_ones() == 4
+            || (self & MASK_SEVENS).count_ones() == 4
+            || (self & MASK_EIGHTS).count_ones() == 4
+            || (self & MASK_NINES).count_ones() == 4
+            || (self & MASK_TENS).count_ones() == 4
+            || (self & MASK_JACKS).count_ones() == 4
+            || (self & MASK_QUEENS).count_ones() == 4
+            || (self & MASK_KINGS).count_ones() == 4
+            || (self & MASK_ACES).count_ones() == 4
+    }
+
     fn pretty_print(&self) -> String {
         let mut res_str = String::new();
         for y in 0..16 {
             for x in 0..4 {
-                let shift: CardIndex = (y+1)%16  + 16 * x;
+                let shift: CardIndex = (y + 1) % 16 + 16 * x;
                 if ((self >> shift) & 1u64) != 0u64 {
                     res_str.push_str(&card_to_colored_string(shift));
                 }
@@ -182,7 +223,7 @@ impl TichuHand for Hand {
         for y in 0..14 {
             res_str.push_str("|");
             for x in 0..4 {
-                let shift: CardIndex = 61 - (y  + 16 * x);
+                let shift: CardIndex = 61 - (y + 16 * x);
                 res_str.push_str(&format!("\t{} ", shift));
                 if ((self >> shift) & 1u64) != 0u64 {
                     res_str.push_str(&card_to_colored_string(shift));

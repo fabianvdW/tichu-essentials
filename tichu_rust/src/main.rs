@@ -39,4 +39,20 @@ mod tests {
         println!("QGCEVfvrh1djbw: {}",hand.pretty_print());
 
     }
+
+    #[test]
+    fn bomb_detection(){
+        let hand: Hand= hand!(ACE+RED, ACE+GREEN, ACE+BLUE, TEN+YELLOW, DRAGON, MAHJONG, PHOENIX);
+        assert!(!hand.contains_four_of_kind_bomb());
+        assert!(!hand.contains_straight_bomb());
+        let hand: Hand= hand!(ACE+RED, ACE+GREEN, ACE+BLUE, ACE+YELLOW, DRAGON, MAHJONG, PHOENIX);
+        assert!(hand.contains_four_of_kind_bomb());
+        assert!(!hand.contains_straight_bomb());
+        let hand: Hand= hand!(TWO+RED, THREE+RED, FOUR+RED, FIVE+RED, MAHJONG);
+        assert!(!hand.contains_four_of_kind_bomb());
+        assert!(!hand.contains_straight_bomb());
+        let hand: Hand= hand!(TWO+RED, THREE+RED, FOUR+RED, FIVE+RED, SIX+RED, MAHJONG);
+        assert!(!hand.contains_four_of_kind_bomb());
+        assert!(hand.contains_straight_bomb());
+    }
 }
