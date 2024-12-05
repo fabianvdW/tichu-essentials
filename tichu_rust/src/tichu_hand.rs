@@ -24,33 +24,30 @@ macro_rules! hand {
 pub type CardIndex = usize;
 
 pub const YELLOW: CardIndex = 0;
-pub const BLUE: CardIndex = 1;
-pub const GREEN: CardIndex = 2;
-pub const RED: CardIndex = 3;
-pub const fn get_color(card: CardIndex) -> CardIndex {
-    debug_assert!(card > LARGEST_SPECIAL_CARD); //Special cards don't really have a color
-    card % 4
-}
+pub const BLUE: CardIndex = 16;
+pub const GREEN: CardIndex = 32;
+pub const RED: CardIndex = 48;
 
 pub const DOG: CardIndex = 0;
-pub const PHOENIX: CardIndex = 1;
-pub const DRAGON: CardIndex = 2;
-pub const MAHJONG: CardIndex = 3;
-pub const LARGEST_SPECIAL_CARD: CardIndex = 3;
+pub const PHOENIX: CardIndex = 16;
+pub const DRAGON: CardIndex = 32;
+pub const MAHJONG: CardIndex = 48;
 
-pub const TWO: CardIndex = 4;
-pub const THREE: CardIndex = 8;
-pub const FOUR: CardIndex = 12;
-pub const FIVE: CardIndex = 16;
-pub const SIX: CardIndex = 20;
-pub const SEVEN: CardIndex = 24;
-pub const EIGHT: CardIndex = 28;
-pub const NINE: CardIndex = 32;
-pub const TEN: CardIndex = 36;
-pub const JACK: CardIndex = 40;
-pub const QUEEN: CardIndex = 44;
-pub const KING: CardIndex = 48;
-pub const ACE: CardIndex = 52;
+pub const SPECIAL_CARDS: Hand = hand!(DOG, PHOENIX, DRAGON, MAHJONG);
+
+pub const TWO: CardIndex = 1;
+pub const THREE: CardIndex = 2;
+pub const FOUR: CardIndex = 3;
+pub const FIVE: CardIndex = 4;
+pub const SIX: CardIndex = 5;
+pub const SEVEN: CardIndex = 6;
+pub const EIGHT: CardIndex = 7;
+pub const NINE: CardIndex = 8;
+pub const TEN: CardIndex = 9;
+pub const JACK: CardIndex = 10;
+pub const QUEEN: CardIndex = 11;
+pub const KING: CardIndex = 12;
+pub const ACE: CardIndex = 13;
 
 static TICHU_ONE_ENCODING: phf::Map<char, CardIndex> = phf_map! {
     '6' => DRAGON,
@@ -124,28 +121,28 @@ pub fn tichu_one_str_to_hand(hand_str: &str) -> Hand {
 
 static CARD_TO_CHAR: phf::Map<u32, &'static str> = phf_map! {
     0u32 => "↺",
-    1u32 => "🐦",
-    2u32 => "🐉",
-    3u32 => "1",
-    4u32 => "2",
-    8u32 => "3",
-    12u32 => "4",
-    16u32 => "5",
-    20u32 => "6",
-    24u32 => "7",
-    28u32 => "8",
-    32u32 => "9",
-    36u32 => "T",
-    40u32 => "J",
-    44u32 => "Q",
-    48u32 => "K",
-    52u32 => "A"
+    16u32 => "🐦",
+    32u32 => "🐉",
+    48u32 => "1",
+    1u32 => "2",
+    2u32 => "3",
+    3u32 => "4",
+    4u32 => "5",
+    5u32 => "6",
+    6u32 => "7",
+    7u32 => "8",
+    8u32 => "9",
+    9u32 => "T",
+    10u32 => "J",
+    11u32 => "Q",
+    12u32 => "K",
+    13u32 => "A"
 };
 pub fn card_to_colored_string(card: CardIndex) -> String {
-    let card_in_char = CARD_TO_CHAR[&(get_card_type(card) as u32)];
-    if card <= LARGEST_SPECIAL_CARD {
-        card_in_char.to_string()
+    if (1u64 << card) & SPECIAL_CARDS != 0u64 {
+        CARD_TO_CHAR[&(card as u32)].to_string()
     } else {
+        let card_in_char = CARD_TO_CHAR[&(get_card_type(card) as u32)];
         match get_color(card) {
             YELLOW => card_in_char.yellow().to_string(),
             BLUE => card_in_char.blue().to_string(),
@@ -156,20 +153,22 @@ pub fn card_to_colored_string(card: CardIndex) -> String {
     }
 }
 
+pub const fn get_color(card: CardIndex) -> CardIndex {
+    debug_assert!((1u64 << card) & SPECIAL_CARDS == 0u64); //Special cards don't really have a color
+    (card >> 4) * 16
+}
+
 pub const fn get_card_type(card: CardIndex) -> CardIndex {
-    if card <= LARGEST_SPECIAL_CARD {
-        card
-    } else {
-        card - get_color(card)
-    }
+    debug_assert!((1u64 << card) & SPECIAL_CARDS == 0u64); //Special cards have card type 0 which does not allow for distinguishment
+    card & 0b1111
 }
 
 impl TichuHand for Hand {
     fn pretty_print(&self) -> String {
         let mut res_str = String::new();
-        for y in 0..14 {
+        for y in 0..16 {
             for x in 0..4 {
-                let shift: CardIndex = y * 4 + x;
+                let shift: CardIndex = (y+1)%16  + 16 * x;
                 if ((self >> shift) & 1u64) != 0u64 {
                     res_str.push_str(&card_to_colored_string(shift));
                 }
@@ -183,7 +182,7 @@ impl TichuHand for Hand {
         for y in 0..14 {
             res_str.push_str("|");
             for x in 0..4 {
-                let shift: CardIndex = 55 - (y * 4 + x);
+                let shift: CardIndex = 61 - (y  + 16 * x);
                 res_str.push_str(&format!("\t{} ", shift));
                 if ((self >> shift) & 1u64) != 0u64 {
                     res_str.push_str(&card_to_colored_string(shift));
