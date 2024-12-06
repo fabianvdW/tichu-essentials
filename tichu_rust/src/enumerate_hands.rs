@@ -3,11 +3,13 @@ use crate::tichu_hand::*;
 use std::time::{Instant};
 
 
-const TARGET_NUM_CARDS: usize = 14;
+const TARGET_NUM_CARDS: usize = 8;
 
 //First Result!
 //Tichu Hands: 5804731963800 = (56 choose 14)
-//Number of Tichu Hands >= 1 Bomb: 118114016196 approx. (0.02034788461)
+//Number of Tichu Hands >= 1 Bomb: 118114016196,  approx. 0.02034788461
+//First-8 Hands: 1420494075 (56 choose 8)
+//Number >= 1 Bomb: 1536107,  approx 0.00108138923
 struct BombCounter {
     hands_evaluated: u64,
     hands_counted: u64,
