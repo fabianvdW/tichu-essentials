@@ -1,11 +1,10 @@
 use crate::tichu_hand::*;
 
 pub mod tichu_hand;
+mod enumerate_hands;
 
 fn main() {
-    let hand: Hand= hand!(ACE+RED, ACE+GREEN, ACE+BLUE, TEN+YELLOW, DRAGON, MAHJONG, PHOENIX);
-    println!("{}",hand.debug_print());
-    println!("{}", hand.pretty_print());
+    enumerate_hands::count_bombs();
 }
 
 #[cfg(test)]

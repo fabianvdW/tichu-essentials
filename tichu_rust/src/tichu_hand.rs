@@ -79,6 +79,38 @@ pub const MASK_QUEENS: Hand = hand!(QUEEN + YELLOW, QUEEN + BLUE, QUEEN + GREEN,
 pub const MASK_KINGS: Hand = hand!(KING + YELLOW, KING + BLUE, KING + GREEN, KING + RED);
 pub const MASK_ACES: Hand = hand!(ACE + YELLOW, ACE + BLUE, ACE + GREEN, ACE + RED);
 
+pub const MASK_FOUR_OF_KIND: [Hand; 13] = [
+    MASK_TWOS,
+    MASK_THREES,
+    MASK_FOURS,
+    MASK_FIVES,
+    MASK_SIXS,
+    MASK_SEVENS,
+    MASK_EIGHTS,
+    MASK_NINES,
+    MASK_TENS,
+    MASK_JACKS,
+    MASK_QUEENS,
+    MASK_KINGS,
+    MASK_ACES,
+];
+
+pub const MASK_YELLOW: Hand = hand!(
+    TWO + YELLOW,
+    THREE + YELLOW,
+    FOUR + YELLOW,
+    FIVE + YELLOW,
+    SIX + YELLOW,
+    SEVEN + YELLOW,
+    EIGHT + YELLOW,
+    NINE + YELLOW,
+    TEN + YELLOW,
+    JACK + YELLOW,
+    QUEEN + YELLOW,
+    KING + YELLOW,
+    ACE + YELLOW
+);
+
 //--------------------------------------------------------------------------
 static TICHU_ONE_ENCODING: phf::Map<char, CardIndex> = phf_map! {
     '6' => DRAGON,
@@ -186,7 +218,12 @@ pub fn card_to_colored_string(card: CardIndex) -> String {
 impl TichuHand for Hand {
     fn contains_straight_bomb(&self) -> bool {
         let straight_cards = self & MASK_NORMAL_CARDS;
-        (straight_cards & (straight_cards << 1) & (straight_cards << 2) & (straight_cards << 3) & (straight_cards << 4)) != 0u64
+        (straight_cards
+            & (straight_cards << 1)
+            & (straight_cards << 2)
+            & (straight_cards << 3)
+            & (straight_cards << 4))
+            != 0u64
     }
 
     fn contains_four_of_kind_bomb(&self) -> bool {
