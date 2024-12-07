@@ -79,13 +79,13 @@ impl<P: CountableProperty> fmt::Display for Counter<P> {
 #[derive(Debug, Clone)]
 pub struct CountAll; //Every Hand passes this
 #[derive(Debug, Clone)]
-pub struct CounterBombs0_1; //Determine if a hand contains at least one bomb or not
+pub struct CountBombs0_1; //Determine if a hand contains at least one bomb or not
 
 #[derive(Debug, Clone)]
-pub struct CounterBombsFourOfKind0_1; //Determine if a hand contains at least one four of kind bomb or not
+pub struct CountBombsFourOfKind0_1; //Determine if a hand contains at least one four of kind bomb or not
 
 #[derive(Debug, Clone)]
-pub struct CounterBombsStraights0_1; //Determine if a hand contains a straight bomb.
+pub struct CountBombsStraights0_1; //Determine if a hand contains a straight bomb.
 
 impl CountableProperty for CountAll {
     type UpperBound = typenum::U1;
@@ -94,21 +94,21 @@ impl CountableProperty for CountAll {
         0
     }
 }
-impl CountableProperty for CounterBombs0_1 {
+impl CountableProperty for CountBombs0_1 {
     type UpperBound = typenum::U2;
     fn count(&self, hand: &Hand) -> usize {
         (hand.contains_four_of_kind_bomb() || hand.contains_straight_bomb()) as usize
     }
 }
 
-impl CountableProperty for CounterBombsFourOfKind0_1 {
+impl CountableProperty for CountBombsFourOfKind0_1 {
     type UpperBound = typenum::U2;
     fn count(&self, hand: &Hand) -> usize {
         hand.contains_four_of_kind_bomb() as usize
     }
 }
 
-impl CountableProperty for CounterBombsStraights0_1 {
+impl CountableProperty for CountBombsStraights0_1 {
     type UpperBound = typenum::U2;
     fn count(&self, hand: &Hand) -> usize {
         hand.contains_straight_bomb() as usize

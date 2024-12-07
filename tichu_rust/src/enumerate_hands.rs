@@ -3,20 +3,22 @@ use crate::hand;
 use crate::tichu_hand::*;
 use std::time::Instant;
 
-const TARGET_NUM_CARDS: usize = 14;
-
-
 //First-8 Hands: 1420494075 (56 choose 8)
 //Number >= 1 Bomb: 4229667,  approx 0.0029776027048898
 
-pub fn count_special_card_invariant_property<P: CountableProperty>(kind: P) -> Counter<P> {
+pub fn count_special_card_invariant_property<
+    P: CountableProperty,
+    const TARGET_NUM_CARDS: usize,
+>(
+    kind: P,
+) -> Counter<P> {
     let start = Instant::now();
     let special_card_amount_to_frequency: [u64; 5] = [1, 4, 6, 4, 1];
     let mut global_counter = Counter::new(kind.clone());
     for special_card_amount in (0usize..=4).rev() {
         let mut local_counter = Counter::new(kind.clone());
         let mut other_cards = [0usize; 13];
-        count_property_recursive_upwards(
+        count_property_recursive_upwards::<P, TARGET_NUM_CARDS>(
             &mut other_cards,
             special_card_amount,
             special_card_amount,
@@ -36,7 +38,7 @@ pub fn count_special_card_invariant_property<P: CountableProperty>(kind: P) -> C
     global_counter
 }
 
-fn count_property_recursive_upwards<P: CountableProperty>(
+fn count_property_recursive_upwards<P: CountableProperty, const TARGET_NUM_CARDS: usize>(
     other_cards: &mut [usize; 13],
     special_card_amount: usize,
     cards_sum: usize,
@@ -44,7 +46,7 @@ fn count_property_recursive_upwards<P: CountableProperty>(
     counter: &mut Counter<P>,
 ) {
     if cards_sum == TARGET_NUM_CARDS {
-        count_property_recursive_downwards(
+        count_property_recursive_downwards::<P, TARGET_NUM_CARDS>(
             other_cards,
             0u64,
             special_card_amount,
@@ -61,7 +63,7 @@ fn count_property_recursive_upwards<P: CountableProperty>(
     }
     for card_amount in 0..=4 {
         other_cards[current_index] = card_amount;
-        count_property_recursive_upwards(
+        count_property_recursive_upwards::<P, TARGET_NUM_CARDS>(
             other_cards,
             special_card_amount,
             cards_sum + card_amount,
@@ -86,7 +88,7 @@ const COLUMN_EQUAL_ID_TO_COMBINATIONS: [u64; 8] = [24, 12, 12, 4, 12, 6, 4, 1];
 //0b101=5 => 6
 //0b110=6 => 4
 //0b111=7 => 1
-fn count_property_recursive_downwards<P: CountableProperty>(
+fn count_property_recursive_downwards<P: CountableProperty, const TARGET_NUM_CARDS: usize>(
     other_cards: &[usize; 13],
     hand: u64,
     bits_set: usize,
@@ -109,7 +111,7 @@ fn count_property_recursive_downwards<P: CountableProperty>(
     //Explicit case enumeration, I did not have a better idea :( But it works! :) And it is straightforward to follow on a case by base basis
     macro_rules! cases {($ ($condition: expr, $add: expr, $bits_set: expr, $yl_bl: expr, $bl_gr: expr, $gr_rd: expr); +) => {$(
             if $condition{
-                count_property_recursive_downwards(other_cards, hand ^ $add, bits_set + $bits_set, current_index-1,
+                count_property_recursive_downwards::<P, TARGET_NUM_CARDS>(other_cards, hand ^ $add, bits_set + $bits_set, current_index-1,
                 $yl_bl || yellow_lex_gr_blue, $bl_gr || blue_lex_gr_green, $gr_rd || green_lex_gr_red, counter);
             }
         )+};}

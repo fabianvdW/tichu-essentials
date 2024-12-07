@@ -4,11 +4,15 @@ pub mod countable_properties;
 pub mod enumeration_results;
 
 fn main() {
-    enumeration_results::count_straight_bombs_0_1();
+    //enumeration_results::count_straight_bombs_0_1();
+    enumeration_results::count_gt_hands();
+    enumeration_results::count_gt_bombs_0_1();
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::countable_properties::{CountAll, CountBombs0_1};
+    use crate::enumerate_hands::count_special_card_invariant_property;
     use crate::tichu_hand::*;
     use super::hand;
 
@@ -54,5 +58,11 @@ mod tests {
         let hand: Hand= hand!(TWO+RED, THREE+RED, FOUR+RED, FIVE+RED, SIX+RED, MAHJONG);
         assert!(!hand.contains_four_of_kind_bomb());
         assert!(hand.contains_straight_bomb());
+    }
+
+    #[test]
+    fn gt_card_counts(){
+        assert_eq!(count_special_card_invariant_property::<CountAll, 8>(CountAll).property_counted[0], 1420494075);
+        assert_eq!(count_special_card_invariant_property::<CountBombs0_1, 8>(CountBombs0_1).property_counted[1], 4229667);
     }
 }
