@@ -208,7 +208,7 @@ pub fn card_to_colored_string(card: CardIndex) -> String {
         match get_color(card) {
             YELLOW => card_in_char.yellow().to_string(),
             BLUE => card_in_char.blue().to_string(),
-            GREEN => card_in_char.green().to_string(),
+            GREEN => card_in_char.green( ).to_string(),
             RED => card_in_char.red().to_string(),
             _ => unreachable!(),
         }
@@ -227,19 +227,9 @@ impl TichuHand for Hand {
     }
 
     fn contains_four_of_kind_bomb(&self) -> bool {
-        (self & MASK_TWOS).count_ones() == 4
-            || (self & MASK_THREES).count_ones() == 4
-            || (self & MASK_FOURS).count_ones() == 4
-            || (self & MASK_FIVES).count_ones() == 4
-            || (self & MASK_SIXS).count_ones() == 4
-            || (self & MASK_SEVENS).count_ones() == 4
-            || (self & MASK_EIGHTS).count_ones() == 4
-            || (self & MASK_NINES).count_ones() == 4
-            || (self & MASK_TENS).count_ones() == 4
-            || (self & MASK_JACKS).count_ones() == 4
-            || (self & MASK_QUEENS).count_ones() == 4
-            || (self & MASK_KINGS).count_ones() == 4
-            || (self & MASK_ACES).count_ones() == 4
+        let normal_cards = self & MASK_NORMAL_CARDS;
+        let shift_one_cards = normal_cards & (normal_cards >> BLUE);
+        (shift_one_cards & (shift_one_cards >> GREEN)) != 0u64
     }
 
     fn pretty_print(&self) -> String {
