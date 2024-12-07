@@ -180,7 +180,6 @@ pub fn tichu_one_str_to_hand(hand_str: &str) -> Hand {
 }
 //TODO Ideas: PEXT bitboards for determining which street bomb in case of bombs
 
-
 static CARD_TO_CHAR: phf::Map<u32, &'static str> = phf_map! {
     0u32 => "↺",
     16u32 => "🐦",
@@ -208,7 +207,7 @@ pub fn card_to_colored_string(card: CardIndex) -> String {
         match get_color(card) {
             YELLOW => card_in_char.yellow().to_string(),
             BLUE => card_in_char.blue().to_string(),
-            GREEN => card_in_char.green( ).to_string(),
+            GREEN => card_in_char.green().to_string(),
             RED => card_in_char.red().to_string(),
             _ => unreachable!(),
         }

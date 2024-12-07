@@ -1,9 +1,10 @@
 pub mod tichu_hand;
 pub mod enumerate_hands;
 pub mod countable_properties;
+pub mod enumeration_results;
 
 fn main() {
-    enumerate_hands::count_bombs();
+    enumeration_results::count_straight_bombs_0_1();
 }
 
 #[cfg(test)]

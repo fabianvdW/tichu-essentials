@@ -4,7 +4,8 @@ use std::fmt::Debug;
 use std::ops::{Add, Mul};
 
 use generic_array::{typenum, ArrayLength, GenericArray};
-pub trait CountableProperty {
+
+pub trait CountableProperty: Debug + Clone {
     type UpperBound: ArrayLength;
     fn count(&self, hand: &Hand) -> usize;
 }
@@ -61,7 +62,7 @@ impl<P: CountableProperty> Mul<u64> for Counter<P> {
     }
 }
 
-impl<P: CountableProperty + Debug> fmt::Display for Counter<P> {
+impl<P: CountableProperty> fmt::Display for Counter<P> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut res_str = String::new();
         res_str.push_str(&format!(
@@ -75,15 +76,24 @@ impl<P: CountableProperty + Debug> fmt::Display for Counter<P> {
     }
 }
 
-#[derive(Debug)]
-pub struct CounterBombs0_1;
+#[derive(Debug, Clone)]
+pub struct CountAll; //Every Hand passes this
+#[derive(Debug, Clone)]
+pub struct CounterBombs0_1; //Determine if a hand contains at least one bomb or not
 
-#[derive(Debug)]
-pub struct CounterBombsFourOfKind0_1;
+#[derive(Debug, Clone)]
+pub struct CounterBombsFourOfKind0_1; //Determine if a hand contains at least one four of kind bomb or not
 
-#[derive(Debug)]
-pub struct CounterBombsStraights0_1;
+#[derive(Debug, Clone)]
+pub struct CounterBombsStraights0_1; //Determine if a hand contains a straight bomb.
 
+impl CountableProperty for CountAll {
+    type UpperBound = typenum::U1;
+
+    fn count(&self, _: &Hand) -> usize {
+        0
+    }
+}
 impl CountableProperty for CounterBombs0_1 {
     type UpperBound = typenum::U2;
     fn count(&self, hand: &Hand) -> usize {
