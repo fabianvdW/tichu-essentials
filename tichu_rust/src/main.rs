@@ -1,7 +1,6 @@
-use crate::tichu_hand::*;
-
 pub mod tichu_hand;
-mod enumerate_hands;
+pub mod enumerate_hands;
+pub mod countable_properties;
 
 fn main() {
     enumerate_hands::count_bombs();
@@ -9,7 +8,8 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::tichu_hand::*;
+    use super::hand;
 
     #[test]
     fn simple_hand_print(){

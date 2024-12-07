@@ -178,8 +178,8 @@ pub fn tichu_one_str_to_hand(hand_str: &str) -> Hand {
     }
     hand
 }
-//TODO Ideas: Magic bitboards for determining which street bomb in case of bombs
-// For Bomb detection: Be smart about special cards(they don't influence bombs) (52 choose 14) + (52 choose 13) + ... + (52 choose 10) << (56 choose 14).
+//TODO Ideas: PEXT bitboards for determining which street bomb in case of bombs
+
 
 static CARD_TO_CHAR: phf::Map<u32, &'static str> = phf_map! {
     0u32 => "↺",
@@ -199,7 +199,7 @@ static CARD_TO_CHAR: phf::Map<u32, &'static str> = phf_map! {
     11u32 => "Q",
     12u32 => "K",
     13u32 => "A"
-};
+}; //If this is used only in non-speed related things, might be worth it to kick out the dependency and just use match.
 pub fn card_to_colored_string(card: CardIndex) -> String {
     if (1u64 << card) & MASK_SPECIAL_CARDS != 0u64 {
         CARD_TO_CHAR[&(card as u32)].to_string()

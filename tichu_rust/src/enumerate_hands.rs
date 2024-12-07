@@ -1,15 +1,15 @@
 use crate::hand;
 use crate::tichu_hand::*;
-use std::time::{Instant};
+use std::time::Instant;
 
-
-const TARGET_NUM_CARDS: usize = 8;
+const TARGET_NUM_CARDS: usize = 14;
 
 //First Result!
 //Tichu Hands: 5804731963800 = (56 choose 14)
 //Number of Tichu Hands >= 1 Bomb: 118114016196,  approx. 0.02034788461
 //First-8 Hands: 1420494075 (56 choose 8)
 //Number >= 1 Bomb: 1536107,  approx 0.00108138923
+
 struct BombCounter {
     hands_evaluated: u64,
     hands_counted: u64,
@@ -29,7 +29,7 @@ pub fn count_bombs() {
     let start = Instant::now();
     let special_card_amount_to_frequency: [u64; 5] = [1, 4, 6, 4, 1];
     let mut global_counter = BombCounter::default();
-    for special_card_amount in (0usize..=4).rev() {
+    for special_card_amount in (2usize..=4).rev() {
         let mut local_counter = BombCounter::default();
         let mut other_cards = [0usize; 13];
         count_bombs_recursive_upwards(
@@ -50,7 +50,10 @@ pub fn count_bombs() {
     }
     let duration = start.elapsed();
     println!("Time elapsed in expensive_function() is: {:?}", duration);
-    println!("Searched {:.2} hands per second", global_counter.hands_evaluated as f64/ duration.as_secs_f64());
+    println!(
+        "Searched {:.2} hands per second",
+        global_counter.hands_evaluated as f64 / duration.as_secs_f64()
+    );
 }
 
 fn count_bombs_recursive_upwards(
@@ -65,7 +68,7 @@ fn count_bombs_recursive_upwards(
             other_cards,
             0u64,
             special_card_amount,
-            current_index - 1,
+            current_index,
             false,
             false,
             false,
@@ -90,7 +93,7 @@ fn count_bombs_recursive_upwards(
 }
 
 const fn current_index_to_card(current_index: usize) -> CardIndex {
-    current_index + 1
+    current_index
 }
 const COLUMN_EQUAL_ID_TO_COMBINATIONS: [u64; 8] = [24, 12, 12, 4, 12, 6, 4, 1];
 //The bits state which columns are equal. First bit: yellow_blue, Second: blue_green, Third: green_red
@@ -116,7 +119,9 @@ fn count_bombs_downards_recursively(
 ) {
     if bits_set == TARGET_NUM_CARDS {
         //Now, count number of different columns
-        let column_equal_identifier: u8 = (!yellow_blue_resolved as u8) + ((!blue_green_resolved as u8)<< 1) + ((!green_red_resolved as u8) << 2);
+        let column_equal_identifier: u8 = (!yellow_blue_resolved as u8)
+            + ((!blue_green_resolved as u8) << 1)
+            + ((!green_red_resolved as u8) << 2);
         let mult = COLUMN_EQUAL_ID_TO_COMBINATIONS[column_equal_identifier as usize];
         bomb_counter.hands_evaluated += 1;
         bomb_counter.hands_counted += 1u64 * mult;
@@ -127,7 +132,8 @@ fn count_bombs_downards_recursively(
 
     //Explicit case enumeration,
     // I did not have a better idea :( But it works! :) And its straightforward to follow on a case by base basis
-    match other_cards[current_index] {
+    //TODO: I should use a macro for this! This can reduce it greatly to its essence and make it kinda nice again.
+    match other_cards[current_index- 1] {
         0 => {
             count_bombs_downards_recursively(
                 other_cards,
@@ -144,7 +150,7 @@ fn count_bombs_downards_recursively(
         4 => {
             count_bombs_downards_recursively(
                 other_cards,
-                hand ^ MASK_FOUR_OF_KIND[current_index],
+                hand ^ MASK_FOUR_OF_KIND[current_index - 1],
                 bits_set + 4,
                 current_index - 1,
                 yellow_blue_resolved,
@@ -155,7 +161,7 @@ fn count_bombs_downards_recursively(
             );
         }
         1 => {
-            let card: CardIndex = current_index_to_card(current_index);
+            let card: CardIndex = current_index_to_card(current_index );
             //Yellow is always an option.
             count_bombs_downards_recursively(
                 other_cards,
