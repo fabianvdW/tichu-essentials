@@ -1,7 +1,7 @@
-use std::ops::{Add, Mul};
 use crate::tichu_hand::{Hand, TichuHand};
 use std::fmt;
 use std::fmt::Debug;
+use std::ops::{Add, Mul};
 
 use generic_array::{typenum, ArrayLength, GenericArray};
 pub trait CountableProperty {
@@ -24,54 +24,56 @@ impl<P: CountableProperty> Counter<P> {
         }
     }
 
-    pub fn count_hand(&mut self, hand: &Hand, hand_multiplicity: u64){
+    pub fn count_hand(&mut self, hand: &Hand, hand_multiplicity: u64) {
         self.hands_evaluated += 1;
         self.hands_counted += hand_multiplicity;
         self.property_counted[self.property.count(hand)] += hand_multiplicity;
     }
 }
-impl<P: CountableProperty> Add for Counter<P>{
-    type Output=Self;
+impl<P: CountableProperty> Add for Counter<P> {
+    type Output = Self;
 
-    fn add(mut self, other: Self) -> Self{
-        for (i, value) in other.property_counted.iter().enumerate(){
+    fn add(mut self, other: Self) -> Self {
+        for (i, value) in other.property_counted.iter().enumerate() {
             self.property_counted[i] += value
         }
-        Self{
+        Self {
             property: self.property,
             hands_evaluated: self.hands_evaluated + other.hands_evaluated,
             hands_counted: self.hands_counted + other.hands_counted,
-            property_counted: self.property_counted
+            property_counted: self.property_counted,
         }
     }
 }
 
-impl <P: CountableProperty> Mul<u64> for Counter<P>{
-    type Output=Self;
-    fn mul(mut self, other: u64) -> Self{
-        for i in 0..self.property_counted.len(){
+impl<P: CountableProperty> Mul<u64> for Counter<P> {
+    type Output = Self;
+    fn mul(mut self, other: u64) -> Self {
+        for i in 0..self.property_counted.len() {
             self.property_counted[i] *= other;
         }
-        Self{
+        Self {
             property: self.property,
             hands_evaluated: self.hands_evaluated,
             hands_counted: self.hands_counted * other,
-            property_counted: self.property_counted
+            property_counted: self.property_counted,
         }
     }
 }
 
-impl<P: CountableProperty + Debug> fmt::Display for Counter<P>{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
+impl<P: CountableProperty + Debug> fmt::Display for Counter<P> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut res_str = String::new();
-        res_str.push_str(&format!("----------Counter for {:?}-----------\n", self.property));
+        res_str.push_str(&format!(
+            "----------Counter for {:?}-----------\n",
+            self.property
+        ));
         res_str.push_str(&format!("Hands evaluated: {}\n", self.hands_evaluated));
         res_str.push_str(&format!("Hands counted: {}\n", self.hands_counted));
         res_str.push_str(&format!("Property counted: {:?}\n", self.property_counted));
         write!(f, "{}", res_str)
     }
 }
-
 
 #[derive(Debug)]
 pub struct CounterBombs0_1;

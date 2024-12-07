@@ -1,15 +1,15 @@
+use crate::countable_properties::{CountableProperty, Counter, CounterBombs0_1};
 use crate::hand;
 use crate::tichu_hand::*;
-use crate::countable_properties::{Counter, CounterBombs0_1, CountableProperty};
 use std::time::Instant;
 
-const TARGET_NUM_CARDS: usize = 8;
+const TARGET_NUM_CARDS: usize = 14;
 
 //First Result!
 //Tichu Hands: 5804731963800 = (56 choose 14)
-//Number of Tichu Hands >= 1 Bomb: 118114016196,  approx. 0.02034788461
+//Number of Tichu Hands >= 1 Bomb: 294663199638,  approx. 0.0507625849868014
 //First-8 Hands: 1420494075 (56 choose 8)
-//Number >= 1 Bomb: 1536107,  approx 0.00108138923
+//Number >= 1 Bomb: 4229667,  approx 0.0029776027048898
 
 pub fn count_bombs() {
     let start = Instant::now();
@@ -25,7 +25,8 @@ pub fn count_bombs() {
             0,
             &mut local_counter,
         );
-        global_counter = global_counter  + local_counter * special_card_amount_to_frequency[special_card_amount];
+        global_counter =
+            global_counter + local_counter * special_card_amount_to_frequency[special_card_amount];
         println!("{}", global_counter);
     }
     let duration = start.elapsed();
@@ -109,7 +110,7 @@ fn count_property_recursive_downwards<P: CountableProperty>(
     //Explicit case enumeration,
     // I did not have a better idea :( But it works! :) And its straightforward to follow on a case by base basis
     //TODO: I should use a macro for this! This can reduce it greatly to its essence and make it kinda nice again.
-    match other_cards[current_index- 1] {
+    match other_cards[current_index - 1] {
         0 => {
             count_property_recursive_downwards(
                 other_cards,
@@ -135,7 +136,7 @@ fn count_property_recursive_downwards<P: CountableProperty>(
             );
         }
         1 => {
-            let card: CardIndex = current_index_to_card(current_index );
+            let card: CardIndex = current_index_to_card(current_index);
             //Yellow is always an option.
             count_property_recursive_downwards(
                 other_cards,
