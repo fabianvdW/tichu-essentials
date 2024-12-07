@@ -75,7 +75,7 @@ fn count_property_recursive_upwards<P: CountableProperty, const TARGET_NUM_CARDS
 
 #[inline(always)]
 const fn current_index_to_card(current_index: usize) -> CardIndex {
-    current_index
+    current_index as CardIndex
 }
 const COLUMN_EQUAL_ID_TO_COMBINATIONS: [u64; 8] = [24, 12, 12, 4, 12, 6, 4, 1];
 //The bits state which columns are equal. First bit: yellow_blue, Second: blue_green, Third: green_red

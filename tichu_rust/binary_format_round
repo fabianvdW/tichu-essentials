@@ -1,0 +1,27 @@
+TaggedPlayerRoundHand = (PlayerRoundHand, PlayerCall, PlayerWon: bool)
+PlayerRoundHand:
+    GT Hand: Hand
+    Hand Pre exch: Hand
+    Hand post exch: Hand
+    => 24 Byte
+    fn weggeschupft -> Hand
+    fn zugeschupft -> Hand
+Round:
+ 4 PlayerRoundHands 24 Bytes each
+ Player Calls - 1 Byte
+ Player Positions - 1 Byte
+ Card Score - 1 Byte
+ 5 padding bytes
+ => 104 Bytes per round
+
+ Game:
+    Vec<Round>
+    Vec<RoundLog>
+    playerid: 2 Byte each
+
+    160 Byte* rounds + 8 Byte
+    => Around 3.37 GB (should implement serialization/de-serialization).
+ TaggedCardIndex: 2 Bits Player, 6 Bits CardIndex
+    fn get_player, fn get_card_index -> Trait again Ig
+ RoundLog:
+    Vec<TaggedCardIndex: u8> -> 56 Byte per Round

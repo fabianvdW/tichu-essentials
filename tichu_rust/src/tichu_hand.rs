@@ -11,6 +11,7 @@ pub trait TichuHand {
 }
 
 // Actual data structure we use is a u64:
+
 pub type Hand = u64;
 #[macro_export]
 macro_rules! hand {
@@ -24,8 +25,11 @@ macro_rules! hand {
         }
    };
 }
+
+//We use weak typing for everything here (mostly implicit Enums).
+//TODO: Strong typing without runtime loss should be possible I think (with unsafe and debug assert for enum conversion)
 // ----------------------- Cards and CardIndex -------------------
-pub type CardIndex = usize;
+pub type CardIndex = u8;
 
 pub const YELLOW: CardIndex = 0;
 pub const BLUE: CardIndex = 16;
