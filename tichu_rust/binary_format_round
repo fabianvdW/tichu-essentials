@@ -21,4 +21,4 @@ Round:
  TaggedCardIndex: 2 Bits Player(Or Bomb Or NewTrick), 6 Bits CardIndex
     fn get_player, fn get_card_index -> Trait again 
  RoundLog:
-    Vec<TaggedCardIndex: u8> -> 56 Byte per Round + 8 Byte * #Trick + Bombs, need seperating bytes to identify them 
+    Vec<TaggedCardIndex: u8> -> 56 Byte per Round + some

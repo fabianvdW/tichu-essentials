@@ -7,6 +7,8 @@ edition = "2021"
 phf = { version = "0.11", features = ["macros"] }
 colored="2.1.0"
 generic-array = "1.1.1"
+bitcode = "0.6.3"
+memmap2 = "0.9.5"
 
 [profile.release]
 lto=true

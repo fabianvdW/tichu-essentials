@@ -116,7 +116,7 @@ pub const MASK_YELLOW: Hand = hand!(
 );
 
 //--------------------------------------------------------------------------
-static TICHU_ONE_ENCODING: phf::Map<char, CardIndex> = phf_map! {
+pub static TICHU_ONE_ENCODING: phf::Map<char, CardIndex> = phf_map! {
     '6' => DRAGON,
     '5' => PHOENIX,
     '4' => ACE+RED,

@@ -4,10 +4,13 @@ pub mod countable_properties;
 pub mod enumeration_results;
 pub mod bsw_binary_format;
 
-use bsw_binary_format::PlayerRoundHand;
+use crate::bsw_binary_format::DataBase;
 
 fn main() {
-    enumeration_results::count_bombs_0_1();
+    let db = DataBase::from_bsw().unwrap();
+    db.write("bsw.db").unwrap();
+
+    //enumeration_results::count_bombs_0_1();
     //enumeration_results::count_straight_bombs_0_1();
     //enumeration_results::count_gt_hands();
     //enumeration_results::count_gt_bombs_0_1();
