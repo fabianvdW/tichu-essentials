@@ -38,6 +38,7 @@ pub fn count_special_card_invariant_property<
     global_counter
 }
 
+#[inline(always)]
 fn count_property_recursive_upwards<P: CountableProperty, const TARGET_NUM_CARDS: usize>(
     other_cards: &mut [usize; 13],
     special_card_amount: usize,
@@ -58,7 +59,7 @@ fn count_property_recursive_upwards<P: CountableProperty, const TARGET_NUM_CARDS
         );
         return;
     }
-    if cards_sum > TARGET_NUM_CARDS || current_index >= 13 {
+    if cards_sum > TARGET_NUM_CARDS || current_index >= 13 || cards_sum + (13 - current_index) * 4 < TARGET_NUM_CARDS{
         return;
     }
     for card_amount in 0..=4 {
@@ -88,6 +89,7 @@ const COLUMN_EQUAL_ID_TO_COMBINATIONS: [u64; 8] = [24, 12, 12, 4, 12, 6, 4, 1];
 //0b101=5 => 6
 //0b110=6 => 4
 //0b111=7 => 1
+#[inline(always)]
 fn count_property_recursive_downwards<P: CountableProperty, const TARGET_NUM_CARDS: usize>(
     other_cards: &[usize; 13],
     hand: u64,

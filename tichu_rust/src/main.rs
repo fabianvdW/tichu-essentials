@@ -7,10 +7,10 @@ pub mod bsw_binary_format;
 use bsw_binary_format::PlayerRoundHand;
 
 fn main() {
+    enumeration_results::count_bombs_0_1();
     //enumeration_results::count_straight_bombs_0_1();
     //enumeration_results::count_gt_hands();
     //enumeration_results::count_gt_bombs_0_1();
-    println!("{}", std::mem::size_of::<PlayerRoundHand>())
 }
 
 #[cfg(test)]
