@@ -3,8 +3,9 @@ pub mod enumerate_hands;
 pub mod countable_properties;
 pub mod enumeration_results;
 pub mod bsw_binary_format;
+pub mod bsw_database;
 
-use crate::bsw_binary_format::DataBase;
+use crate::bsw_database::DataBase;
 
 fn main() {
     let db = DataBase::from_bsw().unwrap();
