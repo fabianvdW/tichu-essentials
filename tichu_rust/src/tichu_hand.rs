@@ -83,21 +83,7 @@ pub const MASK_QUEENS: Hand = hand!(QUEEN + YELLOW, QUEEN + BLUE, QUEEN + GREEN,
 pub const MASK_KINGS: Hand = hand!(KING + YELLOW, KING + BLUE, KING + GREEN, KING + RED);
 pub const MASK_ACES: Hand = hand!(ACE + YELLOW, ACE + BLUE, ACE + GREEN, ACE + RED);
 
-pub const MASK_FOUR_OF_KIND: [Hand; 13] = [
-    MASK_TWOS,
-    MASK_THREES,
-    MASK_FOURS,
-    MASK_FIVES,
-    MASK_SIXS,
-    MASK_SEVENS,
-    MASK_EIGHTS,
-    MASK_NINES,
-    MASK_TENS,
-    MASK_JACKS,
-    MASK_QUEENS,
-    MASK_KINGS,
-    MASK_ACES,
-];
+pub const MASK_FOUR_OF_KIND: [Hand; 13] = [MASK_TWOS, MASK_THREES, MASK_FOURS, MASK_FIVES, MASK_SIXS, MASK_SEVENS, MASK_EIGHTS, MASK_NINES, MASK_TENS, MASK_JACKS, MASK_QUEENS, MASK_KINGS, MASK_ACES, ];
 
 pub const MASK_YELLOW: Hand = hand!(
     TWO + YELLOW,
@@ -114,6 +100,11 @@ pub const MASK_YELLOW: Hand = hand!(
     KING + YELLOW,
     ACE + YELLOW
 );
+pub const MASK_ALL: Hand = MASK_YELLOW
+    | (MASK_YELLOW << BLUE)
+    | (MASK_YELLOW << GREEN)
+    | (MASK_YELLOW << RED)
+    | MASK_SPECIAL_CARDS;
 
 //--------------------------------------------------------------------------
 pub static TICHU_ONE_ENCODING: phf::Map<char, CardIndex> = phf_map! {

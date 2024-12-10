@@ -58,6 +58,10 @@ impl DataBase {
         //Fix extra fields for every PlayerRoundHand and every game
         for (i, game) in database.games.iter_mut().enumerate() {
             for (j, round) in game.rounds.iter_mut().enumerate() {
+                for prh in round.player_rounds.iter(){
+                    prh.integrity_check();
+                }
+
                 let (mut pr0, mut pr1, mut pr2, mut pr3) = (
                     round.player_rounds[0].extras,
                     round.player_rounds[1].extras,
@@ -91,10 +95,10 @@ impl DataBase {
                     }
                 }
                 assert!(card_score_team_1 + card_score_team_2 == 100);
-                pr0 &= 0xFF00000000000000;
-                pr1 &= 0xFF00000000000000;
-                pr2 &= 0xFF00000000000000;
-                pr3 &= 0xFF00000000000000;
+                pr0 &= !0xFFC0000000000000;
+                pr1 &= !0xFFC0000000000000;
+                pr2 &= !0xFFC0000000000000;
+                pr3 &= !0xFFC0000000000000;
                 pr0 |= ((card_score_team_1 + 25) as u64) << 54;
                 pr1 |= ((card_score_team_1 + 25) as u64) << 54;
                 pr2 |= ((card_score_team_1 + 25) as u64) << 54;
@@ -103,6 +107,7 @@ impl DataBase {
                 round.player_rounds[1].extras = pr1;
                 round.player_rounds[2].extras = pr2;
                 round.player_rounds[3].extras = pr3;
+                round.integrity_check();
             }
         }
         Ok(database)

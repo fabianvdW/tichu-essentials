@@ -2,8 +2,6 @@ use crate::hand;
 use crate::tichu_hand::*;
 use bitcode::{Decode, Encode};
 //TODO: Improve this mess! We can start with:
-//TODO: Do some integrity check on PlayerRoundHand
-//TODO: Do some integrity check on Round
 //TODO: Parse Zugfolge into RoundLog
 //TODO: Check Player Ranks and RoundResult with Zugfolge
 //TODO: Tests for Parser
@@ -55,7 +53,52 @@ pub struct PlayerRoundHand {
 pub struct Round {
     pub player_rounds: [PlayerRoundHand; 4],
 }
+impl Round {
+    pub fn integrity_check(&self) {
+        for i in 0..4 {
+            self.player_rounds[i].integrity_check();
+        }
+        let (p0, p1, p2, p3) = (
+            self.player_rounds.get(0).unwrap(),
+            self.player_rounds.get(1).unwrap(),
+            self.player_rounds.get(2).unwrap(),
+            self.player_rounds.get(3).unwrap(),
+        );
+        //Check all cards are distributed. Child checks ensures its 14 each.
+        assert_eq!(
+            p0.first_14 | p1.first_14 | p2.first_14 | p3.first_14,
+            MASK_ALL
+        );
+        //Check exchange cards
+        assert_eq!(p0.right_out_exchange_card(), p1.left_in_exchange_card());
+        assert_eq!(p1.right_out_exchange_card(), p2.left_in_exchange_card());
+        assert_eq!(p2.right_out_exchange_card(), p3.left_in_exchange_card());
+        assert_eq!(p3.right_out_exchange_card(), p0.left_in_exchange_card());
 
+        assert_eq!(p0.left_out_exchange_card(), p3.right_in_exchange_card());
+        assert_eq!(p3.left_out_exchange_card(), p2.right_in_exchange_card());
+        assert_eq!(p2.left_out_exchange_card(), p1.right_in_exchange_card());
+        assert_eq!(p1.left_in_exchange_card(), p0.right_in_exchange_card());
+
+        assert_eq!(p0.partner_out_exchange_card(), p2.partner_in_exchange_card());
+        assert_eq!(p2.partner_out_exchange_card(), p0.partner_in_exchange_card());
+        assert_eq!(p1.partner_out_exchange_card(), p3.partner_in_exchange_card());
+        assert_eq!(p3.partner_out_exchange_card(), p1.partner_in_exchange_card());
+
+        assert_eq!((p0.extras >> 36) & 0xFF, (p1.extras >> 36) & 0xFF);
+        assert_eq!((p1.extras >> 36) & 0xFF, (p2.extras >> 36) & 0xFF);
+        assert_eq!((p2.extras >> 36) & 0xFF, (p3.extras >> 36) & 0xFF);
+
+        assert_eq!(p0.extras >> 46, p1.extras >> 46);
+        assert_eq!(p1.extras >> 46, p2.extras >> 46);
+        assert_eq!(p2.extras >> 46, p3.extras >> 46);
+
+        assert_eq!(p0.player_id(), PLAYER_0);
+        assert_eq!(p1.player_id(), PLAYER_1);
+        assert_eq!(p2.player_id(), PLAYER_2);
+        assert_eq!(p3.player_id(), PLAYER_3);
+    }
+}
 pub type TaggedCardIndex = u8; //Lower 6 bits are CardIndex, upper 2 CardIndex are Tag
 pub type Tag = u8; //Either PlayerId or
 pub const TAG_NEW_TRICK: Tag = 4;
@@ -94,8 +137,34 @@ pub struct Game {
     pub round_logs: Vec<RoundLog>,
     pub player_ids: [PlayerIDGlobal; 4],
 }
+impl Game {
+    pub fn get_winner(&self) -> Team {
+        let mut score_team_0: Score = 0;
+        let mut score_team_1: Score = 0;
+        for round in &self.rounds {
+            let round_scores = round.player_rounds[PLAYER_0 as usize].round_score_relative();
+            score_team_0 += round_scores.0;
+            score_team_1 += round_scores.1;
+        }
+        if score_team_0 > score_team_1 {
+            Team::Team1
+        } else {
+            Team::Team2
+        }
+    }
+}
 
 impl PlayerRoundHand {
+    pub fn integrity_check(&self) {
+        assert_eq!(self.first_8.count_ones(), 8);
+        assert_eq!(self.first_8 & MASK_ALL, self.first_8);
+        assert_eq!(self.first_14.count_ones(), 14);
+        assert_eq!(self.first_14 & MASK_ALL, self.first_14);
+        assert_eq!(self.final_14().count_ones(), 14);
+        assert_eq!(self.final_14() & MASK_ALL, self.final_14());
+        assert_eq!((hand!(self.left_out_exchange_card(),self.partner_out_exchange_card(),self.right_out_exchange_card()) & self.first_14).count_ones(), 3);
+        assert_eq!((hand!(self.left_in_exchange_card(),self.partner_in_exchange_card(),self.right_in_exchange_card()) & self.first_14).count_ones(), 0);
+    }
     pub fn left_out_exchange_card(&self) -> CardIndex {
         (self.extras & LEFT_OUT_EXCHANGE_MASK) as CardIndex
     }
@@ -212,21 +281,5 @@ impl PlayerRoundHand {
     pub fn round_score_relative_gain(&self) -> Score {
         let relative_score = self.round_score_relative();
         relative_score.0 - relative_score.1
-    }
-}
-impl Game {
-    pub fn get_winner(&self) -> Team {
-        let mut score_team_0: Score = 0;
-        let mut score_team_1: Score = 0;
-        for round in &self.rounds {
-            let round_scores = round.player_rounds[PLAYER_0 as usize].round_score_relative();
-            score_team_0 += round_scores.0;
-            score_team_1 += round_scores.1;
-        }
-        if score_team_0 > score_team_1 {
-            Team::Team1
-        } else {
-            Team::Team2
-        }
     }
 }
