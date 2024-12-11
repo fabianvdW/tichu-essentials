@@ -39,7 +39,7 @@ impl DataBase {
         let mut player_str_to_id: HashMap<String, PlayerIDGlobal> = HashMap::new();
         let mut game_id_to_idx: HashMap<u32, u32> = HashMap::new();
         for path in fs::read_dir("../tichulog_csv/")? {
-            let name = path.unwrap().path().display().to_string();
+            let name = path?.path().display().to_string();
             if name.contains("Spiel_") {
                 DataBase::parse_spiel_file(
                     &mut database,
@@ -50,18 +50,24 @@ impl DataBase {
             }
         }
         for path in fs::read_dir("../tichulog_csv/")? {
-            let name = path.unwrap().path().display().to_string();
+            let name = path?.path().display().to_string();
             if name.contains("Runde_") {
                 DataBase::parse_runde_file(&mut database, &mut game_id_to_idx, &name);
             }
         }
+        for path in fs::read_dir("../tichulog_csv/")? {
+            let name = path?.path().display().to_string();
+            if name.contains("Zugfolge_") {
+                DataBase::parse_zugfolge_file(&mut database, &mut game_id_to_idx, &name);
+            }
+        }
+        let mut round_count: usize = 0;
+        let mut round_count_wrong: usize = 0;
+        let mut round_count_right: usize = 0;
+        let mut round_count_dw: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game
         for (i, game) in database.games.iter_mut().enumerate() {
             for (j, round) in game.rounds.iter_mut().enumerate() {
-                for prh in round.player_rounds.iter(){
-                    prh.integrity_check();
-                }
-
                 let (mut pr0, mut pr1, mut pr2, mut pr3) = (
                     round.player_rounds[0].extras,
                     round.player_rounds[1].extras,
@@ -80,25 +86,26 @@ impl DataBase {
                 pr3 |= ranks << 46;
                 let card_score_team_1: Score = ((pr0 >> 54) + (pr2 >> 54)) as Score - 50;
                 let card_score_team_2: Score = ((pr1 >> 54) + (pr3 >> 54)) as Score - 50;
-                if round.player_rounds[0].is_double_win_team_1()
-                    || round.player_rounds[1].is_double_win_team_2()
-                {
-                    continue;
-                }
-                if card_score_team_1 + card_score_team_2 != 100 {
-                    println!("{} {}", card_score_team_1, card_score_team_2);
-                    println!("{} {}", i, j);
-                    for x in game_id_to_idx.iter() {
-                        if *x.1 as usize == i {
-                            println!("{}", x.0)
-                        }
-                    }
-                }
-                assert!(card_score_team_1 + card_score_team_2 == 100);
                 pr0 &= !0xFFC0000000000000;
                 pr1 &= !0xFFC0000000000000;
                 pr2 &= !0xFFC0000000000000;
                 pr3 &= !0xFFC0000000000000;
+                round.player_rounds[0].extras = pr0;
+                round_count += 1;
+                if round.player_rounds[0].is_double_win_team_1()
+                    || round.player_rounds[0].is_double_win_team_2()
+                {
+                    round_count_dw += 1;
+                    continue;
+                }
+
+
+                if card_score_team_1 + card_score_team_2 != 100 {
+                    round_count_wrong += 1;
+                } else {
+                    round_count_right += 1;
+                }
+                //assert!(card_score_team_1 + card_score_team_2 == 100);
                 pr0 |= ((card_score_team_1 + 25) as u64) << 54;
                 pr1 |= ((card_score_team_1 + 25) as u64) << 54;
                 pr2 |= ((card_score_team_1 + 25) as u64) << 54;
@@ -107,17 +114,21 @@ impl DataBase {
                 round.player_rounds[1].extras = pr1;
                 round.player_rounds[2].extras = pr2;
                 round.player_rounds[3].extras = pr3;
-                round.integrity_check();
+                //round.integrity_check();
             }
         }
+        println!("{}", round_count);
+        println!("{}", round_count_dw);
+        println!("{}", round_count_wrong);
+        println!("{}", round_count_right);
         Ok(database)
     }
     fn parse_spiel_file(
         database: &mut DataBase,
         player_str_to_id: &mut HashMap<String, PlayerIDGlobal>,
         game_id_to_idx: &mut HashMap<u32, u32>,
-        path: &str,
-    ) {
+        path: &str, )
+    {
         let file = File::open(path).unwrap();
         let reader = BufReader::new(file);
         let mut lines = reader.lines();
@@ -175,7 +186,8 @@ impl DataBase {
         database: &mut DataBase,
         game_id_to_idx: &mut HashMap<u32, u32>,
         path: &str,
-    ) {
+    )
+    {
         let file = File::open(path).unwrap();
         let reader = BufReader::new(file);
         let mut lines = reader.lines();
@@ -247,6 +259,31 @@ impl DataBase {
                 player_round_hand.final_14(),
                 tichu_one_str_to_hand(final_14)
             );
+            player_round_hand.integrity_check();
+        }
+    }
+
+    fn parse_zugfolge_file(
+        database: &mut DataBase,
+        game_id_to_idx: &mut HashMap<u32, u32>,
+        path: &str,
+    )
+    {
+        let file = File::open(path).unwrap();
+        let reader = BufReader::new(file);
+        let mut lines = reader.lines();
+        while let Some(line) = lines.next() {
+            let line = line.unwrap();
+            let mut parts = line.split(";");
+            let game_id = parts.next().unwrap().parse::<u32>().unwrap();
+            let round = parts.next().unwrap().parse::<usize>().unwrap() - 1;
+            let player: PlayerIDInternal = parts.next().unwrap().parse().unwrap();
+            let call = match parts.next().unwrap() {
+                "T" => CALL_TICHU,
+                "GT" => CALL_GRAND_TICHU,
+                _ => CALL_NONE,
+            };
+            let rank = parts.next().unwrap().parse::<Rank>().unwrap() - 1;
         }
     }
 }

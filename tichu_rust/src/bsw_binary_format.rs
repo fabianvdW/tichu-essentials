@@ -100,13 +100,19 @@ impl Round {
     }
 }
 pub type TaggedCardIndex = u8; //Lower 6 bits are CardIndex, upper 2 CardIndex are Tag
-pub type Tag = u8; //Either PlayerId or
-pub const TAG_NEW_TRICK: Tag = 4;
-pub const TAG_BOMB: Tag = 5;
 
 pub trait TaggedCardndexT {
-    fn get_tag(&self) -> Tag;
+    fn get_player(&self) -> PlayerIDInternal;
     fn get_card_index(&self) -> CardIndex;
+}
+impl TaggedCardndexT for TaggedCardIndex {
+    fn get_player(&self) -> PlayerIDInternal {
+        (self >> 6) & 0b11u8
+    }
+
+    fn get_card_index(&self) -> CardIndex {
+        self & 0x3F
+    }
 }
 #[derive(Encode, Decode)]
 pub struct RoundLog {
@@ -117,7 +123,33 @@ pub struct RoundLog {
 }
 #[derive(Encode, Decode)]
 pub struct Trick {
-    pub trick_log: Vec<TaggedCardIndex>,
+    pub trick_log: Vec<Vec<TaggedCardIndex>>,
+}
+impl Trick {
+    pub fn get_all_trick_cards(&self) -> Hand {
+        let mut res: Hand = 0u64;
+        for player_trick in self.trick_log.iter(){
+            for tci in player_trick.iter(){
+                res |= hand!(tci.get_card_index());
+            }
+        }
+        res
+    }
+    pub fn get_trick_type(&self) -> HandType {
+        todo!()
+    }
+    pub fn integrity_check(&self) {
+        //Check that no card is contained twice
+        assert_eq!(self.get_all_trick_cards().count_ones() as usize, self.trick_log.len());
+        //Assert that the player is the same within the inner Vec<TaggedCardIndex>
+        for player_trick in self.trick_log.iter(){
+            assert!(player_trick.len() > 0);
+            let player_id = player_trick[0].get_player();
+            for tci in player_trick.iter(){
+                assert_eq!(tci.get_player(), player_id);
+            }
+        }
+    }
 }
 pub enum Team {
     Team1,
