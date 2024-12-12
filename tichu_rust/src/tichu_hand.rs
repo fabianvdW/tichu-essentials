@@ -349,20 +349,20 @@ impl TichuHand for Hand {
             if true_pairs == 0u64 {
                 return None;
             }
-            let lower_pair_card = get_card_type(true_pairs.get_some_card());
-            true_pairs &= !MASK_FOUR_OF_KIND[lower_pair_card as usize - 1];
+            let pair_one_card = get_card_type(true_pairs.get_some_card());
+            true_pairs &= !MASK_FOUR_OF_KIND[pair_one_card as usize - 1];
             if true_pairs == 0u64 {
-                //Either we have a triplet of lower_pair_card or we don't have a fullhouse at all.
-                if (MASK_FOUR_OF_KIND[lower_pair_card as usize - 1] & self).count_ones() == 3{
+                //Either we have a triplet of pair_one_card or we don't have a fullhouse at all.
+                if (MASK_FOUR_OF_KIND[pair_one_card as usize - 1] & self).count_ones() == 3{
                     //Full House if Phoenix + other card is a pair
-                    if let Some(HandType::Pairs(card)) = (self & !MASK_FOUR_OF_KIND[lower_pair_card as usize - 1]).hand_type(){
-                        return Some(HandType::FullHouse(card, lower_pair_card));
+                    if let Some(HandType::Pairs(card)) = (self & !MASK_FOUR_OF_KIND[pair_one_card as usize - 1]).hand_type(){
+                        return Some(HandType::FullHouse(card, pair_one_card));
                     }
                 }
                 return None;
             }
-            let higher_pair_card = get_card_type(true_pairs.get_some_card());
-            return Some(HandType::FullHouse(lower_pair_card, higher_pair_card));
+            let pair_two_card = get_card_type(true_pairs.get_some_card());
+            return Some(HandType::FullHouse(pair_one_card.min(pair_two_card), pair_one_card.max(pair_two_card)));
         }
         //No phoenix, we have to have a pair and a triplet.
         let normals = self & MASK_NORMAL_CARDS;
