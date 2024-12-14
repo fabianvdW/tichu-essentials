@@ -1,5 +1,6 @@
 use colored::Colorize;
 use phf::phf_map;
+use crate::bsw_binary_format::Score;
 use crate::pair_street_detection_trick::is_pair_street_fast;
 use crate::street_detection_tricks::{is_street_fast};
 
@@ -13,6 +14,8 @@ pub trait TichuHand {
     fn pretty_print(&self) -> String;
     fn debug_print(&self) -> String;
     fn pop_some_card(&mut self) -> CardIndex;
+
+    fn get_card_points(&self) -> Score;
 }
 
 // Actual data structure we use is a u64:
@@ -186,30 +189,30 @@ pub fn tichu_one_str_to_hand(hand_str: &str) -> Hand {
     hand
 }
 
-static CARD_TO_CHAR: phf::Map<u32, &'static str> = phf_map! {
-    16u32 => "↺",
-    0u32 => "🐦",
-    32u32 => "🐉",
-    48u32 => "1",
-    1u32 => "2",
-    2u32 => "3",
-    3u32 => "4",
-    4u32 => "5",
-    5u32 => "6",
-    6u32 => "7",
-    7u32 => "8",
-    8u32 => "9",
-    9u32 => "T",
-    10u32 => "J",
-    11u32 => "Q",
-    12u32 => "K",
-    13u32 => "A"
+static CARD_TO_CHAR: phf::Map<CardIndex, &'static str> = phf_map! {
+    16u8 => "↺",
+    0u8 => "🐦",
+    32u8 => "🐉",
+    48u8 => "1",
+    1u8 => "2",
+    2u8 => "3",
+    3u8 => "4",
+    4u8 => "5",
+    5u8 => "6",
+    6u8 => "7",
+    7u8 => "8",
+    8u8 => "9",
+    9u8 => "T",
+    10u8 => "J",
+    11u8 => "Q",
+    12u8 => "K",
+    13u8 => "A"
 }; //If this is used only in non-speed related things, might be worth it to kick out the dependency and just use match.
 pub fn card_to_colored_string(card: CardIndex) -> String {
     if (1u64 << card) & MASK_SPECIAL_CARDS != 0u64 {
-        CARD_TO_CHAR[&(card as u32)].to_string()
+        CARD_TO_CHAR[&card].to_string()
     } else {
-        let card_in_char = CARD_TO_CHAR[&(get_card_type(card) as u32)];
+        let card_in_char = CARD_TO_CHAR[&(get_card_type(card))];
         match get_color(card) {
             YELLOW => card_in_char.yellow().to_string(),
             BLUE => card_in_char.blue().to_string(),
@@ -242,20 +245,23 @@ pub const TRICK_STREET13: TrickType = 18;
 pub const TRICK_STREET14: TrickType = 19;
 
 pub const TRICK_FULLHOUSE: TrickType = 20;
-pub const TRICK_BOMB4: TrickType = 21;
-pub const TRICK_BOMB5: TrickType = 22;
-pub const TRICK_BOMB6: TrickType = 23;
-pub const TRICK_BOMB7: TrickType = 24;
-pub const TRICK_BOMB8: TrickType = 25;
-pub const TRICK_BOMB9: TrickType = 26;
-pub const TRICK_BOMB10: TrickType = 27;
-pub const TRICK_BOMB11: TrickType = 28;
-pub const TRICK_BOMB12: TrickType = 29;
-pub const TRICK_BOMB13: TrickType = 30;
+
+pub const TRICK_DOG: TrickType = 21;
+pub const TRICK_BOMB4: TrickType = 22;
+pub const TRICK_BOMB5: TrickType = 23;
+pub const TRICK_BOMB6: TrickType = 24;
+pub const TRICK_BOMB7: TrickType = 25;
+pub const TRICK_BOMB8: TrickType = 26;
+pub const TRICK_BOMB9: TrickType = 27;
+pub const TRICK_BOMB10: TrickType = 28;
+pub const TRICK_BOMB11: TrickType = 29;
+pub const TRICK_BOMB12: TrickType = 30;
+pub const TRICK_BOMB13: TrickType = 31;
 
 
 #[derive(PartialEq, Debug)]
 pub enum HandType {
+    Dog,
     Singleton(CardType),
     Pairs(CardType),
     Triplets(CardType),
@@ -266,16 +272,34 @@ pub enum HandType {
     BombStreet(CardType, u8), //Value of lowest card, length
 }
 impl HandType {
+    pub fn is_bigger_than_same_handtype(&self, other: &HandType) -> bool {
+        match (other, self) {
+            (HandType::Singleton(c1), HandType::Singleton(c2)) => c1 < c2,
+            (HandType::Pairs(c1), HandType::Pairs(c2)) => c1 < c2,
+            (HandType::Triplets(c1), HandType::Triplets(c2)) => c1 < c2,
+            (HandType::PairStreet(c1, s), HandType::PairStreet(c2, s2)) if s == s2 => c1 < c2,
+            (HandType::Street(c1, s), HandType::Street(c2, s2)) if s == s2 => c1 < c2,
+            (HandType::FullHouse(_, c1), HandType::FullHouse(_, c2)) => c1 < c2,
+            (HandType::Bomb4(c1), HandType::Bomb4(c2)) => c1 < c2,
+            (HandType::BombStreet(c1, s), HandType::BombStreet(c2, s2)) if s == s2 => c1 < c2,
+            (_, _) => unreachable!()
+        }
+    }
     pub fn matches_trick_type(&self, trick_type: TrickType) -> bool {
+        let self_trick_type = self.get_trick_type();
+        self_trick_type < TRICK_BOMB4 && self_trick_type == trick_type || self_trick_type > TRICK_BOMB4 && trick_type <= self_trick_type
+    }
+    pub fn get_trick_type(&self) -> TrickType {
         match self {
-            HandType::Singleton(_) => trick_type == TRICK_SINGLETON,
-            HandType::Pairs(_) => trick_type == TRICK_PAIRS,
-            HandType::Triplets(_) => trick_type == TRICK_TRIPLETS,
-            HandType::PairStreet(_, length) => trick_type == TRICK_PAIRSTREET4 + (length - 4) / 2,
-            HandType::Street(_, length) => trick_type == TRICK_STREET5 + length - 5,
-            HandType::FullHouse(_, _) => trick_type == TRICK_FULLHOUSE,
-            HandType::Bomb4(_) => trick_type <= TRICK_BOMB4, // A Bomb of 4 can always be played in tricks of lesser order
-            HandType::BombStreet(_, length) => trick_type <= TRICK_BOMB5 + length - 5 // A Bomb of length x can always be played in tricks of lesser order
+            HandType::Dog => TRICK_DOG,
+            HandType::Singleton(_) => TRICK_SINGLETON,
+            HandType::Pairs(_) => TRICK_PAIRS,
+            HandType::Triplets(_) => TRICK_TRIPLETS,
+            HandType::PairStreet(_, length) => TRICK_PAIRSTREET4 + (length - 4) / 2,
+            HandType::Street(_, length) => TRICK_STREET5 + length - 5,
+            HandType::FullHouse(_, _) => TRICK_FULLHOUSE,
+            HandType::Bomb4(_) => TRICK_BOMB4, // A Bomb of 4 can always be played in tricks of lesser order
+            HandType::BombStreet(_, length) => TRICK_BOMB5 + length - 5 // A Bomb of length x can always be played in tricks of lesser order
         }
     }
 }
@@ -288,7 +312,13 @@ impl TichuHand for Hand {
     fn hand_type(&self) -> Option<HandType> {
         let cards = self.count_ones();
         if cards == 1 {
-            return Some(HandType::Singleton(get_card_type(self.get_lsb_card())));
+            let card = self.get_lsb_card();
+            if card == DOG{
+                return Some(HandType::Dog);
+            }else{
+                return Some(HandType::Singleton(get_card_type(card)));
+            }
+
         }
         if cards == 2 {
             //Only valid hands are pairs.
@@ -439,5 +469,11 @@ impl TichuHand for Hand {
         let card = self.get_lsb_card();
         *self &= *self - 1;
         card
+    }
+
+    fn get_card_points(&self) -> Score {
+        (5 * (self & MASK_FIVES).count_ones() + 10 * (self & (MASK_TENS | MASK_KINGS)).count_ones()
+            + 25 * (self & hand!(DRAGON)).count_ones()) as Score
+            - 25 * (self & hand!(PHOENIX)).count_ones() as Score
     }
 }

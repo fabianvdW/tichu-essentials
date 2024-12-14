@@ -18,7 +18,8 @@ Round:
 
     160 Byte* rounds + 8 Byte
     => Around 3.37 GB (should implement serialization/de-serialization).
- TaggedCardIndex: 2 Bits Player(Or Bomb Or NewTrick), 6 Bits CardIndex
-    fn get_player, fn get_card_index -> Trait again 
+
+ TaggedHand: 2 Bits Player on Bit 14 + 15.,
+    fn get_player, fn get_hand-> Trait again
  RoundLog:
-    Vec<TaggedCardIndex: u8> -> 56 Byte per Round + some
+    Vec<Trick> -> 56 Byte per Round + some
