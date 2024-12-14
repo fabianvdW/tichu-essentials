@@ -1,3 +1,4 @@
+#![ allow(unused_imports)]
 pub mod tichu_hand;
 pub mod enumerate_hands;
 pub mod countable_properties;
@@ -11,10 +12,10 @@ use crate::tichu_hand::*;
 use crate::bsw_database::DataBase;
 
 fn main() {
-    let db = DataBase::from_bsw().unwrap();
+    //let db = DataBase::from_bsw().unwrap();
     //db.write("bsw.db").unwrap();
 
-    //enumeration_results::count_bombs_0_1();
+    enumeration_results::count_bombs_0_1();
     //enumeration_results::count_straight_bombs_0_1();
     //enumeration_results::count_gt_hands();
     //enumeration_results::count_gt_bombs_0_1();
@@ -132,17 +133,37 @@ mod tests {
 
     #[test]
     fn is_street_test(){
-        assert_eq!(is_street_fast(hand!(DOG)), false);
-        assert_eq!(is_street_fast(hand!(DOG, MAHJONG, PHOENIX, DRAGON, KING+YELLOW)), false);
-        assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FOUR+YELLOW)), true);
-        assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FOUR+YELLOW, FIVE+BLUE)), true);
-        assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE)), true);
-        assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED)), true);
-        assert_eq!(is_street_fast(hand!(TWO+BLUE, FOUR+RED, THREE+RED, FIVE+BLUE, SIX+RED)), true);
-        assert_eq!(is_street_fast(hand!(TWO+BLUE, FOUR+RED, THREE+RED, SIX+RED)), false);
-        assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED)), false);
-        assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, FIVE+RED)), false);
-        assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, FOUR+RED, FIVE+BLUE, SIX+RED)), false);
+        assert_eq!(is_street_fast(hand!(DOG)), None);
+        assert_eq!(is_street_fast(hand!(DOG, MAHJONG, PHOENIX, DRAGON, KING+YELLOW)), None);
+        assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FOUR+YELLOW)), Some(SPECIAL_CARD));
+        assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FOUR+YELLOW, FIVE+BLUE)), Some(SPECIAL_CARD));
+        assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE)), Some(SPECIAL_CARD));
+        assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED)), Some(SPECIAL_CARD));
+        assert_eq!(is_street_fast(hand!(TWO+BLUE, FOUR+RED, THREE+RED, FIVE+BLUE, SIX+RED)), Some(TWO));
+        assert_eq!(is_street_fast(hand!(TWO+BLUE, FOUR+RED, THREE+RED, SIX+RED)), None);
+        assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED)), None);
+        assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, FIVE+RED)), None);
+        assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, FOUR+RED, FIVE+BLUE, SIX+RED)), None);
+    }
+
+    #[test]
+    fn hand_type_street(){
+        assert!(matches!(hand!(DOG, MAHJONG, PHOENIX, DRAGON, KING+YELLOW).hand_type(), None));
+        assert!(matches!(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FOUR+YELLOW).hand_type(), Some(HandType::Street(card, length)) if card == SPECIAL_CARD && length == 5));
+        assert!(matches!(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FOUR+YELLOW, FIVE+BLUE).hand_type(), Some(HandType::Street(card, length)) if card == SPECIAL_CARD && length == 6));
+        assert!(matches!(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED).hand_type(), Some(HandType::Street(card, length)) if card == SPECIAL_CARD && length == 6));
+        assert!(matches!(hand!(TWO+BLUE, FOUR+RED, THREE+RED, FIVE+BLUE, SIX+RED).hand_type(), Some(HandType::Street(card, length)) if card == TWO && length == 5));
+        assert!(matches!(hand!(TWO+RED, FOUR+RED, THREE+RED, FIVE+RED, SIX+RED, SEVEN+RED).hand_type(), Some(HandType::BombStreet(card, length)) if card == TWO && length == 6));
+        assert!(matches!(hand!(TWO+RED, FOUR+RED, THREE+RED, FIVE+RED, SIX+RED, SEVEN+RED, PHOENIX).hand_type(), Some(HandType::Street(card, length)) if card == TWO && length == 7));
+        assert!(matches!(hand!(TWO+BLUE, FOUR+RED, THREE+RED, SIX+RED).hand_type(), None));
+        assert!(matches!(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED).hand_type(), None));
+        assert!(matches!(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, FIVE+RED).hand_type(), None));
+        assert!(matches!(hand!(MAHJONG, PHOENIX, FOUR+RED, FIVE+BLUE, SIX+RED).hand_type(), None));
+        assert!(matches!(hand!(ACE+RED, KING+RED, QUEEN+RED, JACK+RED, TEN+RED, NINE+RED, PHOENIX).hand_type(), Some(HandType::Street(card, length)) if card == EIGHT && length == 7));
+        assert!(matches!(MASK_RED.hand_type(), Some(HandType::BombStreet(card, length)) if card == TWO && length == 13));
+        assert!(matches!((hand!(MAHJONG)|MASK_RED).hand_type(), Some(HandType::Street(card, length)) if card == SPECIAL_CARD && length == 14));
+        assert!(matches!((hand!(PHOENIX)|MASK_RED).hand_type(), None)); //Phoenix can't subs in for MAHJONG
+
     }
 
     #[test]
@@ -165,12 +186,25 @@ mod tests {
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, MAHJONG)), None);
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, DOG, KING+YELLOW)), None);
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, KING+RED, KING+YELLOW)), Some(KING));
-        assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW)), Some(KING));
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, QUEEN+YELLOW)), None);
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, QUEEN+BLUE, QUEEN+RED)), Some(QUEEN));
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, QUEEN+RED)), None);
         assert_eq!(is_pair_street_fast(hand!(ACE+RED, ACE+YELLOW, ACE+BLUE, KING+YELLOW, KING+RED, KING+BLUE)), None);
         assert_eq!(is_pair_street_fast(hand!(TWO+RED, TWO+YELLOW, FOUR+BLUE, FOUR+YELLOW, KING+RED, KING+BLUE)), None);
         assert_eq!(is_pair_street_fast(hand!(TWO+RED, TWO+YELLOW, THREE+RED, THREE+YELLOW, FOUR+BLUE, FOUR+GREEN, FIVE+YELLOW, PHOENIX, SIX+BLUE, SIX+YELLOW)), Some(TWO));
+    }
+
+    #[test]
+    fn pair_street_hand_type(){
+        assert!(matches!(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW).hand_type(), Some(HandType::PairStreet(card, length)) if card == KING && length == 4));
+        assert!(matches!(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, MAHJONG).hand_type(), None));
+        assert!(matches!(hand!(PHOENIX, ACE+YELLOW, DOG, KING+YELLOW).hand_type(), None));
+        assert!(matches!(hand!(PHOENIX, ACE+YELLOW, KING+RED, KING+YELLOW).hand_type(), Some(HandType::PairStreet(card, length)) if card == KING && length == 4));
+        assert!(matches!(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, QUEEN+YELLOW).hand_type(), None));
+        assert!(matches!(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, QUEEN+BLUE, QUEEN+RED).hand_type(), Some(HandType::PairStreet(card, length)) if card == QUEEN && length == 6));
+        assert!(matches!(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, QUEEN+RED).hand_type(), None));
+        assert!(matches!(hand!(ACE+RED, ACE+YELLOW, ACE+BLUE, KING+YELLOW, KING+RED, KING+BLUE).hand_type(), None));
+        assert!(matches!(hand!(TWO+RED, TWO+YELLOW, FOUR+BLUE, FOUR+YELLOW, KING+RED, KING+BLUE).hand_type(), None));
+        assert!(matches!(hand!(TWO+RED, TWO+YELLOW, THREE+RED, THREE+YELLOW, FOUR+BLUE, FOUR+GREEN, FIVE+YELLOW, PHOENIX, SIX+BLUE, SIX+YELLOW).hand_type(), Some(HandType::PairStreet(card, length)) if card == TWO && length == 10));
     }
 }

@@ -45,3 +45,5 @@ Three = 2
 Ace = 13
 
 Then Ace + Red is the bit number of the Red ace and so on.
+
+The Phoenix  must stay as Bit 0 due to the current implementation of some functions.

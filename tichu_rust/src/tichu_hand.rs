@@ -1,9 +1,11 @@
 use colored::Colorize;
 use phf::phf_map;
+use crate::pair_street_detection_trick::is_pair_street_fast;
+use crate::street_detection_tricks::{is_street_fast};
 
 // Generic trait each datastructure for a Tichu Hand should implement
 pub trait TichuHand {
-    fn get_some_card(&self) -> CardIndex;
+    fn get_lsb_card(&self) -> CardIndex;
     fn hand_type(&self) -> Option<HandType>;
     fn is_fullhouse(&self) -> Option<HandType>; //Only ever returns Fullhouse
     fn contains_straight_bomb(&self) -> bool;
@@ -47,6 +49,7 @@ pub const DOG: CardType = 16;
 pub const DRAGON: CardType = 32;
 pub const MAHJONG: CardType = 48;
 
+pub const SPECIAL_CARD: CardType = 0;
 pub const TWO: CardType = 1;
 pub const THREE: CardType = 2;
 pub const FOUR: CardType = 3;
@@ -106,10 +109,13 @@ pub const MASK_YELLOW: Hand = hand!(
     KING + YELLOW,
     ACE + YELLOW
 );
+pub const MASK_BLUE: Hand = MASK_YELLOW << BLUE;
+pub const MASK_GREEN: Hand = MASK_YELLOW << GREEN;
+pub const MASK_RED: Hand = MASK_YELLOW << RED;
 pub const MASK_ALL: Hand = MASK_YELLOW
-    | (MASK_YELLOW << BLUE)
-    | (MASK_YELLOW << GREEN)
-    | (MASK_YELLOW << RED)
+    | MASK_BLUE
+    | MASK_GREEN
+    | MASK_RED
     | MASK_SPECIAL_CARDS;
 
 //--------------------------------------------------------------------------
@@ -179,7 +185,6 @@ pub fn tichu_one_str_to_hand(hand_str: &str) -> Hand {
     }
     hand
 }
-//TODO Ideas: PEXT bitboards for determining which street bomb in case of bombs
 
 static CARD_TO_CHAR: phf::Map<u32, &'static str> = phf_map! {
     16u32 => "↺",
@@ -276,34 +281,29 @@ impl HandType {
 }
 //------------------------------Hand implementation-----------------------------
 impl TichuHand for Hand {
-    fn pop_some_card(&mut self) -> CardIndex {
-        let card = self.get_some_card();
-        *self &= *self - 1;
-        card
-    }
-    fn get_some_card(&self) -> CardIndex {
+    fn get_lsb_card(&self) -> CardIndex {
         debug_assert!(*self != 0u64);
         self.trailing_zeros() as CardIndex
     }
     fn hand_type(&self) -> Option<HandType> {
         let cards = self.count_ones();
         if cards == 1 {
-            return Some(HandType::Singleton(get_card_type(self.get_some_card())));
+            return Some(HandType::Singleton(get_card_type(self.get_lsb_card())));
         }
         if cards == 2 {
             //Only valid hands are pairs.
             let normals = self & MASK_NORMAL_CARDS;
             let is_pair = (self & hand!(PHOENIX) | ((normals >> BLUE | normals >> GREEN | normals >> RED) & normals)) != 0u64 && normals.count_ones() > 0;
             if is_pair {
-                let pair_card = (self & MASK_NORMAL_CARDS).get_some_card();
+                let pair_card = (self & MASK_NORMAL_CARDS).get_lsb_card();
                 return Some(HandType::Pairs(get_card_type(pair_card)));
             }
             return None;
         }
         if cards == 3 {
             //Only valid hands are triplets. Just remove a card and check for a pair
-            if let Some(HandType::Pairs(card)) = (self ^ hand!(self.get_some_card())).hand_type() {
-                let removed_card = self.get_some_card();
+            if let Some(HandType::Pairs(card)) = (self ^ hand!(self.get_lsb_card())).hand_type() {
+                let removed_card = self.get_lsb_card();
                 if removed_card == PHOENIX || card == get_card_type(removed_card) {
                     return Some(HandType::Triplets(card));
                 }
@@ -311,22 +311,17 @@ impl TichuHand for Hand {
             }
             return None;
         }
+        if cards % 2 == 0 {
+            if let Some(card) = is_pair_street_fast(*self) {
+                return Some(HandType::PairStreet(card, cards as u8));
+            }
+        }
         if cards == 4 {
             //Either four of kind bomb or a pair street
             if self.contains_four_of_kind_bomb() {
-                return Some(HandType::Bomb4(get_card_type(self.get_some_card())));
+                return Some(HandType::Bomb4(get_card_type(self.get_lsb_card())));
             }
-            //If its not a four of kind bomb, it has to be a pair street.
-            //Regardless of Phooenix or not, we have to have a true pair which we find by:
-            let normals = self & MASK_NORMAL_CARDS;
-            let true_pair: Hand = (normals >> BLUE | normals >> GREEN | normals >> RED) & normals;
-            if true_pair == 0u64 {
-                return None;
-            }
-            let first_pair_card = get_card_type(true_pair.get_some_card());
-            if let Some(HandType::Pairs(card)) = (self & !MASK_FOUR_OF_KIND[first_pair_card as usize - 1]).hand_type() {
-                return Some(HandType::PairStreet(first_pair_card.min(card), 4));
-            }
+            //If its not a four of kind bomb, it has to be a pair street, which was checked above
             return None;
         }
         debug_assert!(cards >= 5);
@@ -337,7 +332,18 @@ impl TichuHand for Hand {
                 return fh;
             }
         }
-        //Can be street or pair street
+        //Can be street
+        if let Some(mut card_type) = is_street_fast(*self) {
+            //Need to check if its a bomb street
+            if (self & MASK_YELLOW).count_ones() == cards || (self & MASK_BLUE).count_ones() == cards || (self & MASK_GREEN).count_ones() == cards || (self & MASK_RED).count_ones() == cards {
+                return Some(HandType::BombStreet(card_type, cards as u8));
+            } else {
+                if card_type + cards as u8 - 1 > ACE {
+                    card_type -= 1; //Phoenix normally appended to top, but not if It can't :D
+                }
+                return Some(HandType::Street(card_type, cards as u8));
+            }
+        }
         None
     }
     fn is_fullhouse(&self) -> Option<HandType> {
@@ -349,19 +355,19 @@ impl TichuHand for Hand {
             if true_pairs == 0u64 {
                 return None;
             }
-            let pair_one_card = get_card_type(true_pairs.get_some_card());
+            let pair_one_card = get_card_type(true_pairs.get_lsb_card());
             true_pairs &= !MASK_FOUR_OF_KIND[pair_one_card as usize - 1];
             if true_pairs == 0u64 {
                 //Either we have a triplet of pair_one_card or we don't have a fullhouse at all.
-                if (MASK_FOUR_OF_KIND[pair_one_card as usize - 1] & self).count_ones() == 3{
+                if (MASK_FOUR_OF_KIND[pair_one_card as usize - 1] & self).count_ones() == 3 {
                     //Full House if Phoenix + other card is a pair
-                    if let Some(HandType::Pairs(card)) = (self & !MASK_FOUR_OF_KIND[pair_one_card as usize - 1]).hand_type(){
+                    if let Some(HandType::Pairs(card)) = (self & !MASK_FOUR_OF_KIND[pair_one_card as usize - 1]).hand_type() {
                         return Some(HandType::FullHouse(card, pair_one_card));
                     }
                 }
                 return None;
             }
-            let pair_two_card = get_card_type(true_pairs.get_some_card());
+            let pair_two_card = get_card_type(true_pairs.get_lsb_card());
             return Some(HandType::FullHouse(pair_one_card.min(pair_two_card), pair_one_card.max(pair_two_card)));
         }
         //No phoenix, we have to have a pair and a triplet.
@@ -391,7 +397,6 @@ impl TichuHand for Hand {
             & (straight_cards << 4))
             != 0u64
     }
-
     fn contains_four_of_kind_bomb(&self) -> bool {
         let normal_cards = self & MASK_NORMAL_CARDS;
         let shift_one_cards = normal_cards & (normal_cards >> BLUE);
@@ -428,5 +433,11 @@ impl TichuHand for Hand {
             res_str.push_str("\n");
         }
         res_str
+    }
+
+    fn pop_some_card(&mut self) -> CardIndex {
+        let card = self.get_lsb_card();
+        *self &= *self - 1;
+        card
     }
 }
