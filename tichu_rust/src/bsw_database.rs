@@ -54,8 +54,9 @@ pub struct DataBase {
     pub games: Vec<Game>,
     pub players: Vec<String>, //Indexed by PlayerIDGlobal
 }
-const BAD_GAMES: [u32; 9] = [
+const BAD_GAMES: [u32; 10] = [
     1107083, 155317, 1837970, 288123, 39186, 500114, 50442, 927659, 968807,
+    1001152, //Bad Zugfolge description
 ]; //Game ID's of BSW dataset that are bugged. Hardcoded to exclude them.
 impl DataBase {
     pub fn write(&self, path: &str) -> std::io::Result<()> {
@@ -80,7 +81,7 @@ impl DataBase {
         let mut round_results: Vec<Vec<(Score, Score)>> = Vec::new();
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Spiel_") {
+            if name.contains("Spiel_1002000") {
                 DataBase::parse_spiel_file(
                     &mut database,
                     &mut player_str_to_id,
@@ -92,23 +93,26 @@ impl DataBase {
         }
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Runde_") {
+            if name.contains("Runde_1002000") {
                 DataBase::parse_runde_file(&mut database, &mut game_id_to_idx, &mut round_results, &name);
             }
         }
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Zugfolge_") {
+            if name.contains("Zugfolge_1002000") {
                 DataBase::parse_zugfolge_file(&mut database, &mut game_id_to_idx, &name);
             }
         }
         let mut round_count: usize = 0;
         let mut round_count_dw: usize = 0;
+        let mut round_count_own_gift: usize = 0;
+        let mut round_count_own_gift_fixed: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game
         for (i, game) in database.games.iter_mut().enumerate() {
             assert_eq!(game.rounds.len(), game.round_logs.len());
-            for (j, (round, round_log)) in game.rounds.iter_mut().zip(game.round_logs.iter()).enumerate() {
-                round_log.integrity_check(round);
+            'A: for (j, (round, round_log)) in game.rounds.iter_mut().zip(game.round_logs.iter_mut()).enumerate() {
+                let game_idx = game_id_to_idx.iter().find(|x| *x.1 as usize== i).unwrap();
+                round_log.integrity_check(round, *game_idx.0 as usize, j);
                 let (mut pr0, mut pr1, mut pr2, mut pr3) = (
                     round.player_rounds[0].extras,
                     round.player_rounds[1].extras,
@@ -126,16 +130,19 @@ impl DataBase {
                 pr2 |= ranks << 46;
                 pr3 |= ranks << 46;
                 assert_eq!(pr0 & !0xFFC0000000000000, pr0);
-                assert_eq!(pr1 & !0xFFC0000000000000, pr0);
-                assert_eq!(pr2 & !0xFFC0000000000000, pr0);
-                assert_eq!(pr3 & !0xFFC0000000000000, pr0);
+                assert_eq!(pr1 & !0xFFC0000000000000, pr1);
+                assert_eq!(pr2 & !0xFFC0000000000000, pr2);
+                assert_eq!(pr3 & !0xFFC0000000000000, pr3);
                 round.player_rounds[0].extras = pr0;
                 round.player_rounds[1].extras = pr1;
                 round.player_rounds[2].extras = pr2;
                 round.player_rounds[3].extras = pr3;
                 round_count += 1;
 
-                let (log_ranks, score, is_double_win) = round_log.play_round(round);
+                let (log_ranks, score, is_double_win) = round_log.play_round(round, *game_idx.0 as usize, j);
+                if *game_idx.0 == 1000167 && j == 8 && false{
+                    println!("Calculated score exact {:?}", score);
+                }
                 //Check that the ranks agree with the calculated ranks.
                 let mut round_log_ranks = 0u64;
                 round_log_ranks |= (log_ranks[PLAYER_0 as usize] as u64) << 0;
@@ -148,7 +155,7 @@ impl DataBase {
                 //First is round_results vector
                 let parsed_round_result = round_results[i][j];
                 //Second is from the round log + calls points. They must match!
-                let card_score_team_1 = score[PLAYER_0 as usize] + score[PLAYER_2 as usize];
+                let mut card_score_team_1 = score[PLAYER_0 as usize] + score[PLAYER_2 as usize];
 
                 //In case of double wins, no card points must be set.
                 if round.player_rounds[0].is_double_win_team_1()
@@ -159,12 +166,32 @@ impl DataBase {
                     round_count_dw += 1;
                 } else {
                     assert!(!is_double_win);
+                    let mut dragon_gifting_changed: bool = false;
+                    if let Some(fixed) = round_log.try_fix_dragon_gifting(&round){
+                        round_count_own_gift += 1;
+                        if fixed{
+                            //println!("Gifting dragon in Game {} round {}. Fixed!", *game_idx.0, j);
+                            round_count_own_gift_fixed += 1;
+                            //Recalculate card_scores
+                            let new_score = round_log.play_round(round, *game_idx.0 as usize, j).1;
+                            card_score_team_1 = new_score[PLAYER_0 as usize] + new_score[PLAYER_2 as usize];
+                            dragon_gifting_changed = true;
+                        }else{
+                            println!("Gifting dragon in Game {} round {}. Not Fixed!", *game_idx.0, j);
+                            continue 'A;
+                        }
+                    }
                     assert!(card_score_team_1 >= -25);
                     round.player_rounds[0].extras |= ((card_score_team_1 + 25) as u64) << 54;
                     round.player_rounds[1].extras |= ((card_score_team_1 + 25) as u64) << 54;
                     round.player_rounds[2].extras |= ((card_score_team_1 + 25) as u64) << 54;
                     round.player_rounds[3].extras |= ((card_score_team_1 + 25) as u64) << 54;
-                    assert_eq!(parsed_round_result, round.player_rounds[0].round_score());
+                    if parsed_round_result != round.player_rounds[0].round_score(){
+                        println!{"In game {} round {}, Round result mismatch: parsed {:?} vs calculated {:?}", *game_idx.0, j, parsed_round_result, round.player_rounds[0].round_score()};
+                    }
+                    let calc_score = round.player_rounds[0].round_score();
+                    assert!(dragon_gifting_changed || parsed_round_result == calc_score);
+
                 }
 
                 round.integrity_check();
@@ -172,6 +199,8 @@ impl DataBase {
         }
         println!("{}", round_count);
         println!("{}", round_count_dw);
+        println!("{}", round_count_own_gift);
+        println!("{}", round_count_own_gift_fixed);
         Ok(database)
     }
     fn parse_spiel_file(
@@ -190,6 +219,18 @@ impl DataBase {
             (
                 parts.next().unwrap().parse::<u32>().unwrap(),
                 parts.next().unwrap().parse::<String>().unwrap(),
+                {
+                    parts.next(); //PlayerIdInternal, not important
+                    let next = parts.next().unwrap().parse::<u8>();
+                    if next.is_err(){
+                        println!("{:?} {} {}", next, line, path);
+                        0
+                    }else{
+                        next.unwrap()
+                    }
+
+
+                }
             )
         };
         while let (Some(line1), Some(line2), Some(line3), Some(line4)) =
@@ -231,6 +272,7 @@ impl DataBase {
                 rounds: Vec::new(),
                 round_logs: Vec::new(),
                 player_ids,
+                unfinished: chunk.iter().all(|x| x.2 == 0)
             });
             round_results.push(Vec::new());
         }
@@ -353,12 +395,16 @@ impl DataBase {
                 .get_mut(*game_id_to_idx.get(&game_id).unwrap() as usize)
                 .unwrap();
             let round = parts.next().unwrap().parse::<usize>().unwrap() - 1;
+            let trick_num = parts.next().unwrap().parse::<usize>().unwrap() - 1;
+            if game.round_logs.len() <= round{
+                game.unfinished = true;
+                continue;
+            }
             assert!(game.round_logs.len() > round);
             let round_log = game.round_logs.get_mut(round).unwrap();
 
 
-            let trick = parts.next().unwrap().parse::<usize>().unwrap() - 1;
-            assert_eq!(round_log.log.len(), trick);
+            assert_eq!(round_log.log.len(), trick_num);
             let mut trick = Trick::default();
             let trick_type_str = parts.next().unwrap();
             trick.trick_type = trick_type_str_to_trick_type(trick_type_str);
@@ -372,6 +418,9 @@ impl DataBase {
             let trick_hands = trick_cards.split("|");
 
             for (i, trick_hand) in trick_hands.enumerate() {
+                if trick_hand.len() == 0{
+                    continue;
+                }
                 let mut hand = 0u64;
                 let mut chars = trick_hand.chars().peekable();
                 while let Some(c) = chars.next() {

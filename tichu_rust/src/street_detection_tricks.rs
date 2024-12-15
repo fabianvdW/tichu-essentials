@@ -1,14 +1,28 @@
 use crate::tichu_hand::*;
 use crate::hand;
 
-pub const fn is_street_fast(hand: Hand) -> Option<CardType>  { //Returns lowest card in case of street (does not correct phoenix if that has to be lowest
+pub const fn is_street_fast(hand: Hand) -> Option<CardType> { //Returns lowest card in case of street (does not correct phoenix if that has to be lowest
     //Computes is_street or not in like 24 Bit Ops + 4KB Table lookup
     let prepared = prepare_hand(hand);
-    if prepared.count_ones() == hand.count_ones() && STREET_DATA_ARRAY[(prepared >> PACKING_BITS) as usize] & (1 << (prepared & PACKING_BITS_MASK)) != 0u64{
+    if prepared.count_ones() == hand.count_ones() && STREET_DATA_ARRAY[(prepared >> PACKING_BITS) as usize] & (1 << (prepared & PACKING_BITS_MASK)) != 0u64 {
         Some(prepared.trailing_zeros() as CardType)
-    }else {
+    } else {
         None
     }
+}
+pub const fn phoenix_used_as_street_extension(hand: Hand) -> bool { //Returns true only for streets that contain the phoenix and for which the phoenix does not fill a hole.
+    if hand & hand!(PHOENIX) == 0{
+        return false;
+    }
+    //Also check that hand without phoenix would be a street.
+    let mut prepared = prepare_hand(hand ^ hand!(PHOENIX));
+    let street_length = prepared.count_ones();
+    let mut i = 1;
+    while i < street_length{
+        prepared &= prepared >> 1;
+        i += 1;
+    }
+    prepared > 0
 }
 
 pub const fn prepare_hand(hand: Hand) -> u64 {
@@ -22,7 +36,7 @@ pub const fn is_street_slow(mut prepared_hand: u64) -> bool {
         return false;
     }
     let mut has_phoenix: bool = (prepared_hand >> 14) & 0b1 != 0u64; //has_phoenix is turned off at first hole.
-    if has_phoenix && prepared_hand == 0x7FFE{ //Phoenix can not substitute in for mahjong.
+    if has_phoenix && prepared_hand == 0x7FFE { //Phoenix can not substitute in for mahjong.
         return false;
     }
     prepared_hand &= 0x3FFF;

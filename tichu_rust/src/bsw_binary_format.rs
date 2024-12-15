@@ -1,6 +1,7 @@
 use crate::hand;
 use crate::tichu_hand::*;
 use bitcode::{Decode, Encode};
+use crate::street_detection_tricks::phoenix_used_as_street_extension;
 
 pub const LEFT_OUT_EXCHANGE_MASK: u64 = 0x3Fu64;
 pub const PARTNER_OUT_EXCHANGE_MASK: u64 = 0x3Fu64 << 6;
@@ -78,7 +79,7 @@ impl Round {
         assert_eq!(p0.left_out_exchange_card(), p3.right_in_exchange_card());
         assert_eq!(p3.left_out_exchange_card(), p2.right_in_exchange_card());
         assert_eq!(p2.left_out_exchange_card(), p1.right_in_exchange_card());
-        assert_eq!(p1.left_in_exchange_card(), p0.right_in_exchange_card());
+        assert_eq!(p1.left_out_exchange_card(), p0.right_in_exchange_card());
 
         assert_eq!(p0.partner_out_exchange_card(), p2.partner_in_exchange_card());
         assert_eq!(p2.partner_out_exchange_card(), p0.partner_in_exchange_card());
@@ -131,7 +132,40 @@ pub struct RoundLog {
     pub log: Vec<Trick>,
 }
 impl RoundLog {
-    pub fn play_round(&self, round: &Round) -> ([Rank; 4], [Score; 4], bool) { //Ranks, CardPoints, double_win
+    pub fn try_fix_dragon_gifting(&mut self, round: &Round) -> Option<bool> {
+        //The BSW dataset has a bug where the dragon is sometimes gifted to the player that plays it
+        //or is gifted to an enemy that is no longer playing.
+        //(no bombs involved). However, we can resolve the dragon gifting if there is only
+        //one enemy player still playing.
+        let mut player_hands = [round.player_rounds[0].final_14(), round.player_rounds[1].final_14(), round.player_rounds[2].final_14(), round.player_rounds[3].final_14()];
+        for trick in self.log.iter() {
+            for t_hand in trick.trick_log.iter() {
+                let player = t_hand.get_player() as usize;
+                player_hands[player] ^= t_hand.get_hand();
+            }
+            if trick.has_to_gift_trick() {
+                let gift_player = self.dragon_player_gift.unwrap();
+                let winner_player = trick.get_trick_winner();
+                //Dragon gifted to own team or to a player that has finished already.
+                if winner_player == gift_player || winner_player == (gift_player + 2) % 4 || player_hands[gift_player as usize] == 0 {
+                    if player_hands[(winner_player as usize + 1) % 4] == 0 {
+                        //We can gift the dragon to (winner_player + 3) % 4
+                        self.dragon_player_gift = Some((winner_player + 3) % 4);
+                        return Some(true);
+                    } else if player_hands[(winner_player as usize + 3) % 4] == 0 {
+                        //We can gift the dragon to (winner_player + 1) % 4
+                        self.dragon_player_gift = Some((winner_player + 1) % 4);
+                        return Some(true);
+                    } else {
+                        return Some(false);
+                    }
+                }
+
+            }
+        }
+        None
+    }
+    pub fn play_round(&self, round: &Round, game: usize, round_num: usize) -> ([Rank; 4], [Score; 4], bool) { //Ranks, CardPoints, double_win
         let mut player_hands = [round.player_rounds[0].final_14(), round.player_rounds[1].final_14(), round.player_rounds[2].final_14(), round.player_rounds[3].final_14()];
         let mut player_scores = [0; 4];
         let mut player_ranks = [RANK_4; 4];
@@ -163,19 +197,46 @@ impl RoundLog {
         let fourth_player = player_ranks.iter().position(|x| *x == RANK_4).unwrap();
         player_scores[first_player] += player_scores[fourth_player];
         player_scores[fourth_player] = 0;
-        player_scores[third_player] += player_hands[third_player].get_card_points();
+        player_scores[third_player] += player_hands[fourth_player].get_card_points();
+        if player_scores.iter().sum::<Score>() != 100 {
+            println!("Score mismatch in {} {}", game, round_num);
+            println!("Player Scores: {:?}", player_scores);
+            println!("Player Ranks: {:?}", player_ranks);
+        }
         assert_eq!(player_scores.iter().sum::<Score>(), 100);
         (player_ranks, player_scores, false)
     }
-    pub fn integrity_check(&self, round: &Round) {
+    pub fn integrity_check(&self, round: &Round, game_idx: usize, round_num: usize) {
         let mut player_hands = [round.player_rounds[0].final_14(), round.player_rounds[1].final_14(), round.player_rounds[2].final_14(), round.player_rounds[3].final_14()];
+        if game_idx == 1001683 && round_num == 10 {
+            println!("{}", player_hands[0].pretty_print());
+            println!("{}", player_hands[1].pretty_print());
+            println!("{}", player_hands[2].pretty_print());
+            println!("{}", player_hands[3].pretty_print());
+            for (trick_num, trick) in self.log.iter().enumerate() {
+                println!("Starting Trick {} with type {}", trick_num, trick.trick_type);
+                for thand in &trick.trick_log {
+                    println!("Player {} plays {}", thand.get_player(), thand.get_hand().pretty_print());
+                }
+                println!("Ending Trick {} with trick winner {}", trick_num, trick.get_trick_winner());
+            }
+        }
         let mut prev_player: Option<PlayerIDInternal> = None;
-        for trick in self.log.iter() {
+        for (trick_num, trick) in self.log.iter().enumerate() {
             if let Some(prev) = prev_player {
+                if trick.get_starting_player() != prev {
+                    println!("{} {} {}", game_idx, round_num, trick_num);
+                    println!("{:?}", prev);
+                    println!("{}", trick.get_starting_player());
+                }
                 assert_eq!(trick.get_starting_player(), prev);
             }
-            trick.integrity_check(&mut player_hands);
-            prev_player = Some(trick.get_trick_winner());
+            trick.integrity_check(&mut player_hands, game_idx, round_num, trick_num);
+            let mut trick_winner = trick.get_trick_winner();
+            while player_hands[trick_winner as usize] == 0u64 {
+                trick_winner = (trick_winner + 1) % 4;
+            }
+            prev_player = Some(trick_winner);
         }
     }
 }
@@ -199,14 +260,24 @@ impl Trick {
     }
 
     pub fn get_trick_winner(&self) -> PlayerIDInternal {
-        if self.trick_type == DOG {
+        if self.trick_type == TRICK_DOG {
             TEAMMATE_PLAYERS[self.get_starting_player() as usize]
         } else {
             self.trick_log[self.trick_log.len() - 1].get_player()
         }
     }
-
-    pub fn integrity_check(&self, player_hands: &mut [Hand; 4]) {
+    fn hand_is_two_pairs_plus_phoenix(hand: Hand) -> bool { //Only call this on full houses!
+        assert!(hand.is_fullhouse().is_some());
+        if hand & hand!(PHOENIX) == 0 {
+            return false;
+        }
+        let normals = hand & MASK_NORMAL_CARDS;
+        let mut true_pairs: Hand = (normals >> BLUE | normals >> GREEN | normals >> RED) & normals;
+        let pair_one_card = get_card_type(true_pairs.get_lsb_card());
+        true_pairs &= !MASK_FOUR_OF_KIND[pair_one_card as usize - 1];
+        true_pairs != 0
+    }
+    pub fn integrity_check(&self, player_hands: &mut [Hand; 4], game: usize, round_num: usize, trick_num: usize) {
         assert!(self.trick_log.len() > 0);
         assert!(self.trick_type != TRICK_DOG || self.trick_log.len() == 1);
         //Check that hand type of every played hand matches the trick type. In case of bombs, trick type can upgrade!
@@ -217,17 +288,55 @@ impl Trick {
         let mut prev_hand: Option<HandType> = None;
         for (i, t_hand) in self.trick_log.iter().enumerate() {
             let (hand, player) = (t_hand.get_hand(), t_hand.get_player() as usize);
-            assert!(hand & player_hands[player] == hand);
+            assert_eq!(hand & player_hands[player], hand);
             player_hands[player] ^= hand;
-
+            if hand.hand_type().is_none() {
+                println!("{} {} {}", game, round_num, trick_num);
+                println!("Current hand {} for player {}: {}", i, t_hand.get_player(), t_hand.get_hand().pretty_print());
+                println!("No HandType: ");
+                println!("Previous HandType: {:?} {}", prev_hand, trick_type);
+            }
             let hand_type = hand.hand_type().unwrap();
+            if !hand_type.matches_trick_type(trick_type) {
+                println!("{} {} {}", game, round_num, trick_num);
+                println!("Current hand {} for player {}: {}", i, t_hand.get_player(), t_hand.get_hand().pretty_print());
+                println!("HandType: {:?}, trick_type: {}", hand_type, trick_type);
+                println!("Previous HandType: {:?} {}", prev_hand, trick_type);
+            }
             assert!(hand_type.matches_trick_type(trick_type));
             let new_trick_type = hand_type.get_trick_type();
             assert!(prev_player.is_none() || prev_player.unwrap() != player || new_trick_type >= TRICK_BOMB4);
             assert!(i > 0 || new_trick_type == trick_type);
             if trick_type == new_trick_type {
                 //Check that the new hand is actually playable
-                if let Some(prev_hand_type) = prev_hand {
+                if let Some(mut prev_hand_type) = prev_hand {
+                    //If the trick type is street, and the previous hand contains a phoenix that extends the street,
+                    //we allow prev_hand_type to be one smaller (since we have no indication of how phoenix is played).
+                    if trick_type >= TRICK_STREET5 && trick_type <= TRICK_STREET14 && phoenix_used_as_street_extension(self.trick_log[i - 1].get_hand()) {
+                        //Lower prev_hand_type if possible
+                        if let HandType::Street(lowest_card, length) = prev_hand_type {
+                            if lowest_card > SPECIAL_CARD && self.trick_log[i-1].get_hand() & MASK_ACES == 0 { //Phoenix already used as low card if the street can't be extended further than ace.
+                                prev_hand_type = HandType::Street(lowest_card - 1, length);
+                            }
+                        } else {
+                            assert!(false);
+                        }
+                    }
+                    //If the trick type is fullhouse, and the full house consists of two pairs + phoenix,
+                    // we allow the phoenix to be used as the lower card instead of the default upper card (since we have no indication of how phoenix is played).
+                    if trick_type == TRICK_FULLHOUSE && Trick::hand_is_two_pairs_plus_phoenix(self.trick_log[i - 1].get_hand()) {
+                        if let HandType::FullHouse(lower_card, higher_card) = prev_hand_type {
+                            prev_hand_type = HandType::FullHouse(higher_card, lower_card);
+                        } else {
+                            assert!(false);
+                        }
+                    }
+                    if !hand_type.is_bigger_than_same_handtype(&prev_hand_type) {
+                        println!("{} {} {}", game, round_num, trick_num);
+                        println!("Current hand {} for player {}: {}", i, t_hand.get_player(), t_hand.get_hand().pretty_print());
+                        println!("HandType: {:?}", hand_type);
+                        println!("Previous HandType: {:?}", prev_hand_type);
+                    }
                     assert!(hand_type.is_bigger_than_same_handtype(&prev_hand_type));
                 }
             }
@@ -254,6 +363,7 @@ pub struct Game {
     pub rounds: Vec<Round>,
     pub round_logs: Vec<RoundLog>,
     pub player_ids: [PlayerIDGlobal; 4],
+    pub unfinished: bool,
 }
 impl Game {
     pub fn get_winner(&self) -> Team {

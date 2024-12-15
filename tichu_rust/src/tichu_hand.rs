@@ -262,7 +262,7 @@ pub const TRICK_BOMB13: TrickType = 31;
 #[derive(PartialEq, Debug)]
 pub enum HandType {
     Dog,
-    Singleton(CardType),
+    Singleton(CardType, CardIndex),
     Pairs(CardType),
     Triplets(CardType),
     PairStreet(CardType, u8), //Value of lowest pair, length
@@ -274,7 +274,9 @@ pub enum HandType {
 impl HandType {
     pub fn is_bigger_than_same_handtype(&self, other: &HandType) -> bool {
         match (other, self) {
-            (HandType::Singleton(c1), HandType::Singleton(c2)) => c1 < c2,
+            (HandType::Singleton(c1, c1_idx), HandType::Singleton(c2, c2_idx)) => {
+                c1 < c2 || (*c1 > 0 || *c1_idx == MAHJONG )&& *c2_idx == PHOENIX || *c1 > 0 && *c2_idx == DRAGON || (*c1_idx == PHOENIX || *c1_idx == MAHJONG) && *c2_idx == DRAGON
+            },
             (HandType::Pairs(c1), HandType::Pairs(c2)) => c1 < c2,
             (HandType::Triplets(c1), HandType::Triplets(c2)) => c1 < c2,
             (HandType::PairStreet(c1, s), HandType::PairStreet(c2, s2)) if s == s2 => c1 < c2,
@@ -287,12 +289,12 @@ impl HandType {
     }
     pub fn matches_trick_type(&self, trick_type: TrickType) -> bool {
         let self_trick_type = self.get_trick_type();
-        self_trick_type < TRICK_BOMB4 && self_trick_type == trick_type || self_trick_type > TRICK_BOMB4 && trick_type <= self_trick_type
+        self_trick_type < TRICK_BOMB4 && self_trick_type == trick_type || self_trick_type >= TRICK_BOMB4 && trick_type <= self_trick_type
     }
     pub fn get_trick_type(&self) -> TrickType {
         match self {
             HandType::Dog => TRICK_DOG,
-            HandType::Singleton(_) => TRICK_SINGLETON,
+            HandType::Singleton(_, _) => TRICK_SINGLETON,
             HandType::Pairs(_) => TRICK_PAIRS,
             HandType::Triplets(_) => TRICK_TRIPLETS,
             HandType::PairStreet(_, length) => TRICK_PAIRSTREET4 + (length - 4) / 2,
@@ -313,12 +315,11 @@ impl TichuHand for Hand {
         let cards = self.count_ones();
         if cards == 1 {
             let card = self.get_lsb_card();
-            if card == DOG{
+            if card == DOG {
                 return Some(HandType::Dog);
-            }else{
-                return Some(HandType::Singleton(get_card_type(card)));
+            } else {
+                return Some(HandType::Singleton(get_card_type(card), card));
             }
-
         }
         if cards == 2 {
             //Only valid hands are pairs.
@@ -415,6 +416,9 @@ impl TichuHand for Hand {
         }
         if first_card != second_card && second_card == third_card {
             return Some(HandType::FullHouse(first_card, third_card));
+        }
+        if first_card == third_card && second_card != third_card{
+            return Some(HandType::FullHouse(second_card, third_card));
         }
         None
     }

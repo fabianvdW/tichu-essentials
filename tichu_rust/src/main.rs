@@ -5,17 +5,17 @@ pub mod countable_properties;
 pub mod enumeration_results;
 pub mod bsw_binary_format;
 pub mod bsw_database;
-mod street_detection_tricks;
-mod pair_street_detection_trick;
+pub mod street_detection_tricks;
+pub mod pair_street_detection_trick;
 
 use crate::tichu_hand::*;
 use crate::bsw_database::DataBase;
 
 fn main() {
-    //let db = DataBase::from_bsw().unwrap();
-    //db.write("bsw.db").unwrap();
+    let db = DataBase::from_bsw().unwrap();
+    db.write("bsw.db").unwrap();
 
-    enumeration_results::count_bombs_0_1();
+    //enumeration_results::count_bombs_0_1();
     //enumeration_results::count_straight_bombs_0_1();
     //enumeration_results::count_gt_hands();
     //enumeration_results::count_gt_bombs_0_1();
@@ -26,7 +26,7 @@ mod tests {
     use crate::countable_properties::{CountAll, CountBombs0_1};
     use crate::enumerate_hands::count_special_card_invariant_property;
     use crate::tichu_hand::*;
-    use crate::street_detection_tricks::is_street_fast;
+    use crate::street_detection_tricks::{is_street_fast, phoenix_used_as_street_extension};
     use crate::pair_street_detection_trick::{is_pair_street_slow, is_pair_street_fast};
     use super::hand;
 
@@ -129,6 +129,7 @@ mod tests {
         assert!(matches!(hand!(DOG, KING+GREEN, KING+BLUE, KING+YELLOW, PHOENIX).hand_type(), None));
         assert!(matches!(hand!(MAHJONG, KING+GREEN, KING+BLUE, KING+YELLOW, PHOENIX).hand_type(), None));
         assert!(matches!(hand!(TWO+RED, TWO+GREEN, KING+GREEN, KING+BLUE, PHOENIX).hand_type(), Some(HandType::FullHouse(card, card2)) if card == TWO && card2 == KING));
+        assert!(matches!(hand!(SIX+RED, SIX+BLUE, EIGHT+GREEN, EIGHT+BLUE, EIGHT+YELLOW).hand_type(), Some(HandType::FullHouse(card, card2)) if card == SIX && card2 == EIGHT));
     }
 
     #[test]
@@ -144,6 +145,15 @@ mod tests {
         assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED)), None);
         assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, FIVE+RED)), None);
         assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, FOUR+RED, FIVE+BLUE, SIX+RED)), None);
+    }
+    #[test]
+    fn is_street_extension_phoenix(){
+        assert_eq!(phoenix_used_as_street_extension(hand!(PHOENIX)), false);
+        assert_eq!(phoenix_used_as_street_extension(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FOUR+YELLOW)), true);
+        assert_eq!(phoenix_used_as_street_extension(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FOUR+YELLOW, FIVE+BLUE)), true);
+        assert_eq!(phoenix_used_as_street_extension(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE)), false);
+        assert_eq!(phoenix_used_as_street_extension(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED)), false);
+        assert_eq!(phoenix_used_as_street_extension(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE)), false);
     }
 
     #[test]
