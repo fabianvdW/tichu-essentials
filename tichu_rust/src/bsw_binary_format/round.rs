@@ -2,7 +2,7 @@ use bitcode::{Decode, Encode};
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, Score, PLAYER_0, PLAYER_1, PLAYER_2, PLAYER_3};
 use crate::bsw_binary_format::player_round_hand::{PlayerRoundHand, PlayerRoundHandIntegrityError};
 use crate::bsw_binary_format::round::RoundIntegrityError::{CallsMismatch, CardScoreMismatch, CardScoreTooLarge, ExchangeCardMismatch, IdMismatch, RankMismatch};
-use crate::tichu_hand::MASK_ALL;
+use crate::tichu_hand::{Hand, MASK_ALL};
 
 #[derive(Encode, Decode, Default)]
 pub struct Round {
@@ -104,5 +104,9 @@ impl Round {
         }
 
         Ok(())
+    }
+
+    pub fn get_starting_hands(&self) -> [Hand;4]{
+        [self.player_rounds[0].final_14(), self.player_rounds[1].final_14(), self.player_rounds[2].final_14(), self.player_rounds[3].final_14()]
     }
 }

@@ -1,7 +1,9 @@
+use std::fmt::{Debug, Formatter};
 use bitcode::{Decode, Encode};
 use crate::tichu_hand::*;
 use crate::bsw_binary_format::binary_format_constants::*;
 use crate::bsw_binary_format::{trick::Trick, round::Round};
+use crate::bsw_binary_format::trick::TrickIntegrityError;
 
 #[derive(Encode, Decode, Default)]
 pub struct RoundLog {
@@ -9,7 +11,30 @@ pub struct RoundLog {
     pub dragon_player_gift: Option<PlayerIDInternal>,
     pub log: Vec<Trick>,
 }
+#[derive(Debug)]
+pub enum RoundLogIntegrityError{
+    StartTrickIsNotNextInLine{trick_num: usize, starting_player: PlayerIDInternal, should_start: PlayerIDInternal},
+    Child(TrickIntegrityError),
+}
 impl RoundLog {
+    pub fn integrity_check(&self, round: &Round, game_idx: u32, round_num: usize) -> Result<(), RoundLogIntegrityError>{
+        let mut player_hands = round.get_starting_hands();
+        let mut prev_player: Option<PlayerIDInternal> = None;
+        for (trick_num, trick) in self.log.iter().enumerate() {
+            if let Some(prev) = prev_player {
+                if trick.get_starting_player() != prev {
+                    return Err(RoundLogIntegrityError::StartTrickIsNotNextInLine {trick_num, starting_player: trick.get_starting_player(), should_start: prev});
+                }
+            }
+            trick.integrity_check(&mut player_hands, game_idx, round_num, trick_num).map_err(|x| RoundLogIntegrityError::Child(x))?;
+            let mut trick_winner = trick.get_trick_winner();
+            while player_hands[trick_winner as usize] == 0u64 {
+                trick_winner = (trick_winner + 1) % 4;
+            }
+            prev_player = Some(trick_winner);
+        }
+        Ok(())
+    }
     pub fn try_fix_dragon_gifting(&mut self, round: &Round) -> Option<bool> {
         //The BSW dataset has a bug where the dragon is sometimes gifted to the player that plays it
         //or is gifted to an enemy that is no longer playing.
@@ -42,7 +67,7 @@ impl RoundLog {
         None
     }
     pub fn play_round(&self, round: &Round, game: u32, round_num: usize) -> ([Rank; 4], [Score; 4], bool) { //Ranks, CardPoints, double_win
-        let mut player_hands = [round.player_rounds[0].final_14(), round.player_rounds[1].final_14(), round.player_rounds[2].final_14(), round.player_rounds[3].final_14()];
+        let mut player_hands = round.get_starting_hands();
         let mut player_scores = [0; 4];
         let mut player_ranks = [RANK_4; 4];
         let mut next_rank = RANK_1;
@@ -81,37 +106,20 @@ impl RoundLog {
         assert_eq!(player_scores.iter().sum::<Score>(), 100);
         (player_ranks, player_scores, false)
     }
-    pub fn integrity_check(&self, round: &Round, game_idx: u32, round_num: usize) {
-        let mut player_hands = [round.player_rounds[0].final_14(), round.player_rounds[1].final_14(), round.player_rounds[2].final_14(), round.player_rounds[3].final_14()];
-        if game_idx == 1001683 && round_num == 10 {
-            println!("{}", player_hands[0].pretty_print());
-            println!("{}", player_hands[1].pretty_print());
-            println!("{}", player_hands[2].pretty_print());
-            println!("{}", player_hands[3].pretty_print());
-            for (trick_num, trick) in self.log.iter().enumerate() {
-                println!("Starting Trick {} with type {}", trick_num, trick.trick_type);
-                for (player, hand) in trick.iter() {
-                    println!("Player {} plays {}", player, hand.pretty_print());
-                }
-                println!("Ending Trick {} with trick winner {}", trick_num, trick.get_trick_winner());
-            }
-        }
-        let mut prev_player: Option<PlayerIDInternal> = None;
+    pub fn to_debug_str(&self, round: &Round) -> String {
+        let player_hands = round.get_starting_hands();
+        let mut res_str = String::new();
+        res_str.push_str(&format!("P0: {}\n", player_hands[0].pretty_print()));
+        res_str.push_str(&format!("P1: {}\n", player_hands[1].pretty_print()));
+        res_str.push_str(&format!("P2: {}\n", player_hands[2].pretty_print()));
+        res_str.push_str(&format!("P3: {}\n", player_hands[3].pretty_print()));
         for (trick_num, trick) in self.log.iter().enumerate() {
-            if let Some(prev) = prev_player {
-                if trick.get_starting_player() != prev {
-                    println!("{} {} {}", game_idx, round_num, trick_num);
-                    println!("{:?}", prev);
-                    println!("{}", trick.get_starting_player());
-                }
-                assert_eq!(trick.get_starting_player(), prev);
+            res_str.push_str(&format!("Trick {} with type {}:\n", trick_num, trick.trick_type));
+            for (player, hand) in trick.iter() {
+                res_str.push_str(&format!("Player {}: {}\n", player, hand.pretty_print()));
             }
-            trick.integrity_check(&mut player_hands, game_idx, round_num, trick_num);
-            let mut trick_winner = trick.get_trick_winner();
-            while player_hands[trick_winner as usize] == 0u64 {
-                trick_winner = (trick_winner + 1) % 4;
-            }
-            prev_player = Some(trick_winner);
+            res_str.push_str(&format!("Trick {} trick winner: {}\n-----------------\n", trick_num, trick.get_trick_winner()));
         }
+        res_str
     }
 }
