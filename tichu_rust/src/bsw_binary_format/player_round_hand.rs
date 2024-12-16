@@ -13,11 +13,11 @@ pub struct PlayerRoundHand {
 
 #[derive(Debug)]
 pub enum PlayerRoundHandIntegrityError {
-    First8Count { count: u32 },
+    First8Count(u32),
     First8Invalid,
-    First14Count { count: u32 },
+    First14Count(u32),
     First14Invalid,
-    Final14Count { count: u32 },
+    Final14Count(u32),
     Final14Invalid,
     OutExchangeCardsNotInFirst14,
     InExchangeCardsInFirst14,
@@ -25,11 +25,11 @@ pub enum PlayerRoundHandIntegrityError {
 
 impl PlayerRoundHand {
     pub fn integrity_check(&self) -> Result<(), PlayerRoundHandIntegrityError> {
-        if self.first_8.count_ones() != 8 { return Err(First8Count { count: self.first_8.count_ones() }); }
+        if self.first_8.count_ones() != 8 { return Err(First8Count(self.first_8.count_ones())); }
         if self.first_8 & MASK_ALL != self.first_8 { return Err(First8Invalid); }
-        if self.first_14.count_ones() != 14 { return Err(First14Count { count: self.first_14.count_ones() }); }
+        if self.first_14.count_ones() != 14 { return Err(First14Count(self.first_14.count_ones())); }
         if self.first_14 & MASK_ALL != self.first_14 { return Err(First14Invalid); }
-        if self.final_14().count_ones() != 14 { return Err(Final14Count { count: self.final_14().count_ones() }); }
+        if self.final_14().count_ones() != 14 { return Err(Final14Count(self.final_14().count_ones())); }
         if self.final_14() & MASK_ALL != self.final_14() { return Err(Final14Invalid); }
         if (hand!(self.left_out_exchange_card(),self.partner_out_exchange_card(),self.right_out_exchange_card()) & self.first_14).count_ones() != 3 {
             return Err(OutExchangeCardsNotInFirst14);

@@ -121,7 +121,11 @@ impl DataBase {
         let mut round_count_own_gift_fixed: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game
         for (game_idx, game) in bsw_id_to_game.iter_mut() {
-            'A: for (j, (round, round_log)) in game.rounds.iter_mut().enumerate() {
+            'A: for j in 0..game.rounds.len(){
+                let (round, round_log) = game.rounds.get_mut(j).unwrap();
+                if exclude_rounds.contains_key(game_idx) && exclude_rounds[game_idx].contains(&j) {
+                    continue;
+                }
                 round_log.integrity_check(round, *game_idx, j);
                 let (mut pr0, mut pr1, mut pr2, mut pr3) = (
                     round.player_rounds[0].extras,
@@ -200,7 +204,12 @@ impl DataBase {
                     assert!(dragon_gifting_changed || parsed_round_result == calc_score);
                 }
 
-                round.integrity_check();
+                if let Some(err) = round.integrity_check().err() {
+                    //Any of these errors can not be recovered from. The round is trash.
+                    println!("Skipping Game {} round {}: {:?} in Round integrity check.", game_idx, j, err);
+                    DataBase::add_skip_round(&mut exclude_rounds, game, j);
+                    continue;
+                }
             }
         }
         println!("{}", round_count);
@@ -344,11 +353,13 @@ impl DataBase {
             player_round_hand.extras ^= (rank as u64) << (46 + 2 * player);
 
             if let Some(err) = player_round_hand.integrity_check().err() {
+                //Any of these errors can not be recovered from. The round is trash.
                 println!("Skipping Game {} round {}: {:?} in PlayerRoundHand {:?}. File {}.", game_id, round, err, player_round_hand, path);
                 DataBase::add_skip_round(exclude_rounds, game, round);
                 continue;
             }
             if player_round_hand.final_14() != tichu_one_str_to_hand(final_14) {
+                //This is also enough reason to discard the round and invite further investigation.
                 println!("Skipping Game {} round {}: PlayerRoundHand {} does not match parsed final 14 {}. File {}.",
                          game_id, round, player_round_hand.final_14().pretty_print(),
                          tichu_one_str_to_hand(final_14).pretty_print(), path);
