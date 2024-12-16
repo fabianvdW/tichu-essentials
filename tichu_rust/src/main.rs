@@ -3,10 +3,10 @@ pub mod tichu_hand;
 pub mod enumerate_hands;
 pub mod countable_properties;
 pub mod enumeration_results;
-pub mod bsw_binary_format;
 pub mod bsw_database;
 pub mod street_detection_tricks;
 pub mod pair_street_detection_trick;
+pub mod bsw_binary_format;
 
 use crate::tichu_hand::*;
 use crate::bsw_database::DataBase;

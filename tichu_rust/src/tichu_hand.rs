@@ -1,6 +1,6 @@
 use colored::Colorize;
 use phf::phf_map;
-use crate::bsw_binary_format::Score;
+use crate::bsw_binary_format::binary_format_constants::Score;
 use crate::pair_street_detection_trick::is_pair_street_fast;
 use crate::street_detection_tricks::{is_street_fast};
 

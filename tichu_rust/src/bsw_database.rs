@@ -1,4 +1,8 @@
-use crate::bsw_binary_format::*;
+use crate::bsw_binary_format::binary_format_constants::{PlayerIDGlobal, Score, PLAYER_0, PLAYER_1, PLAYER_2, PLAYER_3, CALL_TICHU, CALL_GRAND_TICHU, CALL_NONE, PlayerIDInternal, Rank};
+use crate::bsw_binary_format::game::{Game, FLAG_EXCLUDED_ROUND, FLAG_GAME_STOPPED_WITHIN_ROUND, FLAG_NO_WINNER_BSW};
+use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
+use crate::bsw_binary_format::round::Round;
+use crate::bsw_binary_format::round_log::RoundLog;
 use crate::tichu_hand::*;
 use bitcode::{Decode, Encode};
 use memmap2::MmapOptions;
@@ -6,6 +10,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
+use crate::bsw_binary_format::trick::{TaggeCardIndexT, TaggedCardIndex, Trick};
 use crate::hand;
 
 pub fn trick_type_str_to_trick_type(trick_type: &str) -> TrickType {
@@ -54,10 +59,7 @@ pub struct DataBase {
     pub games: Vec<Game>,
     pub players: Vec<String>, //Indexed by PlayerIDGlobal
 }
-const BAD_GAMES: [u32; 10] = [
-    1107083, 155317, 1837970, 288123, 39186, 500114, 50442, 927659, 968807,
-    1001152, //Bad Zugfolge description
-]; //Game ID's of BSW dataset that are bugged. Hardcoded to exclude them.
+
 impl DataBase {
     pub fn write(&self, path: &str) -> std::io::Result<()> {
         let encoded = bitcode::encode(self);
@@ -70,22 +72,32 @@ impl DataBase {
         let mmap = unsafe { MmapOptions::new().map(&file)? };
         Ok(bitcode::decode(&mmap[..]).unwrap())
     }
-
+    fn add_skip_round(exclude_rounds: &mut HashMap<u32, Vec<usize>>, game: &mut Game, round: usize) {
+        if exclude_rounds.contains_key(&game.original_bsw_id) {
+            exclude_rounds.get_mut(&game.original_bsw_id).unwrap().push(round);
+        } else {
+            exclude_rounds.insert(game.original_bsw_id, vec![round]);
+        }
+        game.parsing_flags |= FLAG_EXCLUDED_ROUND;
+    }
     pub fn from_bsw() -> std::io::Result<DataBase> {
         let mut database = DataBase {
             games: Vec::new(),
             players: Vec::new(),
         };
         let mut player_str_to_id: HashMap<String, PlayerIDGlobal> = HashMap::new();
-        let mut game_id_to_idx: HashMap<u32, u32> = HashMap::new();
-        let mut round_results: Vec<Vec<(Score, Score)>> = Vec::new();
+        let mut bsw_id_to_game: HashMap<u32, Game> = HashMap::new();
+        let mut round_results: HashMap<u32, Vec<(Score, Score)>> = HashMap::new();
+        //let mut exclude_games: HashMap<u32, bool> = HashMap::new();
+        let mut exclude_rounds: HashMap<u32, Vec<usize>> = HashMap::new();
+
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
             if name.contains("Spiel_1002000") {
                 DataBase::parse_spiel_file(
                     &mut database,
                     &mut player_str_to_id,
-                    &mut game_id_to_idx,
+                    &mut bsw_id_to_game,
                     &mut round_results,
                     &name,
                 );
@@ -94,13 +106,13 @@ impl DataBase {
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
             if name.contains("Runde_1002000") {
-                DataBase::parse_runde_file(&mut database, &mut game_id_to_idx, &mut round_results, &name);
+                DataBase::parse_runde_file(&mut bsw_id_to_game, &mut round_results, &mut exclude_rounds, &name);
             }
         }
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
             if name.contains("Zugfolge_1002000") {
-                DataBase::parse_zugfolge_file(&mut database, &mut game_id_to_idx, &name);
+                DataBase::parse_zugfolge_file(&mut bsw_id_to_game, &mut exclude_rounds, &name);
             }
         }
         let mut round_count: usize = 0;
@@ -108,11 +120,9 @@ impl DataBase {
         let mut round_count_own_gift: usize = 0;
         let mut round_count_own_gift_fixed: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game
-        for (i, game) in database.games.iter_mut().enumerate() {
-            assert_eq!(game.rounds.len(), game.round_logs.len());
-            'A: for (j, (round, round_log)) in game.rounds.iter_mut().zip(game.round_logs.iter_mut()).enumerate() {
-                let game_idx = game_id_to_idx.iter().find(|x| *x.1 as usize== i).unwrap();
-                round_log.integrity_check(round, *game_idx.0 as usize, j);
+        for (game_idx, game) in bsw_id_to_game.iter_mut() {
+            'A: for (j, (round, round_log)) in game.rounds.iter_mut().enumerate() {
+                round_log.integrity_check(round, *game_idx, j);
                 let (mut pr0, mut pr1, mut pr2, mut pr3) = (
                     round.player_rounds[0].extras,
                     round.player_rounds[1].extras,
@@ -139,10 +149,7 @@ impl DataBase {
                 round.player_rounds[3].extras = pr3;
                 round_count += 1;
 
-                let (log_ranks, score, is_double_win) = round_log.play_round(round, *game_idx.0 as usize, j);
-                if *game_idx.0 == 1000167 && j == 8 && false{
-                    println!("Calculated score exact {:?}", score);
-                }
+                let (log_ranks, score, is_double_win) = round_log.play_round(round, *game_idx, j);
                 //Check that the ranks agree with the calculated ranks.
                 let mut round_log_ranks = 0u64;
                 round_log_ranks |= (log_ranks[PLAYER_0 as usize] as u64) << 0;
@@ -153,7 +160,7 @@ impl DataBase {
 
                 //We have two different sources of round result.
                 //First is round_results vector
-                let parsed_round_result = round_results[i][j];
+                let parsed_round_result = round_results[game_idx][j];
                 //Second is from the round log + calls points. They must match!
                 let mut card_score_team_1 = score[PLAYER_0 as usize] + score[PLAYER_2 as usize];
 
@@ -167,17 +174,17 @@ impl DataBase {
                 } else {
                     assert!(!is_double_win);
                     let mut dragon_gifting_changed: bool = false;
-                    if let Some(fixed) = round_log.try_fix_dragon_gifting(&round){
+                    if let Some(fixed) = round_log.try_fix_dragon_gifting(&round) {
                         round_count_own_gift += 1;
-                        if fixed{
+                        if fixed {
                             //println!("Gifting dragon in Game {} round {}. Fixed!", *game_idx.0, j);
                             round_count_own_gift_fixed += 1;
                             //Recalculate card_scores
-                            let new_score = round_log.play_round(round, *game_idx.0 as usize, j).1;
+                            let new_score = round_log.play_round(round, *game_idx, j).1;
                             card_score_team_1 = new_score[PLAYER_0 as usize] + new_score[PLAYER_2 as usize];
                             dragon_gifting_changed = true;
-                        }else{
-                            println!("Gifting dragon in Game {} round {}. Not Fixed!", *game_idx.0, j);
+                        } else {
+                            println!("Gifting dragon in Game {} round {}. Not Fixed!", *game_idx, j);
                             continue 'A;
                         }
                     }
@@ -186,12 +193,11 @@ impl DataBase {
                     round.player_rounds[1].extras |= ((card_score_team_1 + 25) as u64) << 54;
                     round.player_rounds[2].extras |= ((card_score_team_1 + 25) as u64) << 54;
                     round.player_rounds[3].extras |= ((card_score_team_1 + 25) as u64) << 54;
-                    if parsed_round_result != round.player_rounds[0].round_score(){
-                        println!{"In game {} round {}, Round result mismatch: parsed {:?} vs calculated {:?}", *game_idx.0, j, parsed_round_result, round.player_rounds[0].round_score()};
+                    if parsed_round_result != round.player_rounds[0].round_score() {
+                        println! {"In game {} round {}, Round result mismatch: parsed {:?} vs calculated {:?}", *game_idx, j, parsed_round_result, round.player_rounds[0].round_score()};
                     }
                     let calc_score = round.player_rounds[0].round_score();
                     assert!(dragon_gifting_changed || parsed_round_result == calc_score);
-
                 }
 
                 round.integrity_check();
@@ -206,8 +212,8 @@ impl DataBase {
     fn parse_spiel_file(
         database: &mut DataBase,
         player_str_to_id: &mut HashMap<String, PlayerIDGlobal>,
-        game_id_to_idx: &mut HashMap<u32, u32>,
-        round_results: &mut Vec<Vec<(Score, Score)>>,
+        game_id_to_idx: &mut HashMap<u32, Game>,
+        round_results: &mut HashMap<u32, Vec<(Score, Score)>>,
         path: &str, )
     {
         let file = File::open(path).unwrap();
@@ -221,15 +227,7 @@ impl DataBase {
                 parts.next().unwrap().parse::<String>().unwrap(),
                 {
                     parts.next(); //PlayerIdInternal, not important
-                    let next = parts.next().unwrap().parse::<u8>();
-                    if next.is_err(){
-                        println!("{:?} {} {}", next, line, path);
-                        0
-                    }else{
-                        next.unwrap()
-                    }
-
-
+                    parts.next().unwrap().parse::<u8>().unwrap() //Win or not
                 }
             )
         };
@@ -246,12 +244,7 @@ impl DataBase {
             assert_eq!(chunk[0].0, chunk[1].0);
             assert_eq!(chunk[1].0, chunk[2].0);
             assert_eq!(chunk[2].0, chunk[3].0);
-            if BAD_GAMES.contains(&chunk[0].0) {
-                continue;
-            }
             assert!(!game_id_to_idx.contains_key(&chunk[0].0));
-            let game_idx = database.games.len() as u32;
-            game_id_to_idx.insert(chunk[0].0, game_idx);
             let mut player_ids: [PlayerIDGlobal; 4] = [0; 4];
             for player in 0..4 {
                 let player_id = {
@@ -267,20 +260,20 @@ impl DataBase {
                 };
                 player_ids[player] = player_id;
             }
-
-            database.games.push(Game {
+            let parsing_flags = if chunk.iter().all(|x| x.2 == 0) { FLAG_NO_WINNER_BSW } else { 0 };
+            game_id_to_idx.insert(chunk[0].0, Game {
                 rounds: Vec::new(),
-                round_logs: Vec::new(),
                 player_ids,
-                unfinished: chunk.iter().all(|x| x.2 == 0)
+                original_bsw_id: chunk[0].0,
+                parsing_flags,
             });
-            round_results.push(Vec::new());
+            round_results.insert(chunk[0].0, Vec::new());
         }
     }
     fn parse_runde_file(
-        database: &mut DataBase,
-        game_id_to_idx: &mut HashMap<u32, u32>,
-        round_results: &mut Vec<Vec<(Score, Score)>>,
+        game_id_to_idx: &mut HashMap<u32, Game>,
+        round_results: &mut HashMap<u32, Vec<(Score, Score)>>,
+        exclude_rounds: &mut HashMap<u32, Vec<usize>>,
         path: &str,
     )
     {
@@ -292,23 +285,16 @@ impl DataBase {
             let mut parts = line.split(";");
             let game_id = parts.next().unwrap().parse::<u32>().unwrap();
             let round = parts.next().unwrap().parse::<usize>().unwrap() - 1;
-            if BAD_GAMES.contains(&game_id) {
-                continue;
-            }
+
             assert!(game_id_to_idx.contains_key(&game_id));
-            let game: &mut Game = database
-                .games
-                .get_mut(*game_id_to_idx.get(&game_id).unwrap() as usize)
-                .unwrap();
-            let game_round_results: &mut Vec<(Score, Score)> = round_results.get_mut(*game_id_to_idx.get(&game_id).unwrap() as usize).unwrap();
+            let game: &mut Game = game_id_to_idx.get_mut(&game_id).unwrap();
+            let game_round_results: &mut Vec<(Score, Score)> = round_results.get_mut(&game_id).unwrap();
 
             assert!(game.rounds.len() >= round);
             if game.rounds.len() == round {
-                game.rounds.push(Round::default());
+                game.rounds.push((Round::default(), RoundLog::default()));
                 assert_eq!(game_round_results.len(), round);
                 game_round_results.push((0, 0));
-                assert_eq!(game.round_logs.len(), round);
-                game.round_logs.push(RoundLog::default());
             }
             assert_eq!(game.rounds.len(), round + 1);
 
@@ -338,7 +324,7 @@ impl DataBase {
             let player_round_hand: &mut PlayerRoundHand = game
                 .rounds
                 .get_mut(round)
-                .unwrap()
+                .unwrap().0
                 .player_rounds
                 .get_mut(player as usize)
                 .unwrap();
@@ -356,26 +342,24 @@ impl DataBase {
             player_round_hand.extras ^= (call as u64) << (36 + 2 * player);
             player_round_hand.extras ^= (player as u64) << 44;
             player_round_hand.extras ^= (rank as u64) << (46 + 2 * player);
-            //This is how BAD_GAMES is found.
-            /*if player_round_hand.final_14() != tichu_one_str_to_hand(final_14) || player_round_hand.final_14().count_ones() != 14 {
-                println!("Bad game {} in {}. Round {}", game_id, path, round+1);
-                println!("{}", first_8);
-                println!("{}", first_14);
-                println!("{}", final_14);
-                println!("{}", player_round_hand.first_14.pretty_print());
-                println!("{}", tichu_one_str_to_hand(final_14).pretty_print());
-            }*/
-            assert_eq!(
-                player_round_hand.final_14(),
-                tichu_one_str_to_hand(final_14)
-            );
-            player_round_hand.integrity_check();
+
+            if let Some(err) = player_round_hand.integrity_check().err() {
+                println!("Skipping Game {} round {}: {:?} in PlayerRoundHand {:?}. File {}.", game_id, round, err, player_round_hand, path);
+                DataBase::add_skip_round(exclude_rounds, game, round);
+                continue;
+            }
+            if player_round_hand.final_14() != tichu_one_str_to_hand(final_14) {
+                println!("Skipping Game {} round {}: PlayerRoundHand {} does not match parsed final 14 {}. File {}.",
+                         game_id, round, player_round_hand.final_14().pretty_print(),
+                         tichu_one_str_to_hand(final_14).pretty_print(), path);
+                DataBase::add_skip_round(exclude_rounds, game, round);
+            }
         }
     }
 
     fn parse_zugfolge_file(
-        database: &mut DataBase,
-        game_id_to_idx: &mut HashMap<u32, u32>,
+        game_id_to_idx: &mut HashMap<u32, Game>,
+        exclude_rounds: &mut HashMap<u32, Vec<usize>>,
         path: &str,
     )
     {
@@ -386,22 +370,20 @@ impl DataBase {
             let line = line.unwrap();
             let mut parts = line.split(";");
             let game_id = parts.next().unwrap().parse::<u32>().unwrap();
-            if BAD_GAMES.contains(&game_id) {
-                continue;
-            }
+
             assert!(game_id_to_idx.contains_key(&game_id));
-            let game: &mut Game = database
-                .games
-                .get_mut(*game_id_to_idx.get(&game_id).unwrap() as usize)
-                .unwrap();
+            let game: &mut Game = game_id_to_idx.get_mut(&game_id).unwrap();
             let round = parts.next().unwrap().parse::<usize>().unwrap() - 1;
-            let trick_num = parts.next().unwrap().parse::<usize>().unwrap() - 1;
-            if game.round_logs.len() <= round{
-                game.unfinished = true;
+            if exclude_rounds.contains_key(&game_id) && exclude_rounds[&game_id].contains(&round) {
                 continue;
             }
-            assert!(game.round_logs.len() > round);
-            let round_log = game.round_logs.get_mut(round).unwrap();
+            if game.rounds.len() <= round {
+                game.parsing_flags |= FLAG_GAME_STOPPED_WITHIN_ROUND;
+                continue;
+            }
+            let trick_num = parts.next().unwrap().parse::<usize>().unwrap() - 1;
+
+            let (_, round_log) = game.rounds.get_mut(round).unwrap();
 
 
             assert_eq!(round_log.log.len(), trick_num);
@@ -409,7 +391,7 @@ impl DataBase {
             let trick_type_str = parts.next().unwrap();
             trick.trick_type = trick_type_str_to_trick_type(trick_type_str);
 
-            let trick_length = parts.next().unwrap().parse::<usize>().unwrap(); //TODO: Check that it matches at the end
+            let trick_length = parts.next().unwrap().parse::<usize>().unwrap();
             let trick_players: Vec<PlayerIDInternal> = parts.next().unwrap().chars()
                 .map(|c| c.to_digit(10).unwrap() as PlayerIDInternal)
                 .collect();
@@ -418,7 +400,7 @@ impl DataBase {
             let trick_hands = trick_cards.split("|");
 
             for (i, trick_hand) in trick_hands.enumerate() {
-                if trick_hand.len() == 0{
+                if trick_hand.len() == 0 {
                     continue;
                 }
                 let mut hand = Vec::new();
@@ -426,7 +408,7 @@ impl DataBase {
                 let mut chars = trick_hand.chars().peekable();
                 while let Some(c) = chars.next() {
                     let new_card_index = TICHU_ONE_ENCODING[&c];
-                    hand.push(u8::construct(trick_players[i], new_card_index));
+                    hand.push(TaggedCardIndex::construct(trick_players[i], new_card_index));
                     let new_card = hand!(new_card_index);
                     assert_eq!(new_card & hand_bb, 0u64);
                     hand_bb ^= new_card;
