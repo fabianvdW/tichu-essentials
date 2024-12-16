@@ -105,24 +105,24 @@ impl Round {
         assert_eq!(p2.extras >> 54, p3.extras >> 54);
     }
 }
-pub type TaggedHand = u64; //Lower 6 bits are CardIndex, upper 2 CardIndex are Tag
+pub type TaggedCardIndex = u8; //Lower 6 bits are CardIndex, upper 2 CardIndex are Tag
 
-pub trait TaggedHandT {
-    fn construct(player: PlayerIDInternal, hand: Hand) -> Self;
+pub trait TaggeCardIndexT {
+    fn construct(player: PlayerIDInternal, card_index: CardIndex) -> Self;
     fn get_player(&self) -> PlayerIDInternal;
-    fn get_hand(&self) -> Hand;
+    fn get_card(&self) -> CardIndex;
 }
-impl TaggedHandT for TaggedHand {
-    fn construct(player: PlayerIDInternal, hand: Hand) -> Self {
-        hand | (player as u64) << 14
+impl TaggeCardIndexT for TaggedCardIndex {
+    fn construct(player: PlayerIDInternal, card_index: CardIndex) -> Self {
+        card_index | (player as u8) << 6
     }
 
     fn get_player(&self) -> PlayerIDInternal {
-        ((self >> 14) & 0b11u64) as u8
+        ((self >> 6) & 0b11u8) as PlayerIDInternal
     }
 
-    fn get_hand(&self) -> Hand {
-        self & MASK_ALL
+    fn get_card(&self) -> CardIndex {
+        self & 0x3F
     }
 }
 #[derive(Encode, Decode, Default)]
@@ -139,9 +139,8 @@ impl RoundLog {
         //one enemy player still playing.
         let mut player_hands = [round.player_rounds[0].final_14(), round.player_rounds[1].final_14(), round.player_rounds[2].final_14(), round.player_rounds[3].final_14()];
         for trick in self.log.iter() {
-            for t_hand in trick.trick_log.iter() {
-                let player = t_hand.get_player() as usize;
-                player_hands[player] ^= t_hand.get_hand();
+            for (player, hand) in trick.iter(){
+                player_hands[player as usize] ^= hand;
             }
             if trick.has_to_gift_trick() {
                 let gift_player = self.dragon_player_gift.unwrap();
@@ -160,7 +159,6 @@ impl RoundLog {
                         return Some(false);
                     }
                 }
-
             }
         }
         None
@@ -177,11 +175,10 @@ impl RoundLog {
             } else {
                 player_scores[trick.get_trick_winner() as usize] += card_points;
             }
-            for t_hand in trick.trick_log.iter() {
-                let player = t_hand.get_player() as usize;
-                player_hands[player] ^= t_hand.get_hand();
-                if player_hands[player] == 0 {
-                    player_ranks[player] = next_rank;
+            for (player, hand) in trick.iter() {
+                player_hands[player as usize] ^= hand;
+                if player_hands[player as usize] == 0 {
+                    player_ranks[player as usize] = next_rank;
                     next_rank += 1;
                 }
             }
@@ -215,8 +212,8 @@ impl RoundLog {
             println!("{}", player_hands[3].pretty_print());
             for (trick_num, trick) in self.log.iter().enumerate() {
                 println!("Starting Trick {} with type {}", trick_num, trick.trick_type);
-                for thand in &trick.trick_log {
-                    println!("Player {} plays {}", thand.get_player(), thand.get_hand().pretty_print());
+                for (player, hand) in trick.iter() {
+                    println!("Player {} plays {}", player, hand.pretty_print());
                 }
                 println!("Ending Trick {} with trick winner {}", trick_num, trick.get_trick_winner());
             }
@@ -243,27 +240,58 @@ impl RoundLog {
 #[derive(Encode, Decode, Default)]
 pub struct Trick {
     pub trick_type: TrickType,
-    pub trick_log: Vec<TaggedHand>, //TODO: Maybe TaggedHand -> Vec<TaggedCardIndex> ?! saves some space.
+    pub trick_log: Vec<Vec<TaggedCardIndex>>,
+}
+pub struct TrickIterator<'a> {
+    trick: &'a Trick,
+    current_index: usize,
+}
+impl<'a> Iterator for TrickIterator<'a> {
+    type Item = (PlayerIDInternal, Hand);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current_index < self.trick.trick_log.len() {
+            let player = self.trick.get_player(self.current_index);
+            let hand = self.trick.get_hand(self.current_index);
+            self.current_index += 1;
+            Some((player, hand))
+        } else {
+            None
+        }
+    }
 }
 impl Trick {
+    pub fn iter(&self) -> TrickIterator {
+        TrickIterator { trick: self, current_index: 0 }
+    }
+    pub fn get_player(&self, index: usize) -> PlayerIDInternal {
+        self.trick_log[index][0].get_player()
+    }
+    pub fn get_hand(&self, index: usize) -> Hand {
+        self.trick_log[index].iter().fold(0u64, |acc, inc| acc | hand!(inc.get_card()))
+    }
     pub fn played_cards(&self) -> Hand {
-        self.trick_log.iter().fold(0u64, |acc, inc| acc | inc.get_hand())
+        let mut res = 0u64;
+        for i in 0..self.trick_log.len() {
+            res |= self.get_hand(i);
+        }
+        res
     }
 
     pub fn has_to_gift_trick(&self) -> bool {
         self.played_cards() & hand!(DRAGON) != 0
-            && self.trick_log[self.trick_log.len() - 1].get_hand().hand_type().unwrap().get_trick_type() < TRICK_BOMB4
+            && self.get_hand(self.trick_log.len() - 1).hand_type().unwrap().get_trick_type() < TRICK_BOMB4
     }
 
     pub fn get_starting_player(&self) -> PlayerIDInternal {
-        self.trick_log[0].get_player()
+        self.get_player(0)
     }
 
     pub fn get_trick_winner(&self) -> PlayerIDInternal {
         if self.trick_type == TRICK_DOG {
             TEAMMATE_PLAYERS[self.get_starting_player() as usize]
         } else {
-            self.trick_log[self.trick_log.len() - 1].get_player()
+            self.get_player(self.trick_log.len() - 1)
         }
     }
     fn hand_is_two_pairs_plus_phoenix(hand: Hand) -> bool { //Only call this on full houses!
@@ -280,26 +308,29 @@ impl Trick {
     pub fn integrity_check(&self, player_hands: &mut [Hand; 4], game: usize, round_num: usize, trick_num: usize) {
         assert!(self.trick_log.len() > 0);
         assert!(self.trick_type != TRICK_DOG || self.trick_log.len() == 1);
+        for card_vec in self.trick_log.iter() {
+            assert!(card_vec.len() > 0);
+            assert!(card_vec.iter().all(|x| x.get_player() == card_vec[0].get_player()));
+        }
         //Check that hand type of every played hand matches the trick type. In case of bombs, trick type can upgrade!
         //Also check that every card that is played can be played by player.
         //checks that no player plays twice in a row unless a bomb is involved.
         let mut prev_player = None;
         let mut trick_type = self.trick_type;
         let mut prev_hand: Option<HandType> = None;
-        for (i, t_hand) in self.trick_log.iter().enumerate() {
-            let (hand, player) = (t_hand.get_hand(), t_hand.get_player() as usize);
-            assert_eq!(hand & player_hands[player], hand);
-            player_hands[player] ^= hand;
+        for (i, (player, hand)) in self.iter().enumerate(){
+            assert_eq!(hand & player_hands[player as usize], hand);
+            player_hands[player as usize] ^= hand;
             if hand.hand_type().is_none() {
                 println!("{} {} {}", game, round_num, trick_num);
-                println!("Current hand {} for player {}: {}", i, t_hand.get_player(), t_hand.get_hand().pretty_print());
+                println!("Current hand {} for player {}: {}", i, player, hand.pretty_print());
                 println!("No HandType: ");
                 println!("Previous HandType: {:?} {}", prev_hand, trick_type);
             }
             let hand_type = hand.hand_type().unwrap();
             if !hand_type.matches_trick_type(trick_type) {
                 println!("{} {} {}", game, round_num, trick_num);
-                println!("Current hand {} for player {}: {}", i, t_hand.get_player(), t_hand.get_hand().pretty_print());
+                println!("Current hand {} for player {}: {}", i, player, hand.pretty_print());
                 println!("HandType: {:?}, trick_type: {}", hand_type, trick_type);
                 println!("Previous HandType: {:?} {}", prev_hand, trick_type);
             }
@@ -312,10 +343,10 @@ impl Trick {
                 if let Some(mut prev_hand_type) = prev_hand {
                     //If the trick type is street, and the previous hand contains a phoenix that extends the street,
                     //we allow prev_hand_type to be one smaller (since we have no indication of how phoenix is played).
-                    if trick_type >= TRICK_STREET5 && trick_type <= TRICK_STREET14 && phoenix_used_as_street_extension(self.trick_log[i - 1].get_hand()) {
+                    if trick_type >= TRICK_STREET5 && trick_type <= TRICK_STREET14 && phoenix_used_as_street_extension(self.get_hand(i - 1)) {
                         //Lower prev_hand_type if possible
                         if let HandType::Street(lowest_card, length) = prev_hand_type {
-                            if lowest_card > SPECIAL_CARD && self.trick_log[i-1].get_hand() & MASK_ACES == 0 { //Phoenix already used as low card if the street can't be extended further than ace.
+                            if lowest_card > SPECIAL_CARD && self.get_hand(i - 1) & MASK_ACES == 0 { //Phoenix already used as low card if the street can't be extended further than ace.
                                 prev_hand_type = HandType::Street(lowest_card - 1, length);
                             }
                         } else {
@@ -324,7 +355,7 @@ impl Trick {
                     }
                     //If the trick type is fullhouse, and the full house consists of two pairs + phoenix,
                     // we allow the phoenix to be used as the lower card instead of the default upper card (since we have no indication of how phoenix is played).
-                    if trick_type == TRICK_FULLHOUSE && Trick::hand_is_two_pairs_plus_phoenix(self.trick_log[i - 1].get_hand()) {
+                    if trick_type == TRICK_FULLHOUSE && Trick::hand_is_two_pairs_plus_phoenix(self.get_hand(i - 1)) {
                         if let HandType::FullHouse(lower_card, higher_card) = prev_hand_type {
                             prev_hand_type = HandType::FullHouse(higher_card, lower_card);
                         } else {
@@ -333,7 +364,7 @@ impl Trick {
                     }
                     if !hand_type.is_bigger_than_same_handtype(&prev_hand_type) {
                         println!("{} {} {}", game, round_num, trick_num);
-                        println!("Current hand {} for player {}: {}", i, t_hand.get_player(), t_hand.get_hand().pretty_print());
+                        println!("Current hand {} for player {}: {}", i, player, hand.pretty_print());
                         println!("HandType: {:?}", hand_type);
                         println!("Previous HandType: {:?}", prev_hand_type);
                     }

@@ -421,33 +421,35 @@ impl DataBase {
                 if trick_hand.len() == 0{
                     continue;
                 }
-                let mut hand = 0u64;
+                let mut hand = Vec::new();
+                let mut hand_bb = 0u64;
                 let mut chars = trick_hand.chars().peekable();
                 while let Some(c) = chars.next() {
-                    let new_card = hand!(TICHU_ONE_ENCODING[&c]);
-                    assert!(new_card & hand == 0u64);
-                    hand ^= new_card;
+                    let new_card_index = TICHU_ONE_ENCODING[&c];
+                    hand.push(u8::construct(trick_players[i], new_card_index));
+                    let new_card = hand!(new_card_index);
+                    assert_eq!(new_card & hand_bb, 0u64);
+                    hand_bb ^= new_card;
                     if chars.peek() == Some(&'(') {
                         chars.next(); // consume '('
                         let next = chars.next().unwrap();
-                        if hand & hand!(MAHJONG) != 0u64 {
+                        if hand_bb & hand!(MAHJONG) != 0u64 {
                             assert!(round_log.mahjong_wish.is_none());
                             round_log.mahjong_wish = Some(card_wish_to_cardtype(next));
-                        } else if hand & hand!(DRAGON) != 0u64 {
+                        } else if hand_bb & hand!(DRAGON) != 0u64 {
                             assert!(round_log.dragon_player_gift.is_none());
                             round_log.dragon_player_gift = Some(next.to_digit(10).unwrap() as PlayerIDInternal);
                         } else {
                             //Mahjong is served. Check that it holds
                             assert!(round_log.mahjong_wish.is_some());
                             let wish = round_log.mahjong_wish.unwrap();
-                            assert!(hand & MASK_FOUR_OF_KIND[(wish -1) as usize] != 0u64);
+                            assert_ne!(hand_bb & MASK_FOUR_OF_KIND[(wish - 1) as usize], 0u64);
                         }
                         chars.next(); // consume ')'
                         assert!(chars.next().is_none());
                     }
                 }
-                let tagged_hand = u64::construct(trick_players[i], hand);
-                trick.trick_log.push(tagged_hand);
+                trick.trick_log.push(hand);
             }
 
             assert_eq!(trick.trick_log.len(), trick_length);
