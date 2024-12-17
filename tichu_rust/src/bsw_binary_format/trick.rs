@@ -2,7 +2,7 @@ use bitcode::{Decode, Encode};
 use crate::hand;
 use crate::tichu_hand::*;
 use crate::bsw_binary_format::binary_format_constants::*;
-use crate::bsw_binary_format::trick::TrickIntegrityError::{DogTrickTooLong, EmptyPlayedHand, EmptyTrickLog, PlayedHandPlayerTagMismatch};
+use crate::bsw_binary_format::trick::TrickIntegrityError::{DogTrickTooLong, EmptyPlayedHand, EmptyTrickLog, HandNoType, HandNotAvailable, HandTooSmall, HandWrongTrickType, ImplementationBug, PlayedHandPlayerTagMismatch, TwiceInARowNoBomb};
 use crate::street_detection_tricks::phoenix_used_as_street_extension;
 
 pub type TaggedCardIndex = u8; //Lower 6 bits are CardIndex, upper 2 CardIndex are Tag
@@ -53,8 +53,15 @@ impl<'a> Iterator for TrickIterator<'a> {
 pub enum TrickIntegrityError {
     EmptyTrickLog,
     DogTrickTooLong,
-    EmptyPlayedHand(usize), //Index into trick_log
-    PlayedHandPlayerTagMismatch(usize),
+    EmptyPlayedHand(usize), //Move Index into trick_log
+    PlayedHandPlayerTagMismatch(usize), //Move Index into_trick_log
+    HandNotAvailable { hand: String, available_hand: String, player: PlayerIDInternal, move_idx: usize },
+    HandNoType(String, PlayerIDInternal, usize),
+    HandWrongTrickType(String, PlayerIDInternal, usize, HandType, TrickType),
+    TwiceInARowNoBomb(usize, PlayerIDInternal),
+    ImplementationBug(usize, TrickType, HandType),
+    HandTooSmall{ hand: String, hand_type: HandType, prev_hand: String, prev_hand_type: HandType, move_idx: usize}
+
 }
 impl Trick {
     pub fn integrity_check(&self, player_hands: &mut [Hand; 4], game: u32, round_num: usize, trick_num: usize) -> Result<(), TrickIntegrityError> {
@@ -71,57 +78,49 @@ impl Trick {
         let mut prev_player = None;
         let mut trick_type = self.trick_type;
         let mut prev_hand: Option<HandType> = None;
-        for (i, (player, hand)) in self.iter().enumerate() {
-            assert_eq!(hand & player_hands[player as usize], hand);
+        for (move_idx, (player, hand)) in self.iter().enumerate() {
+            if hand & player_hands[player as usize] != hand {
+                return Err(HandNotAvailable { hand: hand.pretty_print(), available_hand: player_hands[player as usize].pretty_print(), player, move_idx });
+            }
             player_hands[player as usize] ^= hand;
             if hand.hand_type().is_none() {
-                println!("{} {} {}", game, round_num, trick_num);
-                println!("Current hand {} for player {}: {}", i, player, hand.pretty_print());
-                println!("No HandType: ");
-                println!("Previous HandType: {:?} {}", prev_hand, trick_type);
+                return Err(HandNoType(hand.pretty_print(), player, move_idx));
             }
             let hand_type = hand.hand_type().unwrap();
-            if !hand_type.matches_trick_type(trick_type) {
-                println!("{} {} {}", game, round_num, trick_num);
-                println!("Current hand {} for player {}: {}", i, player, hand.pretty_print());
-                println!("HandType: {:?}, trick_type: {}", hand_type, trick_type);
-                println!("Previous HandType: {:?} {}", prev_hand, trick_type);
+            if !hand_type.matches_trick_type(trick_type){
+                return Err(HandWrongTrickType(hand.pretty_print(), player, move_idx, hand_type, trick_type));
             }
-            assert!(hand_type.matches_trick_type(trick_type));
             let new_trick_type = hand_type.get_trick_type();
-            assert!(prev_player.is_none() || prev_player.unwrap() != player || new_trick_type >= TRICK_BOMB4);
-            assert!(i > 0 || new_trick_type == trick_type);
+            if prev_player.is_some() && prev_player.unwrap() == player && new_trick_type < TRICK_BOMB4{
+                return Err(TwiceInARowNoBomb(move_idx, player));
+            }
             if trick_type == new_trick_type {
                 //Check that the new hand is actually playable
                 if let Some(mut prev_hand_type) = prev_hand {
                     //If the trick type is street, and the previous hand contains a phoenix that extends the street,
                     //we allow prev_hand_type to be one smaller (since we have no indication of how phoenix is played).
-                    if trick_type >= TRICK_STREET5 && trick_type <= TRICK_STREET14 && phoenix_used_as_street_extension(self.get_hand(i - 1)) {
+                    if trick_type >= TRICK_STREET5 && trick_type <= TRICK_STREET14 && phoenix_used_as_street_extension(self.get_hand(move_idx - 1)) {
                         //Lower prev_hand_type if possible
                         if let HandType::Street(lowest_card, length) = prev_hand_type {
-                            if lowest_card > SPECIAL_CARD && self.get_hand(i - 1) & MASK_ACES == 0 { //Phoenix already used as low card if the street can't be extended further than ace.
+                            if lowest_card > SPECIAL_CARD && self.get_hand(move_idx - 1) & MASK_ACES == 0 { //Phoenix already used as low card if the street can't be extended further than ace.
                                 prev_hand_type = HandType::Street(lowest_card - 1, length);
                             }
                         } else {
-                            assert!(false);
+                            return Err(ImplementationBug(move_idx, trick_type, prev_hand_type));
                         }
                     }
                     //If the trick type is fullhouse, and the full house consists of two pairs + phoenix,
                     // we allow the phoenix to be used as the lower card instead of the default upper card (since we have no indication of how phoenix is played).
-                    if trick_type == TRICK_FULLHOUSE && Trick::hand_is_two_pairs_plus_phoenix(self.get_hand(i - 1)) {
+                    if trick_type == TRICK_FULLHOUSE && Trick::hand_is_two_pairs_plus_phoenix(self.get_hand(move_idx - 1)) {
                         if let HandType::FullHouse(lower_card, higher_card) = prev_hand_type {
                             prev_hand_type = HandType::FullHouse(higher_card, lower_card);
                         } else {
-                            assert!(false);
+                            return Err(ImplementationBug(move_idx, trick_type, prev_hand_type));
                         }
                     }
                     if !hand_type.is_bigger_than_same_handtype(&prev_hand_type) {
-                        println!("{} {} {}", game, round_num, trick_num);
-                        println!("Current hand {} for player {}: {}", i, player, hand.pretty_print());
-                        println!("HandType: {:?}", hand_type);
-                        println!("Previous HandType: {:?}", prev_hand_type);
+                        return Err(HandTooSmall {hand: hand.pretty_print(), hand_type, prev_hand: self.get_hand(move_idx - 1).pretty_print(), prev_hand_type, move_idx});
                     }
-                    assert!(hand_type.is_bigger_than_same_handtype(&prev_hand_type));
                 }
             }
             trick_type = new_trick_type;

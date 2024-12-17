@@ -14,7 +14,7 @@ pub struct RoundLog {
 #[derive(Debug)]
 pub enum RoundLogIntegrityError{
     StartTrickIsNotNextInLine{trick_num: usize, starting_player: PlayerIDInternal, should_start: PlayerIDInternal},
-    Child(TrickIntegrityError),
+    Child(usize, TrickIntegrityError),
 }
 impl RoundLog {
     pub fn integrity_check(&self, round: &Round, game_idx: u32, round_num: usize) -> Result<(), RoundLogIntegrityError>{
@@ -26,7 +26,7 @@ impl RoundLog {
                     return Err(RoundLogIntegrityError::StartTrickIsNotNextInLine {trick_num, starting_player: trick.get_starting_player(), should_start: prev});
                 }
             }
-            trick.integrity_check(&mut player_hands, game_idx, round_num, trick_num).map_err(|x| RoundLogIntegrityError::Child(x))?;
+            trick.integrity_check(&mut player_hands, game_idx, round_num, trick_num).map_err(|x| RoundLogIntegrityError::Child(trick_num, x))?;
             let mut trick_winner = trick.get_trick_winner();
             while player_hands[trick_winner as usize] == 0u64 {
                 trick_winner = (trick_winner + 1) % 4;
@@ -115,8 +115,8 @@ impl RoundLog {
         res_str.push_str(&format!("P3: {}\n", player_hands[3].pretty_print()));
         for (trick_num, trick) in self.log.iter().enumerate() {
             res_str.push_str(&format!("Trick {} with type {}:\n", trick_num, trick.trick_type));
-            for (player, hand) in trick.iter() {
-                res_str.push_str(&format!("Player {}: {}\n", player, hand.pretty_print()));
+            for (move_idx, (player, hand)) in trick.iter().enumerate() {
+                res_str.push_str(&format!("Move {}, Player {}: {}\n", move_idx, player, hand.pretty_print()));
             }
             res_str.push_str(&format!("Trick {} trick winner: {}\n-----------------\n", trick_num, trick.get_trick_winner()));
         }
