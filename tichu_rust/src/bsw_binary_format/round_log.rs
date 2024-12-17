@@ -16,6 +16,9 @@ pub enum RoundLogIntegrityError{
     StartTrickIsNotNextInLine{trick_num: usize, starting_player: PlayerIDInternal, should_start: PlayerIDInternal},
     Child(usize, TrickIntegrityError),
 }
+#[derive(Debug)]
+pub struct RoundNotFinishedPlayingError;
+
 impl RoundLog {
     pub fn integrity_check(&self, round: &Round) -> Result<(), RoundLogIntegrityError>{
         let mut player_hands = round.get_starting_hands();
@@ -66,7 +69,7 @@ impl RoundLog {
         }
         None
     }
-    pub fn play_round(&self, round: &Round) -> ([Rank; 4], [Score; 4], bool) { //Ranks, CardPoints, double_win
+    pub fn play_round(&self, round: &Round) -> Result<([Rank; 4], [Score; 4], bool), RoundNotFinishedPlayingError> { //Ranks, CardPoints, double_win
         let mut player_hands = round.get_starting_hands();
         let mut player_scores = [0; 4];
         let mut player_ranks = [RANK_4; 4];
@@ -89,7 +92,10 @@ impl RoundLog {
         let is_double_win = player_ranks[PLAYER_0 as usize] + player_ranks[PLAYER_2 as usize] <= RANK_1 + RANK_2
             || player_ranks[PLAYER_1 as usize] + player_ranks[PLAYER_3 as usize] <= RANK_1 + RANK_2;
         if is_double_win {
-            return (player_ranks, [0; 4], true);
+            return Ok((player_ranks, [0; 4], true));
+        }
+        if next_rank <= RANK_3{
+            return Err(RoundNotFinishedPlayingError);
         }
         //Else, gift card points of player 4 to first
         let first_player = player_ranks.iter().position(|x| *x == RANK_1).unwrap();
@@ -98,7 +104,7 @@ impl RoundLog {
         player_scores[first_player] += player_scores[fourth_player];
         player_scores[fourth_player] = 0;
         player_scores[third_player] += player_hands[fourth_player].get_card_points();
-        (player_ranks, player_scores, false)
+        Ok((player_ranks, player_scores, false))
     }
     pub fn to_debug_str(&self, round: &Round) -> String {
         let player_hands = round.get_starting_hands();

@@ -1,5 +1,5 @@
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDGlobal, Score, PLAYER_0, PLAYER_1, PLAYER_2, PLAYER_3, CALL_TICHU, CALL_GRAND_TICHU, CALL_NONE, PlayerIDInternal, Rank};
-use crate::bsw_binary_format::game::{Game,  FLAG_EXCLUDED_ROUND, FLAG_GAME_STOPPED_WITHIN_ROUND, FLAG_NO_WINNER_BSW};
+use crate::bsw_binary_format::game::{Game, FLAG_EXCLUDED_ROUND, FLAG_GAME_STOPPED_WITHIN_ROUND, FLAG_NO_WINNER_BSW};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_binary_format::round::Round;
 use crate::bsw_binary_format::round_log::RoundLog;
@@ -115,10 +115,11 @@ impl DataBase {
                 DataBase::parse_zugfolge_file(&mut bsw_id_to_game, &mut exclude_rounds, &name);
             }
         }
+        println!("Finished parsing! Starting correction!");
         let mut round_count: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game
         for (game_idx, game) in bsw_id_to_game.iter_mut() {
-            for round_num in 0..game.rounds.len(){
+            for round_num in 0..game.rounds.len() {
                 round_count += 1;
                 let (round, round_log) = game.rounds.get_mut(round_num).unwrap();
                 if exclude_rounds.contains_key(game_idx) && exclude_rounds[game_idx].contains(&round_num) {
@@ -155,15 +156,27 @@ impl DataBase {
                 round.player_rounds[1].extras = pr1;
                 round.player_rounds[2].extras = pr2;
                 round.player_rounds[3].extras = pr3;
-
-                let (log_ranks, score, is_double_win) = round_log.play_round(round);
+                //Skip the round if both players of a team call GT.
+                if round.player_rounds[0].player_0_call() == CALL_GRAND_TICHU && round.player_rounds[0].player_2_call() == CALL_GRAND_TICHU ||
+                    round.player_rounds[0].player_1_call() == CALL_GRAND_TICHU && round.player_rounds[0].player_3_call() == CALL_GRAND_TICHU {
+                    println!("Skipping Game {} round {}: Two players of a team both called Grand Tichu.", game_idx, round_num);
+                    DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
+                    continue;
+                }
+                let res = round_log.play_round(round);
+                if res.is_err() {
+                    println!("Skipping Game {} round {}: {:?} in play_round.", game_idx, round_num, res.err().unwrap());
+                    DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
+                    continue;
+                }
+                let (log_ranks, score, is_double_win) = res.unwrap();
                 //Check that the ranks agree with the calculated ranks.
                 let mut round_log_ranks = 0u64;
                 round_log_ranks |= (log_ranks[PLAYER_0 as usize] as u64) << 0;
                 round_log_ranks |= (log_ranks[PLAYER_1 as usize] as u64) << 2;
                 round_log_ranks |= (log_ranks[PLAYER_2 as usize] as u64) << 4;
                 round_log_ranks |= (log_ranks[PLAYER_3 as usize] as u64) << 6;
-                if ranks != round_log_ranks{
+                if ranks != round_log_ranks {
                     println!("Skipping Game {} round {}: Calculated ranks do not match parsed ranks. Printing Trick Log:", game_idx, round_num);
                     println!("{}", round_log.to_debug_str(round));
                     DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
@@ -181,7 +194,7 @@ impl DataBase {
                     || round.player_rounds[0].is_double_win_team_2()
                 {
                     assert!(is_double_win);
-                    if parsed_round_result != round.player_rounds[0].round_score(){
+                    if parsed_round_result != round.player_rounds[0].round_score() {
                         println!("Game {} round {}: Parsed round result {:?} does not match calculated round result {:?}(double win). Continuing with our calculated result. Trick Log:", game_idx, round_num, parsed_round_result, round.player_rounds[0].round_score());
                         println!("{}", round_log.to_debug_str(round));
                         game.parsing_flags |= game::FLAG_CHANGED_ROUND_SCORE | game::FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON;
@@ -189,7 +202,7 @@ impl DataBase {
                     }
                 } else {
                     assert!(!is_double_win);
-                    if score.iter().sum::<Score>() != 100{
+                    if score.iter().sum::<Score>() != 100 {
                         println!("Skipping Game {} round {}: Card points {:?} do not add up to 100. Printing Trick Log:", game_idx, round_num, score);
                         println!("{}", round_log.to_debug_str(round));
                         DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
@@ -198,8 +211,14 @@ impl DataBase {
                     if let Some(fixed) = round_log.try_fix_dragon_gifting(&round) {
                         if fixed {
                             //Recalculate card_scores
-                            let new_score = round_log.play_round(round).1;
-                            if new_score.iter().sum::<Score>() != 100{
+                            let res = round_log.play_round(round);
+                            if res.is_err() {
+                                println!("Skipping Game {} round {}: {:?} in play_round.", game_idx, round_num, res.err().unwrap());
+                                DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
+                                continue;
+                            }
+                            let new_score = res.unwrap().1;
+                            if new_score.iter().sum::<Score>() != 100 {
                                 println!("Skipping Game {} round {}: (Recalculated) Card points {:?} do not add up to 100. Printing Trick Log:", game_idx, round_num, new_score);
                                 println!("{}", round_log.to_debug_str(round));
                                 DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
@@ -230,7 +249,6 @@ impl DataBase {
                             println!("Game {} round {}: Parsed round result {:?} does not match calculated round result {:?} (no dragon gift change). Continuing with our calculated result. Trick Log:", game_idx, round_num, parsed_round_result, round.player_rounds[0].round_score());
                             println!("{}", round_log.to_debug_str(round));
                         }
-
                     }
                 }
 
@@ -244,16 +262,16 @@ impl DataBase {
         }
         println!("Correctly parsed {} rounds!", round_count);
         println!("Starting to delete excluded rounds from database! Excluded rounds: {}", exclude_rounds.iter().fold(0, |acc, inc| acc + inc.1.len()));
-        for (game_idx, exclude_rounds) in exclude_rounds.iter(){
+        for (game_idx, exclude_rounds) in exclude_rounds.iter() {
             let game: &mut Game = bsw_id_to_game.get_mut(game_idx).unwrap();
-            if game.rounds.len() == exclude_rounds.len(){
+            if game.rounds.len() == exclude_rounds.len() {
                 println!("Deleting game {} from database! No more rounds.", *game_idx);
                 bsw_id_to_game.remove(game_idx);
                 continue;
             }
             //Assert excluded rounds is sorted.
             assert!(exclude_rounds.is_sorted());
-            for exclude_idx in exclude_rounds.iter().rev(){
+            for exclude_idx in exclude_rounds.iter().rev() {
                 game.rounds.remove(*exclude_idx);
             }
         }
@@ -444,8 +462,31 @@ impl DataBase {
             let mut trick = Trick::default();
             let trick_type_str = parts.next().unwrap();
             trick.trick_type = trick_type_str_to_trick_type(trick_type_str);
+            let cards_in_trick_type = match trick.trick_type {
+                TRICK_SINGLETON | TRICK_DOG => 1,
+                TRICK_PAIRS => 2,
+                TRICK_TRIPLETS => 3,
+                TRICK_PAIRSTREET4 | TRICK_BOMB4 => 4,
+                TRICK_PAIRSTREET6 => 6,
+                TRICK_PAIRSTREET8 => 8,
+                TRICK_PAIRSTREET10 => 10,
+                TRICK_PAIRSTREET12 => 12,
+                TRICK_PAIRSTREET14 => 14,
+                TRICK_STREET5 | TRICK_BOMB5 | TRICK_FULLHOUSE => 5,
+                TRICK_STREET6 | TRICK_BOMB6 => 6,
+                TRICK_STREET7 | TRICK_BOMB7 => 7,
+                TRICK_STREET8 | TRICK_BOMB8 => 8,
+                TRICK_STREET9 | TRICK_BOMB9 => 9,
+                TRICK_STREET10 | TRICK_BOMB10 => 10,
+                TRICK_STREET11 | TRICK_BOMB11 => 11,
+                TRICK_STREET12 | TRICK_BOMB12 => 12,
+                TRICK_STREET13 | TRICK_BOMB13 => 13,
+                TRICK_STREET14  => 14,
+                _ => unreachable!()
+            };
 
             let trick_length = parts.next().unwrap().parse::<usize>().unwrap();
+            trick.trick_log = Vec::with_capacity(trick_length);
             let trick_players: Vec<PlayerIDInternal> = parts.next().unwrap().chars()
                 .map(|c| c.to_digit(10).unwrap() as PlayerIDInternal)
                 .collect();
@@ -457,7 +498,7 @@ impl DataBase {
                 if trick_hand.len() == 0 {
                     continue;
                 }
-                let mut hand = Vec::new();
+                let mut hand = Vec::with_capacity(cards_in_trick_type);
                 let mut hand_bb = 0u64;
                 let mut chars = trick_hand.chars().peekable();
                 while let Some(c) = chars.next() {
