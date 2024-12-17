@@ -17,7 +17,7 @@ pub enum RoundLogIntegrityError{
     Child(usize, TrickIntegrityError),
 }
 impl RoundLog {
-    pub fn integrity_check(&self, round: &Round, game_idx: u32, round_num: usize) -> Result<(), RoundLogIntegrityError>{
+    pub fn integrity_check(&self, round: &Round) -> Result<(), RoundLogIntegrityError>{
         let mut player_hands = round.get_starting_hands();
         let mut prev_player: Option<PlayerIDInternal> = None;
         for (trick_num, trick) in self.log.iter().enumerate() {
@@ -26,7 +26,7 @@ impl RoundLog {
                     return Err(RoundLogIntegrityError::StartTrickIsNotNextInLine {trick_num, starting_player: trick.get_starting_player(), should_start: prev});
                 }
             }
-            trick.integrity_check(&mut player_hands, game_idx, round_num, trick_num).map_err(|x| RoundLogIntegrityError::Child(trick_num, x))?;
+            trick.integrity_check(&mut player_hands).map_err(|x| RoundLogIntegrityError::Child(trick_num, x))?;
             let mut trick_winner = trick.get_trick_winner();
             while player_hands[trick_winner as usize] == 0u64 {
                 trick_winner = (trick_winner + 1) % 4;
@@ -66,7 +66,7 @@ impl RoundLog {
         }
         None
     }
-    pub fn play_round(&self, round: &Round, game: u32, round_num: usize) -> ([Rank; 4], [Score; 4], bool) { //Ranks, CardPoints, double_win
+    pub fn play_round(&self, round: &Round) -> ([Rank; 4], [Score; 4], bool) { //Ranks, CardPoints, double_win
         let mut player_hands = round.get_starting_hands();
         let mut player_scores = [0; 4];
         let mut player_ranks = [RANK_4; 4];
@@ -98,12 +98,6 @@ impl RoundLog {
         player_scores[first_player] += player_scores[fourth_player];
         player_scores[fourth_player] = 0;
         player_scores[third_player] += player_hands[fourth_player].get_card_points();
-        if player_scores.iter().sum::<Score>() != 100 {
-            println!("Score mismatch in {} {}", game, round_num);
-            println!("Player Scores: {:?}", player_scores);
-            println!("Player Ranks: {:?}", player_ranks);
-        }
-        assert_eq!(player_scores.iter().sum::<Score>(), 100);
         (player_ranks, player_scores, false)
     }
     pub fn to_debug_str(&self, round: &Round) -> String {

@@ -64,7 +64,7 @@ pub enum TrickIntegrityError {
 
 }
 impl Trick {
-    pub fn integrity_check(&self, player_hands: &mut [Hand; 4], game: u32, round_num: usize, trick_num: usize) -> Result<(), TrickIntegrityError> {
+    pub fn integrity_check(&self, player_hands: &mut [Hand; 4]) -> Result<(), TrickIntegrityError> {
         if self.trick_log.len() == 0 { return Err(EmptyTrickLog); };
         if self.trick_type == TRICK_DOG && self.trick_log.len() != 1 { return Err(DogTrickTooLong); };
         for (i, card_vec) in self.trick_log.iter().enumerate() {

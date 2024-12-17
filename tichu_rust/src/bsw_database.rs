@@ -121,12 +121,12 @@ impl DataBase {
         let mut round_count_own_gift_fixed: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game
         for (game_idx, game) in bsw_id_to_game.iter_mut() {
-            'A: for j in 0..game.rounds.len(){
-                let (round, round_log) = game.rounds.get_mut(j).unwrap();
-                if exclude_rounds.contains_key(game_idx) && exclude_rounds[game_idx].contains(&j) {
+            'A: for round_num in 0..game.rounds.len(){
+                let (round, round_log) = game.rounds.get_mut(round_num).unwrap();
+                if exclude_rounds.contains_key(game_idx) && exclude_rounds[game_idx].contains(&round_num) {
                     continue;
                 }
-                round_log.integrity_check(round, *game_idx, j);
+                round_log.integrity_check(round);
                 let (mut pr0, mut pr1, mut pr2, mut pr3) = (
                     round.player_rounds[0].extras,
                     round.player_rounds[1].extras,
@@ -153,7 +153,8 @@ impl DataBase {
                 round.player_rounds[3].extras = pr3;
                 round_count += 1;
 
-                let (log_ranks, score, is_double_win) = round_log.play_round(round, *game_idx, j);
+                let (log_ranks, score, is_double_win) = round_log.play_round(round);
+                assert_eq!(score.iter().sum::<Score>(), 100);
                 //Check that the ranks agree with the calculated ranks.
                 let mut round_log_ranks = 0u64;
                 round_log_ranks |= (log_ranks[PLAYER_0 as usize] as u64) << 0;
@@ -164,7 +165,7 @@ impl DataBase {
 
                 //We have two different sources of round result.
                 //First is round_results vector
-                let parsed_round_result = round_results[game_idx][j];
+                let parsed_round_result = round_results[game_idx][round_num];
                 //Second is from the round log + calls points. They must match!
                 let mut card_score_team_1 = score[PLAYER_0 as usize] + score[PLAYER_2 as usize];
 
@@ -184,11 +185,12 @@ impl DataBase {
                             //println!("Gifting dragon in Game {} round {}. Fixed!", *game_idx.0, j);
                             round_count_own_gift_fixed += 1;
                             //Recalculate card_scores
-                            let new_score = round_log.play_round(round, *game_idx, j).1;
+                            let new_score = round_log.play_round(round).1;
+                            assert_eq!(new_score.iter().sum::<Score>(), 100);
                             card_score_team_1 = new_score[PLAYER_0 as usize] + new_score[PLAYER_2 as usize];
                             dragon_gifting_changed = true;
                         } else {
-                            println!("Gifting dragon in Game {} round {}. Not Fixed!", *game_idx, j);
+                            println!("Gifting dragon in Game {} round {}. Not Fixed!", *game_idx, round_num);
                             continue 'A;
                         }
                     }
@@ -198,7 +200,7 @@ impl DataBase {
                     round.player_rounds[2].extras |= ((card_score_team_1 + 25) as u64) << 54;
                     round.player_rounds[3].extras |= ((card_score_team_1 + 25) as u64) << 54;
                     if parsed_round_result != round.player_rounds[0].round_score() {
-                        println! {"In game {} round {}, Round result mismatch: parsed {:?} vs calculated {:?}", *game_idx, j, parsed_round_result, round.player_rounds[0].round_score()};
+                        println! {"In game {} round {}, Round result mismatch: parsed {:?} vs calculated {:?}", *game_idx, round_num, parsed_round_result, round.player_rounds[0].round_score()};
                     }
                     let calc_score = round.player_rounds[0].round_score();
                     assert!(dragon_gifting_changed || parsed_round_result == calc_score);
@@ -206,8 +208,8 @@ impl DataBase {
 
                 if let Some(err) = round.integrity_check().err() {
                     //Any of these errors can not be recovered from. The round is trash.
-                    println!("Skipping Game {} round {}: {:?} in Round integrity check.", game_idx, j, err);
-                    DataBase::add_skip_round(&mut exclude_rounds, game, j);
+                    println!("Skipping Game {} round {}: {:?} in Round integrity check.", game_idx, round_num, err);
+                    DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
                     continue;
                 }
             }

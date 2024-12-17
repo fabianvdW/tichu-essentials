@@ -1,12 +1,20 @@
 use bitcode::{Decode, Encode};
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, Score, PLAYER_0, PLAYER_1, PLAYER_2, PLAYER_3};
+use crate::bsw_binary_format::game::ParsingFlagGame;
 use crate::bsw_binary_format::player_round_hand::{PlayerRoundHand, PlayerRoundHandIntegrityError};
 use crate::bsw_binary_format::round::RoundIntegrityError::{CallsMismatch, CardScoreMismatch, CardScoreTooLarge, ExchangeCardMismatch, IdMismatch, RankMismatch};
 use crate::tichu_hand::{Hand, MASK_ALL};
 
+pub type ParsingFlagRound = u8;
+pub const FLAG_CHANGED_DRAGON: ParsingFlagRound = crate::bsw_binary_format::game::FLAG_CHANGED_DRAGON;
+pub const FLAG_CHANGED_ROUND_SCORE: ParsingFlagRound = crate::bsw_binary_format::game::FLAG_CHANGED_ROUND_SCORE;
+
+pub const FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON: ParsingFlagRound = crate::bsw_binary_format::game::FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON;
+
 #[derive(Encode, Decode, Default)]
 pub struct Round {
     pub player_rounds: [PlayerRoundHand; 4],
+    pub parsing_flags: ParsingFlagRound,
 }
 #[derive(Debug)]
 pub enum RoundIntegrityError {
