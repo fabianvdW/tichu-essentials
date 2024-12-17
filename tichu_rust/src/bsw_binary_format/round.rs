@@ -1,4 +1,5 @@
 use bitcode::{Decode, Encode};
+use datasize::DataSize;
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, Score, PLAYER_0, PLAYER_1, PLAYER_2, PLAYER_3};
 use crate::bsw_binary_format::game::ParsingFlagGame;
 use crate::bsw_binary_format::player_round_hand::{PlayerRoundHand, PlayerRoundHandIntegrityError};
@@ -11,7 +12,7 @@ pub const FLAG_CHANGED_ROUND_SCORE: ParsingFlagRound = crate::bsw_binary_format:
 
 pub const FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON: ParsingFlagRound = crate::bsw_binary_format::game::FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON;
 
-#[derive(Encode, Decode, Default)]
+#[derive(Encode, Decode, Default, DataSize)]
 pub struct Round {
     pub player_rounds: [PlayerRoundHand; 4],
     pub parsing_flags: ParsingFlagRound,

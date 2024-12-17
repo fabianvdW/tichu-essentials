@@ -1,4 +1,5 @@
 use bitcode::{Decode, Encode};
+use datasize::DataSize;
 use crate::hand;
 use crate::tichu_hand::*;
 use crate::bsw_binary_format::binary_format_constants::*;
@@ -26,7 +27,7 @@ impl TaggeCardIndexT for TaggedCardIndex {
     }
 }
 
-#[derive(Encode, Decode, Default)]
+#[derive(Encode, Decode, Default, DataSize)]
 pub struct Trick {
     pub trick_type: TrickType,
     pub trick_log: Vec<Vec<TaggedCardIndex>>,

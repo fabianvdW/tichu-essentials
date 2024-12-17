@@ -1,11 +1,12 @@
 use std::fmt::{Debug, Formatter};
 use bitcode::{Decode, Encode};
+use datasize::DataSize;
 use crate::tichu_hand::*;
 use crate::bsw_binary_format::binary_format_constants::*;
 use crate::bsw_binary_format::{trick::Trick, round::Round};
 use crate::bsw_binary_format::trick::TrickIntegrityError;
 
-#[derive(Encode, Decode, Default)]
+#[derive(Encode, Decode, Default, DataSize)]
 pub struct RoundLog {
     pub mahjong_wish: Option<CardIndex>,
     pub dragon_player_gift: Option<PlayerIDInternal>,

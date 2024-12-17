@@ -9,6 +9,7 @@ colored="2.1.0"
 generic-array = "1.1.1"
 bitcode = "0.6.3"
 memmap2 = "0.9.5"
+datasize = "0.2.15"
 
 [profile.release]
 lto=true

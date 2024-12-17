@@ -1,10 +1,11 @@
 use bitcode::{Decode, Encode};
+use datasize::DataSize;
 use crate::bsw_binary_format::binary_format_constants::*;
 use crate::hand;
 use crate::tichu_hand::{CardIndex, Hand, MASK_ALL};
 use self::PlayerRoundHandIntegrityError::*;
 
-#[derive(Encode, Decode, Default, Debug)]
+#[derive(Encode, Decode, Default, Debug, DataSize)]
 pub struct PlayerRoundHand {
     pub first_8: Hand,
     pub first_14: Hand,

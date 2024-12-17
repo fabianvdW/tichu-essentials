@@ -13,6 +13,8 @@ use std::io::{BufRead, BufReader, Write};
 use crate::bsw_binary_format::{game, round};
 use crate::bsw_binary_format::trick::{TaggeCardIndexT, TaggedCardIndex, Trick};
 use crate::hand;
+use datasize::{data_size, DataSize};
+
 
 pub fn trick_type_str_to_trick_type(trick_type: &str) -> TrickType {
     match trick_type {
@@ -93,7 +95,7 @@ impl DataBase {
 
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Spiel_") {
+            if name.contains("Spiel_570") {
                 DataBase::parse_spiel_file(
                     &mut database,
                     &mut player_str_to_id,
@@ -105,16 +107,17 @@ impl DataBase {
         }
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Runde_") {
+            if name.contains("Runde_570") {
                 DataBase::parse_runde_file(&mut bsw_id_to_game, &mut round_results, &mut exclude_rounds, &name);
             }
         }
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Zugfolge_") {
+            if name.contains("Zugfolge_570") {
                 DataBase::parse_zugfolge_file(&mut bsw_id_to_game, &mut exclude_rounds, &name);
             }
         }
+        println!("Estimated heap size: {}", data_size(&bsw_id_to_game)); // 40644976
         println!("Finished parsing! Starting correction!");
         let mut round_count: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game

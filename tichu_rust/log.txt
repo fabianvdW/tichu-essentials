@@ -1,0 +1,1194 @@
+Estimated heap size: 40644976
+Finished parsing! Starting correction!
+Skipping Game 56015 round 6: Two players of a team both called Grand Tichu.
+Skipping Game 56042 round 5: Two players of a team both called Grand Tichu.
+Game 569947 round 9: Parsed round result (40, 60) does not match calculated round result (15, 85) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 345568889TJJJQ
+P1: 34667789TTTKK🐉
+P2: 22234567QKAA↺1
+P3: 2345799JQQKAA🐦
+Trick 0 with type 21:
+Move 0, Player 2: ↺
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 2:
+Move 0, Player 0: 888
+Move 1, Player 1: TTT
+Move 2, Player 0: JJJ
+Trick 1 trick winner: 0
+-----------------
+Trick 2 with type 0:
+Move 0, Player 0: 3
+Move 1, Player 1: 4
+Move 2, Player 2: Q
+Move 3, Player 3: K
+Trick 2 trick winner: 3
+-----------------
+Trick 3 with type 11:
+Move 0, Player 3: 23457🐦
+Trick 3 trick winner: 3
+-----------------
+Trick 4 with type 1:
+Move 0, Player 3: 99
+Move 1, Player 2: AA
+Trick 4 trick winner: 2
+-----------------
+Trick 5 with type 12:
+Move 0, Player 2: 2345671
+Trick 5 trick winner: 2
+-----------------
+Trick 6 with type 1:
+Move 0, Player 2: 22
+Move 1, Player 3: QQ
+Trick 6 trick winner: 3
+-----------------
+Trick 7 with type 1:
+Move 0, Player 3: AA
+Trick 7 trick winner: 3
+-----------------
+Trick 8 with type 0:
+Move 0, Player 3: J
+Move 1, Player 2: K
+Trick 8 trick winner: 2
+-----------------
+Trick 9 with type 0:
+Move 0, Player 0: 4
+Move 1, Player 1: 8
+Move 2, Player 0: 9
+Move 3, Player 1: K
+Trick 9 trick winner: 1
+-----------------
+Trick 10 with type 0:
+Move 0, Player 1: 3
+Move 1, Player 0: 6
+Move 2, Player 1: 9
+Move 3, Player 0: T
+Move 4, Player 1: K
+Trick 10 trick winner: 1
+-----------------
+Trick 11 with type 4:
+Move 0, Player 1: 6677
+Trick 11 trick winner: 1
+-----------------
+Trick 12 with type 0:
+Move 0, Player 1: 🐉
+Trick 12 trick winner: 1
+-----------------
+
+Game 56453 round 3: Parsed round result (45, 155) does not match calculated round result (-155, 155) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 23456679TJQAAA
+P1: 246799JJQKKKA↺
+P2: 234557888TTQQK
+P3: 233456789TJ🐦🐉1
+Trick 0 with type 16:
+Move 0, Player 3: 23456789TJ1
+Trick 0 trick winner: 3
+-----------------
+Trick 1 with type 0:
+Move 0, Player 3: 3
+Move 1, Player 0: 6
+Move 2, Player 1: 7
+Move 3, Player 3: 🐦
+Move 4, Player 1: Q
+Move 5, Player 2: K
+Move 6, Player 3: 🐉
+Trick 1 trick winner: 3
+-----------------
+Trick 2 with type 11:
+Move 0, Player 0: 234567
+Trick 2 trick winner: 0
+-----------------
+Trick 3 with type 0:
+Move 0, Player 0: 9
+Trick 3 trick winner: 0
+-----------------
+Trick 4 with type 0:
+Move 0, Player 0: T
+Move 1, Player 1: A
+Trick 4 trick winner: 1
+-----------------
+Trick 5 with type 1:
+Move 0, Player 1: 99
+Move 1, Player 2: TT
+Move 2, Player 1: JJ
+Move 3, Player 2: QQ
+Move 4, Player 1: KK
+Move 5, Player 0: AA
+Trick 5 trick winner: 0
+-----------------
+Trick 6 with type 0:
+Move 0, Player 0: Q
+Trick 6 trick winner: 0
+-----------------
+Trick 7 with type 0:
+Move 0, Player 0: A
+Trick 7 trick winner: 0
+-----------------
+Trick 8 with type 0:
+Move 0, Player 0: J
+Trick 8 trick winner: 0
+-----------------
+Trick 9 with type 0:
+Move 0, Player 1: 2
+Move 1, Player 2: 3
+Move 2, Player 1: 4
+Move 3, Player 2: 7
+Move 4, Player 1: K
+Trick 9 trick winner: 1
+-----------------
+Trick 10 with type 21:
+Move 0, Player 1: ↺
+Trick 10 trick winner: 3
+-----------------
+Trick 11 with type 0:
+Move 0, Player 1: 6
+Trick 11 trick winner: 1
+-----------------
+
+Game 56981 round 8: Parsed round result (-85, 85) does not match calculated round result (-85, 285) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 236777789QAA🐦🐉
+P1: 23345TTTJQKKA1
+P2: 2345666888JJK↺
+P3: 24455999TJQQKA
+Trick 0 with type 10:
+Move 0, Player 1: 23451
+Move 1, Player 2: 23456
+Move 2, Player 3: TJQKA
+Trick 0 trick winner: 3
+-----------------
+Trick 1 with type 4:
+Move 0, Player 3: 4455
+Trick 1 trick winner: 3
+-----------------
+Trick 2 with type 0:
+Move 0, Player 3: 2
+Move 1, Player 0: 3
+Move 2, Player 1: K
+Move 3, Player 0: A
+Trick 2 trick winner: 0
+-----------------
+Trick 3 with type 0:
+Move 0, Player 0: 2
+Move 1, Player 1: 3
+Move 2, Player 3: Q
+Move 3, Player 0: A
+Trick 3 trick winner: 0
+-----------------
+Trick 4 with type 0:
+Move 0, Player 0: 6
+Move 1, Player 1: T
+Move 2, Player 0: Q
+Trick 4 trick winner: 0
+-----------------
+Trick 5 with type 0:
+Move 0, Player 0: 8
+Move 1, Player 1: T
+Move 2, Player 0: 🐦
+Trick 5 trick winner: 0
+-----------------
+Trick 6 with type 0:
+Move 0, Player 0: 9
+Move 1, Player 1: TJQKA
+Trick 6 trick winner: 1
+-----------------
+Trick 7 with type 21:
+Move 0, Player 2: ↺
+Trick 7 trick winner: 0
+-----------------
+Trick 8 with type 0:
+Move 0, Player 0: 🐉
+Trick 8 trick winner: 0
+-----------------
+Trick 9 with type 22:
+Move 0, Player 0: 7777
+Trick 9 trick winner: 0
+-----------------
+Trick 10 with type 20:
+Move 0, Player 2: 66888
+Trick 10 trick winner: 2
+-----------------
+Trick 11 with type 1:
+Move 0, Player 2: JJ
+Trick 11 trick winner: 2
+-----------------
+Trick 12 with type 0:
+Move 0, Player 2: K
+Trick 12 trick winner: 2
+-----------------
+
+Game 56777 round 0: Parsed round result (200, 0) does not match calculated round result (200, -200)(double win). Continuing with our calculated result. Trick Log:
+P0: 26777TTTQAA↺🐉1
+P1: 2456789QQQKKAA
+P2: 33344558899JJJ
+P3: 223456689TJKK🐦
+Trick 0 with type 0:
+Move 0, Player 0: 1
+Move 1, Player 1: K
+Move 2, Player 0: A
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 0:
+Move 0, Player 0: 2
+Move 1, Player 3: 6
+Move 2, Player 0: Q
+Move 3, Player 3: K
+Move 4, Player 0: A
+Trick 1 trick winner: 0
+-----------------
+Trick 2 with type 2:
+Move 0, Player 0: 777
+Trick 2 trick winner: 0
+-----------------
+Trick 3 with type 2:
+Move 0, Player 0: TTT
+Move 1, Player 1: QQQ
+Trick 3 trick winner: 1
+-----------------
+Trick 4 with type 11:
+Move 0, Player 1: 456789
+Trick 4 trick winner: 1
+-----------------
+Trick 5 with type 0:
+Move 0, Player 1: 2
+Move 1, Player 0: 6
+Move 2, Player 3: K
+Move 3, Player 0: 🐉
+Trick 5 trick winner: 0
+-----------------
+Trick 6 with type 21:
+Move 0, Player 0: ↺
+Trick 6 trick winner: 2
+-----------------
+Trick 7 with type 20:
+Move 0, Player 2: 33344
+Trick 7 trick winner: 2
+-----------------
+Trick 8 with type 20:
+Move 0, Player 2: 55JJJ
+Trick 8 trick winner: 2
+-----------------
+Trick 9 with type 4:
+Move 0, Player 2: 8899
+Trick 9 trick winner: 2
+-----------------
+
+Game 56292 round 0: Parsed round result (300, 0) does not match calculated round result (300, -200)(double win). Continuing with our calculated result. Trick Log:
+P0: 2277JJKKAAAA↺1
+P1: 23344568899J🐦🐉
+P2: 234555699TJQKK
+P3: 34667788TTTQQQ
+Trick 0 with type 1:
+Move 0, Player 0: 22
+Move 1, Player 1: 33
+Move 2, Player 2: 55
+Move 3, Player 0: 77
+Move 4, Player 1: J🐦
+Move 5, Player 0: KK
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 1:
+Move 0, Player 0: JJ
+Trick 1 trick winner: 0
+-----------------
+Trick 2 with type 0:
+Move 0, Player 0: 1
+Move 1, Player 0: AAAA
+Trick 2 trick winner: 0
+-----------------
+Trick 3 with type 21:
+Move 0, Player 0: ↺
+Trick 3 trick winner: 2
+-----------------
+Trick 4 with type 10:
+Move 0, Player 2: 23456
+Trick 4 trick winner: 2
+-----------------
+Trick 5 with type 10:
+Move 0, Player 2: 9TJQK
+Trick 5 trick winner: 2
+-----------------
+Trick 6 with type 0:
+Move 0, Player 2: 9
+Move 1, Player 3: Q
+Move 2, Player 1: 🐉
+Trick 6 trick winner: 1
+-----------------
+Trick 7 with type 4:
+Move 0, Player 1: 8899
+Trick 7 trick winner: 1
+-----------------
+Trick 8 with type 1:
+Move 0, Player 1: 44
+Trick 8 trick winner: 1
+-----------------
+Trick 9 with type 0:
+Move 0, Player 1: 6
+Move 1, Player 2: K
+Trick 9 trick winner: 2
+-----------------
+
+Skipping Game 56919 round 4: Two players of a team both called Grand Tichu.
+Game 55768 round 3: Parsed round result (100, -100) does not match calculated round result (300, -100) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 256789TTJKKAA↺
+P1: 223445679TJJJ1
+P2: 233344556TQQA🐦
+P3: 67788899QQKKA🐉
+Trick 0 with type 12:
+Move 0, Player 1: 2345671
+Move 1, Player 0: 56789TJ
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 21:
+Move 0, Player 0: ↺
+Trick 1 trick winner: 2
+-----------------
+Trick 2 with type 0:
+Move 0, Player 2: 3
+Move 1, Player 3: 6
+Move 2, Player 0: T
+Move 3, Player 2: A
+Move 4, Player 3: 🐉
+Trick 2 trick winner: 3
+-----------------
+Trick 3 with type 5:
+Move 0, Player 3: 778899
+Trick 3 trick winner: 3
+-----------------
+Trick 4 with type 4:
+Move 0, Player 3: QQKK
+Move 1, Player 0: KKAA
+Trick 4 trick winner: 0
+-----------------
+Trick 5 with type 0:
+Move 0, Player 0: 2
+Move 1, Player 1: 4
+Move 2, Player 2: 6
+Move 3, Player 3: 8
+Move 4, Player 1: 9
+Move 5, Player 2: T
+Move 6, Player 3: A
+Move 7, Player 2: 🐦
+Trick 5 trick winner: 2
+-----------------
+Trick 6 with type 5:
+Move 0, Player 2: 334455
+Trick 6 trick winner: 2
+-----------------
+Trick 7 with type 1:
+Move 0, Player 2: QQ
+Trick 7 trick winner: 2
+-----------------
+Trick 8 with type 0:
+Move 0, Player 2: 2
+Trick 8 trick winner: 2
+-----------------
+
+Game 56128 round 10: Parsed round result (60, 40) does not match calculated round result (60, -160) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 244667888TTJJK
+P1: 2455699TJAA↺🐉1
+P2: 23467899TJQAA🐦
+P3: 23335577QQQKKK
+Trick 0 with type 0:
+Move 0, Player 1: 1
+Move 1, Player 2: 3
+Move 2, Player 0: 7
+Move 3, Player 1: T
+Move 4, Player 0: K
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 0:
+Move 0, Player 0: 2
+Move 1, Player 1: 4
+Move 2, Player 2: 9
+Move 3, Player 1: J
+Move 4, Player 2: A
+Trick 1 trick winner: 2
+-----------------
+Trick 2 with type 14:
+Move 0, Player 2: 46789TJQ🐦
+Trick 2 trick winner: 2
+-----------------
+Trick 3 with type 0:
+Move 0, Player 2: 2
+Move 1, Player 1: 6
+Move 2, Player 2: A
+Trick 3 trick winner: 2
+-----------------
+Trick 4 with type 20:
+Move 0, Player 3: 33355
+Move 1, Player 0: 44888
+Move 2, Player 3: 77QQQ
+Trick 4 trick winner: 3
+-----------------
+Trick 5 with type 2:
+Move 0, Player 3: KKK
+Trick 5 trick winner: 3
+-----------------
+Trick 6 with type 0:
+Move 0, Player 3: 2
+Move 1, Player 1: 5
+Move 2, Player 0: J
+Move 3, Player 1: A
+Trick 6 trick winner: 1
+-----------------
+Trick 7 with type 0:
+Move 0, Player 1: 2
+Move 1, Player 0: J
+Move 2, Player 1: A
+Trick 7 trick winner: 1
+-----------------
+Trick 8 with type 1:
+Move 0, Player 1: 99
+Move 1, Player 0: TT
+Trick 8 trick winner: 0
+-----------------
+Trick 9 with type 1:
+Move 0, Player 0: 66
+Trick 9 trick winner: 0
+-----------------
+
+Skipping Game 55671 round 5: Two players of a team both called Grand Tichu.
+Skipping Game 55833 round 7: Two players of a team both called Grand Tichu.
+Game 55830 round 2: Parsed round result (135, 65) does not match calculated round result (-65, 65) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 456788899TJQ↺1
+P1: 23456667899JQ🐦
+P2: 23334455QQKAA🐉
+P3: 2277TTTJJKKKAA
+Trick 0 with type 13:
+Move 0, Player 0: 456789TJ
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 21:
+Move 0, Player 0: ↺
+Trick 1 trick winner: 2
+-----------------
+Trick 2 with type 0:
+Move 0, Player 2: 2
+Move 1, Player 1: 9
+Move 2, Player 2: K
+Trick 2 trick winner: 2
+-----------------
+Trick 3 with type 5:
+Move 0, Player 2: 334455
+Trick 3 trick winner: 2
+-----------------
+Trick 4 with type 0:
+Move 0, Player 2: 3
+Move 1, Player 1: 6
+Move 2, Player 2: 🐉
+Trick 4 trick winner: 2
+-----------------
+Trick 5 with type 1:
+Move 0, Player 2: AA
+Trick 5 trick winner: 2
+-----------------
+Trick 6 with type 1:
+Move 0, Player 2: QQ
+Trick 6 trick winner: 2
+-----------------
+Trick 7 with type 20:
+Move 0, Player 3: 22TTT
+Trick 7 trick winner: 3
+-----------------
+Trick 8 with type 20:
+Move 0, Player 3: 77KKK
+Trick 8 trick winner: 3
+-----------------
+Trick 9 with type 1:
+Move 0, Player 3: JJ
+Move 1, Player 1: Q🐦
+Trick 9 trick winner: 1
+-----------------
+Trick 10 with type 13:
+Move 0, Player 1: 23456789
+Trick 10 trick winner: 1
+-----------------
+Trick 11 with type 0:
+Move 0, Player 1: 6
+Move 1, Player 0: 9
+Move 2, Player 1: J
+Move 3, Player 3: A
+Trick 11 trick winner: 3
+-----------------
+Trick 12 with type 0:
+Move 0, Player 3: A
+Trick 12 trick winner: 3
+-----------------
+
+Game 55529 round 7: Parsed round result (85, 15) does not match calculated round result (85, 215) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 234678TTTJQKAA
+P1: 34446688TJJA🐦🐉
+P2: 222555777JKA↺1
+P3: 335689999QQQKK
+Trick 0 with type 21:
+Move 0, Player 2: ↺
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 0:
+Move 0, Player 0: 2
+Move 1, Player 1: 3
+Move 2, Player 3: 5
+Move 3, Player 0: 6
+Move 4, Player 1: T
+Move 5, Player 2: J
+Move 6, Player 1: 🐦
+Trick 1 trick winner: 1
+-----------------
+Trick 2 with type 1:
+Move 0, Player 1: 66
+Trick 2 trick winner: 1
+-----------------
+Trick 3 with type 1:
+Move 0, Player 1: 88
+Trick 3 trick winner: 1
+-----------------
+Trick 4 with type 1:
+Move 0, Player 1: JJ
+Trick 4 trick winner: 1
+-----------------
+Trick 5 with type 0:
+Move 0, Player 1: A
+Trick 5 trick winner: 1
+-----------------
+Trick 6 with type 2:
+Move 0, Player 1: 444
+Move 1, Player 2: 555
+Move 2, Player 3: QQQ
+Trick 6 trick winner: 3
+-----------------
+Trick 7 with type 0:
+Move 0, Player 3: 6
+Move 1, Player 0: Q
+Trick 7 trick winner: 0
+-----------------
+Trick 8 with type 0:
+Move 0, Player 0: 8
+Move 1, Player 2: K
+Move 2, Player 1: 🐉
+Trick 8 trick winner: 1
+-----------------
+Trick 9 with type 0:
+Move 0, Player 2: 1
+Move 1, Player 3: 8
+Move 2, Player 0: J
+Trick 9 trick winner: 0
+-----------------
+Trick 10 with type 0:
+Move 0, Player 0: 3
+Trick 10 trick winner: 0
+-----------------
+Trick 11 with type 0:
+Move 0, Player 0: 4
+Trick 11 trick winner: 0
+-----------------
+Trick 12 with type 0:
+Move 0, Player 0: 7
+Trick 12 trick winner: 0
+-----------------
+Trick 13 with type 0:
+Move 0, Player 0: K
+Move 1, Player 3: 9999
+Trick 13 trick winner: 3
+-----------------
+Trick 14 with type 1:
+Move 0, Player 3: 33
+Move 1, Player 0: AA
+Trick 14 trick winner: 0
+-----------------
+Trick 15 with type 2:
+Move 0, Player 0: TTT
+Trick 15 trick winner: 0
+-----------------
+Trick 16 with type 2:
+Move 0, Player 2: 222
+Trick 16 trick winner: 2
+-----------------
+Trick 17 with type 2:
+Move 0, Player 2: 777
+Trick 17 trick winner: 2
+-----------------
+Trick 18 with type 0:
+Move 0, Player 2: A
+Trick 18 trick winner: 2
+-----------------
+
+Skipping Game 56681 round 9: Two players of a team both called Grand Tichu.
+Skipping Game 56768 round 7: Two players of a team both called Grand Tichu.
+Skipping Game 56768 round 8: Two players of a team both called Grand Tichu.
+Skipping Game 55610 round 11: Two players of a team both called Grand Tichu.
+Game 56778 round 9: Parsed round result (-150, 50) does not match calculated round result (-150, -150) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 3346789JQAA🐦↺1
+P1: 22458TJQQKKAA🐉
+P2: 2233456999TQKK
+P3: 4556677788TTJJ
+Trick 0 with type 21:
+Move 0, Player 0: ↺
+Trick 0 trick winner: 2
+-----------------
+Trick 1 with type 0:
+Move 0, Player 2: 2
+Move 1, Player 3: 4
+Move 2, Player 0: J
+Move 3, Player 1: A
+Trick 1 trick winner: 1
+-----------------
+Trick 2 with type 1:
+Move 0, Player 1: 22
+Move 1, Player 3: JJ
+Move 2, Player 2: KK
+Trick 2 trick winner: 2
+-----------------
+Trick 3 with type 0:
+Move 0, Player 2: 3
+Move 1, Player 0: Q
+Move 2, Player 1: K
+Move 3, Player 0: A
+Trick 3 trick winner: 0
+-----------------
+Trick 4 with type 0:
+Move 0, Player 0: 1
+Move 1, Player 1: 5
+Move 2, Player 3: 7
+Move 3, Player 0: A
+Move 4, Player 1: 🐉
+Trick 4 trick winner: 1
+-----------------
+Trick 5 with type 0:
+Move 0, Player 1: 4
+Move 1, Player 2: T
+Move 2, Player 1: Q
+Trick 5 trick winner: 1
+-----------------
+Trick 6 with type 10:
+Move 0, Player 1: TJQKA
+Trick 6 trick winner: 1
+-----------------
+Trick 7 with type 0:
+Move 0, Player 1: 8
+Move 1, Player 2: Q
+Trick 7 trick winner: 2
+-----------------
+Trick 8 with type 2:
+Move 0, Player 2: 999
+Trick 8 trick winner: 2
+-----------------
+Trick 9 with type 10:
+Move 0, Player 2: 23456
+Move 1, Player 0: 4678🐦
+Trick 9 trick winner: 0
+-----------------
+Trick 10 with type 1:
+Move 0, Player 0: 33
+Move 1, Player 3: TT
+Trick 10 trick winner: 3
+-----------------
+Trick 11 with type 6:
+Move 0, Player 3: 55667788
+Trick 11 trick winner: 3
+-----------------
+
+Skipping Game 56785 round 6: Two players of a team both called Grand Tichu.
+Skipping Game 56363 round 10: Two players of a team both called Grand Tichu.
+Skipping Game 56279 round 0: Two players of a team both called Grand Tichu.
+Skipping Game 56948 round 5: Two players of a team both called Grand Tichu.
+Game 56490 round 8: Parsed round result (140, 60) does not match calculated round result (140, -140) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 23348899JJJQ🐉1
+P1: 26778899TJQQKA
+P2: 444555577QKKAA
+P3: 2233666TTTKA🐦↺
+Trick 0 with type 0:
+Move 0, Player 0: 1
+Move 1, Player 1: 2
+Move 2, Player 2: 5555
+Trick 0 trick winner: 2
+-----------------
+Trick 1 with type 20:
+Move 0, Player 2: 44477
+Move 1, Player 3: 22666
+Move 2, Player 0: 33JJJ
+Trick 1 trick winner: 0
+-----------------
+Trick 2 with type 0:
+Move 0, Player 0: 2
+Move 1, Player 1: 7
+Move 2, Player 2: Q
+Move 3, Player 3: K
+Move 4, Player 2: A
+Move 5, Player 3: 🐦
+Move 6, Player 0: 🐉
+Trick 2 trick winner: 0
+-----------------
+Trick 3 with type 0:
+Move 0, Player 0: 4
+Move 1, Player 1: 8
+Move 2, Player 2: A
+Trick 3 trick winner: 2
+-----------------
+Trick 4 with type 1:
+Move 0, Player 2: KK
+Trick 4 trick winner: 2
+-----------------
+Trick 5 with type 20:
+Move 0, Player 3: 33TTT
+Trick 5 trick winner: 3
+-----------------
+Trick 6 with type 0:
+Move 0, Player 3: A
+Trick 6 trick winner: 3
+-----------------
+Trick 7 with type 21:
+Move 0, Player 3: ↺
+Trick 7 trick winner: 1
+-----------------
+Trick 8 with type 13:
+Move 0, Player 1: 6789TJQK
+Trick 8 trick winner: 1
+-----------------
+Trick 9 with type 0:
+Move 0, Player 1: Q
+Trick 9 trick winner: 1
+-----------------
+Trick 10 with type 0:
+Move 0, Player 1: 9
+Move 1, Player 0: Q
+Move 2, Player 1: A
+Trick 10 trick winner: 1
+-----------------
+
+Skipping Game 56276 round 10: Two players of a team both called Grand Tichu.
+Game 55525 round 0: Parsed round result (200, 0) does not match calculated round result (200, -200)(double win). Continuing with our calculated result. Trick Log:
+P0: 2347788TTJKAA🐉
+P1: 2366678TJJKKK1
+P2: 33567999JQQAA↺
+P3: 2244455589TQQ🐦
+Trick 0 with type 0:
+Move 0, Player 1: 1
+Move 1, Player 2: 3
+Move 2, Player 3: 4
+Move 3, Player 1: 7
+Move 4, Player 2: J
+Trick 0 trick winner: 2
+-----------------
+Trick 1 with type 0:
+Move 0, Player 2: 3
+Move 1, Player 3: 8
+Move 2, Player 0: J
+Trick 1 trick winner: 0
+-----------------
+Trick 2 with type 0:
+Move 0, Player 0: 2
+Move 1, Player 1: 3
+Move 2, Player 2: 5
+Move 3, Player 3: 9
+Move 4, Player 1: T
+Move 5, Player 2: Q
+Trick 2 trick winner: 2
+-----------------
+Trick 3 with type 0:
+Move 0, Player 2: 6
+Move 1, Player 3: T
+Move 2, Player 2: Q
+Trick 3 trick winner: 2
+-----------------
+Trick 4 with type 0:
+Move 0, Player 2: 7
+Move 1, Player 1: 8
+Move 2, Player 2: A
+Trick 4 trick winner: 2
+-----------------
+Trick 5 with type 2:
+Move 0, Player 2: 999
+Trick 5 trick winner: 2
+-----------------
+Trick 6 with type 21:
+Move 0, Player 2: ↺
+Trick 6 trick winner: 0
+-----------------
+Trick 7 with type 0:
+Move 0, Player 0: 3
+Move 1, Player 1: J
+Move 2, Player 2: A
+Move 3, Player 0: 🐉
+Trick 7 trick winner: 0
+-----------------
+Trick 8 with type 0:
+Move 0, Player 0: 4
+Move 1, Player 1: J
+Move 2, Player 0: K
+Trick 8 trick winner: 0
+-----------------
+Trick 9 with type 1:
+Move 0, Player 0: TT
+Move 1, Player 1: KK
+Move 2, Player 0: AA
+Trick 9 trick winner: 0
+-----------------
+Trick 10 with type 4:
+Move 0, Player 0: 7788
+Trick 10 trick winner: 0
+-----------------
+
+Skipping Game 56632 round 8: Two players of a team both called Grand Tichu.
+Game 569436 round 11: Parsed round result (130, -130) does not match calculated round result (155, -155) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 4456789TJQQAA🐦
+P1: 55567779JJQKKK
+P2: 223448TTQKAA↺🐉
+P3: 22333668899TJ1
+Trick 0 with type 0:
+Move 0, Player 3: 1
+Move 1, Player 0: 4
+Move 2, Player 1: 6
+Move 3, Player 2: 8
+Move 4, Player 3: T
+Move 5, Player 0: A
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 14:
+Move 0, Player 0: 456789TJQ
+Trick 1 trick winner: 0
+-----------------
+Trick 2 with type 1:
+Move 0, Player 0: A🐦
+Trick 2 trick winner: 0
+-----------------
+Trick 3 with type 0:
+Move 0, Player 0: Q
+Move 1, Player 2: K
+Trick 3 trick winner: 2
+-----------------
+Trick 4 with type 21:
+Move 0, Player 2: ↺
+Trick 4 trick winner: 0
+-----------------
+Trick 5 with type 0:
+Move 0, Player 1: Q
+Move 1, Player 2: A
+Trick 5 trick winner: 2
+-----------------
+Trick 6 with type 1:
+Move 0, Player 2: 22
+Move 1, Player 3: 66
+Move 2, Player 1: JJ
+Trick 6 trick winner: 1
+-----------------
+Trick 7 with type 2:
+Move 0, Player 1: 555
+Trick 7 trick winner: 1
+-----------------
+Trick 8 with type 2:
+Move 0, Player 1: 777
+Trick 8 trick winner: 1
+-----------------
+Trick 9 with type 2:
+Move 0, Player 1: KKK
+Trick 9 trick winner: 1
+-----------------
+Trick 10 with type 0:
+Move 0, Player 1: 9
+Move 1, Player 2: Q
+Trick 10 trick winner: 2
+-----------------
+Trick 11 with type 0:
+Move 0, Player 2: 3
+Move 1, Player 3: J
+Move 2, Player 2: A
+Trick 11 trick winner: 2
+-----------------
+Trick 12 with type 1:
+Move 0, Player 2: 44
+Move 1, Player 3: 99
+Move 2, Player 2: TT
+Trick 12 trick winner: 2
+-----------------
+Trick 13 with type 0:
+Move 0, Player 2: 🐉
+Trick 13 trick winner: 2
+-----------------
+
+Skipping Game 55614 round 5: Two players of a team both called Grand Tichu.
+Game 569679 round 12: Parsed round result (45, 55) does not match calculated round result (70, 30) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 235677788QQA🐦🐉
+P1: 23344689TTJJQK
+P2: 355599TJQKAAA1
+P3: 224466789TJKK↺
+Trick 0 with type 0:
+Move 0, Player 2: 1
+Move 1, Player 3: 6
+Move 2, Player 2: A
+Trick 0 trick winner: 2
+-----------------
+Trick 1 with type 20:
+Move 0, Player 2: 55599
+Trick 1 trick winner: 2
+-----------------
+Trick 2 with type 10:
+Move 0, Player 2: TJQKA
+Trick 2 trick winner: 2
+-----------------
+Trick 3 with type 0:
+Move 0, Player 2: 3
+Move 1, Player 1: K
+Move 2, Player 2: A
+Trick 3 trick winner: 2
+-----------------
+Trick 4 with type 21:
+Move 0, Player 3: ↺
+Trick 4 trick winner: 1
+-----------------
+Trick 5 with type 4:
+Move 0, Player 1: 3344
+Move 1, Player 0: 7788
+Move 2, Player 1: TTJJ
+Trick 5 trick winner: 1
+-----------------
+Trick 6 with type 0:
+Move 0, Player 1: 2
+Move 1, Player 0: A
+Trick 6 trick winner: 0
+-----------------
+Trick 7 with type 1:
+Move 0, Player 0: QQ
+Move 1, Player 3: KK
+Trick 7 trick winner: 3
+-----------------
+Trick 8 with type 1:
+Move 0, Player 3: 22
+Trick 8 trick winner: 3
+-----------------
+Trick 9 with type 11:
+Move 0, Player 3: 6789TJ
+Trick 9 trick winner: 3
+-----------------
+Trick 10 with type 1:
+Move 0, Player 3: 44
+Trick 10 trick winner: 3
+-----------------
+Trick 11 with type 11:
+Move 0, Player 0: 23567🐦
+Trick 11 trick winner: 0
+-----------------
+Trick 12 with type 0:
+Move 0, Player 0: 🐉
+Trick 12 trick winner: 0
+-----------------
+
+Game 55808 round 1: Parsed round result (60, 140) does not match calculated round result (-140, 140) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 222349QQKKKA🐉1
+P1: 33456789TTTJA↺
+P2: 2345556677889J
+P3: 46789TJJQQKAA🐦
+Trick 0 with type 0:
+Move 0, Player 0: 1
+Move 1, Player 1: 5
+Move 2, Player 3: J
+Move 3, Player 0: A
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 0:
+Move 0, Player 0: 3
+Move 1, Player 1: 4
+Move 2, Player 2: 5
+Move 3, Player 3: Q
+Trick 1 trick winner: 3
+-----------------
+Trick 2 with type 16:
+Move 0, Player 3: 46789TJQKA🐦
+Trick 2 trick winner: 3
+-----------------
+Trick 3 with type 0:
+Move 0, Player 3: A
+Trick 3 trick winner: 3
+-----------------
+Trick 4 with type 0:
+Move 0, Player 0: 4
+Move 1, Player 1: T
+Move 2, Player 2: J
+Trick 4 trick winner: 2
+-----------------
+Trick 5 with type 12:
+Move 0, Player 2: 2345678
+Trick 5 trick winner: 2
+-----------------
+Trick 6 with type 10:
+Move 0, Player 2: 56789
+Move 1, Player 1: 6789T
+Trick 6 trick winner: 1
+-----------------
+Trick 7 with type 1:
+Move 0, Player 1: 33
+Move 1, Player 0: QQ
+Trick 7 trick winner: 0
+-----------------
+Trick 8 with type 2:
+Move 0, Player 0: 222
+Trick 8 trick winner: 0
+-----------------
+Trick 9 with type 2:
+Move 0, Player 0: KKK
+Trick 9 trick winner: 0
+-----------------
+Trick 10 with type 0:
+Move 0, Player 0: 🐉
+Trick 10 trick winner: 0
+-----------------
+Trick 11 with type 0:
+Move 0, Player 0: 9
+Trick 11 trick winner: 0
+-----------------
+
+Game 56105 round 8: Parsed round result (20, 180) does not match calculated round result (-180, 180) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 2344455TTJJJQA
+P1: 2556789QKKAA🐦🐉
+P2: 223377999TTQQK
+P3: 346667888JKA↺1
+Trick 0 with type 0:
+Move 0, Player 3: 1
+Move 1, Player 0: 2
+Move 2, Player 1: 5
+Move 3, Player 2: K
+Move 4, Player 0: A
+Move 5, Player 1: 🐉
+Trick 0 trick winner: 1
+-----------------
+Trick 1 with type 0:
+Move 0, Player 1: 2
+Move 1, Player 3: 3
+Move 2, Player 0: Q
+Move 3, Player 1: A
+Trick 1 trick winner: 1
+-----------------
+Trick 2 with type 10:
+Move 0, Player 1: 56789
+Trick 2 trick winner: 1
+-----------------
+Trick 3 with type 4:
+Move 0, Player 1: QKK🐦
+Trick 3 trick winner: 1
+-----------------
+Trick 4 with type 0:
+Move 0, Player 1: A
+Trick 4 trick winner: 1
+-----------------
+Trick 5 with type 4:
+Move 0, Player 2: 2233
+Trick 5 trick winner: 2
+-----------------
+Trick 6 with type 20:
+Move 0, Player 2: 999TT
+Trick 6 trick winner: 2
+-----------------
+Trick 7 with type 1:
+Move 0, Player 2: QQ
+Trick 7 trick winner: 2
+-----------------
+Trick 8 with type 1:
+Move 0, Player 2: 77
+Move 1, Player 0: TT
+Trick 8 trick winner: 0
+-----------------
+Trick 9 with type 2:
+Move 0, Player 0: 444
+Move 1, Player 3: 666
+Trick 9 trick winner: 3
+-----------------
+Trick 10 with type 21:
+Move 0, Player 3: ↺
+Trick 10 trick winner: 1
+-----------------
+Trick 11 with type 0:
+Move 0, Player 3: 4
+Move 1, Player 0: J
+Move 2, Player 3: K
+Trick 11 trick winner: 3
+-----------------
+Trick 12 with type 0:
+Move 0, Player 3: 7
+Move 1, Player 0: J
+Move 2, Player 3: A
+Trick 12 trick winner: 3
+-----------------
+Trick 13 with type 2:
+Move 0, Player 3: 888
+Trick 13 trick winner: 3
+-----------------
+Trick 14 with type 0:
+Move 0, Player 3: J
+Trick 14 trick winner: 3
+-----------------
+
+Skipping Game 55722 round 2: Two players of a team both called Grand Tichu.
+Skipping Game 56045 round 7: Two players of a team both called Grand Tichu.
+Game 56923 round 7: Parsed round result (20, 280) does not match calculated round result (-180, 280) (no dragon gift change). Continuing with our calculated result. Trick Log:
+P0: 2234556789JQ🐉1
+P1: 566TTJJKKAAA🐦↺
+P2: 2233567889QQQK
+P3: 344477899TTJKA
+Trick 0 with type 14:
+Move 0, Player 0: 234567891
+Trick 0 trick winner: 0
+-----------------
+Trick 1 with type 0:
+Move 0, Player 0: 2
+Move 1, Player 1: 5
+Move 2, Player 2: 8
+Move 3, Player 0: J
+Move 4, Player 1: A
+Trick 1 trick winner: 1
+-----------------
+Trick 2 with type 1:
+Move 0, Player 1: 66
+Move 1, Player 2: QQ
+Move 2, Player 1: KK
+Trick 2 trick winner: 1
+-----------------
+Trick 3 with type 4:
+Move 0, Player 1: TTJJ
+Trick 3 trick winner: 1
+-----------------
+Trick 4 with type 2:
+Move 0, Player 1: AA🐦
+Trick 4 trick winner: 1
+-----------------
+Trick 5 with type 21:
+Move 0, Player 1: ↺
+Trick 5 trick winner: 3
+-----------------
+Trick 6 with type 0:
+Move 0, Player 3: 3
+Move 1, Player 0: 5
+Move 2, Player 2: Q
+Move 3, Player 3: K
+Move 4, Player 0: 🐉
+Trick 6 trick winner: 0
+-----------------
+Trick 7 with type 0:
+Move 0, Player 0: Q
+Move 1, Player 3: A
+Trick 7 trick winner: 3
+-----------------
+Trick 8 with type 4:
+Move 0, Player 3: 99TT
+Trick 8 trick winner: 3
+-----------------
+Trick 9 with type 20:
+Move 0, Player 3: 44477
+Trick 9 trick winner: 3
+-----------------
+Trick 10 with type 0:
+Move 0, Player 3: 8
+Move 1, Player 2: K
+Trick 10 trick winner: 2
+-----------------
+Trick 11 with type 10:
+Move 0, Player 2: 56789
+Trick 11 trick winner: 2
+-----------------
+Trick 12 with type 4:
+Move 0, Player 2: 2233
+Trick 12 trick winner: 2
+-----------------
+
+Skipping Game 56154 round 2: Two players of a team both called Grand Tichu.
+Skipping Game 56643 round 13: Two players of a team both called Grand Tichu.
+Correctly parsed 29462 rounds!
+Starting to delete excluded rounds from database! Excluded rounds: 20

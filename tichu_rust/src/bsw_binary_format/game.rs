@@ -1,4 +1,5 @@
 use bitcode::{Decode, Encode};
+use datasize::DataSize;
 use crate::bsw_binary_format::binary_format_constants::*;
 use crate::bsw_binary_format::round::Round;
 use crate::bsw_binary_format::round_log::RoundLog;
@@ -11,7 +12,7 @@ pub const FLAG_NO_WINNER_BSW: ParsingFlagGame = 0b1000; //There is no winner acc
 pub const FLAG_GAME_STOPPED_WITHIN_ROUND: ParsingFlagGame = 0b10000; //Zugfolge_.csv contains a started round which was not finished playing.
 pub const FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON: ParsingFlagGame = 0b100000; //Whenever a RoundScore was changed compared to BSW result without the dragon gift changing. These games should be looked at carefully.
 
-#[derive(Encode, Decode)]
+#[derive(Encode, Decode, DataSize)]
 pub struct Game {
     pub rounds: Vec<(Round, RoundLog)>,
     pub player_ids: [PlayerIDGlobal; 4],
