@@ -3,34 +3,34 @@ use datasize::DataSize;
 use crate::hand;
 use crate::tichu_hand::*;
 use crate::bsw_binary_format::binary_format_constants::*;
-use crate::bsw_binary_format::trick::TrickIntegrityError::{DogTrickTooLong, EmptyPlayedHand, EmptyTrickLog, HandNoType, HandNotAvailable, HandTooSmall, HandWrongTrickType, ImplementationBug, PlayedHandPlayerTagMismatch, TwiceInARowNoBomb};
+use crate::bsw_binary_format::trick::TrickIntegrityError::{DogTrickTooLong, EmptyPlayedHand, EmptyTrickLog, HandNoType, HandNotAvailable, HandTooSmall, HandWrongTrickType, ImplementationBug, TwiceInARowNoBomb};
 use crate::street_detection_tricks::phoenix_used_as_street_extension;
 
-pub type TaggedCardIndex = u8; //Lower 6 bits are CardIndex, upper 2 CardIndex are Tag
+pub type TaggedHand = u64; //Lower 6 bits are CardIndex, upper 2 CardIndex are Tag
 
-pub trait TaggeCardIndexT {
-    fn construct(player: PlayerIDInternal, card_index: CardIndex) -> Self;
+pub trait TaggedHandT {
+    fn construct(player: PlayerIDInternal, hand: Hand) -> Self;
     fn get_player(&self) -> PlayerIDInternal;
-    fn get_card(&self) -> CardIndex;
+    fn get_hand(&self) -> Hand;
 }
-impl TaggeCardIndexT for TaggedCardIndex {
-    fn construct(player: PlayerIDInternal, card_index: CardIndex) -> Self {
-        card_index | (player as u8) << 6
+impl TaggedHandT for TaggedHand {
+    fn construct(player: PlayerIDInternal, hand: Hand) -> Self {
+        hand | (player as u64) << 14
     }
 
     fn get_player(&self) -> PlayerIDInternal {
-        ((self >> 6) & 0b11u8) as PlayerIDInternal
+        ((self >> 14) & 0b11u64) as PlayerIDInternal
     }
 
-    fn get_card(&self) -> CardIndex {
-        self & 0x3F
+    fn get_hand(&self) -> Hand {
+        self & MASK_ALL
     }
 }
 
 #[derive(Encode, Decode, Default, DataSize)]
 pub struct Trick {
     pub trick_type: TrickType,
-    pub trick_log: Vec<Vec<TaggedCardIndex>>,
+    pub trick_log: Vec<Hand>,
 }
 pub struct TrickIterator<'a> {
     trick: &'a Trick,
@@ -55,7 +55,6 @@ pub enum TrickIntegrityError {
     EmptyTrickLog,
     DogTrickTooLong,
     EmptyPlayedHand(usize), //Move Index into trick_log
-    PlayedHandPlayerTagMismatch(usize), //Move Index into_trick_log
     HandNotAvailable { hand: String, available_hand: String, player: PlayerIDInternal, move_idx: usize },
     HandNoType(String, PlayerIDInternal, usize),
     HandWrongTrickType(String, PlayerIDInternal, usize, HandType, TrickType),
@@ -68,9 +67,8 @@ impl Trick {
     pub fn integrity_check(&self, player_hands: &mut [Hand; 4]) -> Result<(), TrickIntegrityError> {
         if self.trick_log.len() == 0 { return Err(EmptyTrickLog); };
         if self.trick_type == TRICK_DOG && self.trick_log.len() != 1 { return Err(DogTrickTooLong); };
-        for (i, card_vec) in self.trick_log.iter().enumerate() {
-            if card_vec.len() == 0 { return Err(EmptyPlayedHand(i)); };
-            if card_vec.iter().any(|x| x.get_player() != card_vec[0].get_player()) { return Err(PlayedHandPlayerTagMismatch(i)); };
+        for (i, t_hand) in self.trick_log.iter().enumerate() {
+            if t_hand.get_hand() == 0 { return Err(EmptyPlayedHand(i)); };
         }
         //Check that hand type of every played hand matches the trick type. In case of bombs, trick type can upgrade!
         //Also check that every card that is played can be played by player.
@@ -133,10 +131,10 @@ impl Trick {
         TrickIterator { trick: self, current_index: 0 }
     }
     pub fn get_player(&self, index: usize) -> PlayerIDInternal {
-        self.trick_log[index][0].get_player()
+        self.trick_log[index].get_player()
     }
     pub fn get_hand(&self, index: usize) -> Hand {
-        self.trick_log[index].iter().fold(0u64, |acc, inc| acc | hand!(inc.get_card()))
+        self.trick_log[index].get_hand()
     }
     pub fn played_cards(&self) -> Hand {
         let mut res = 0u64;

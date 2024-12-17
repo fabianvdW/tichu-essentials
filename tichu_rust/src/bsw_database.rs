@@ -11,7 +11,7 @@ use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use crate::bsw_binary_format::{game, round};
-use crate::bsw_binary_format::trick::{TaggeCardIndexT, TaggedCardIndex, Trick};
+use crate::bsw_binary_format::trick::{TaggedHandT, TaggedHand, Trick};
 use crate::hand;
 use datasize::{data_size, DataSize};
 
@@ -95,7 +95,7 @@ impl DataBase {
 
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Spiel_570") {
+            if name.contains("Spiel_") {
                 DataBase::parse_spiel_file(
                     &mut database,
                     &mut player_str_to_id,
@@ -107,17 +107,17 @@ impl DataBase {
         }
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Runde_570") {
+            if name.contains("Runde_") {
                 DataBase::parse_runde_file(&mut bsw_id_to_game, &mut round_results, &mut exclude_rounds, &name);
             }
         }
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Zugfolge_570") {
+            if name.contains("Zugfolge_") {
                 DataBase::parse_zugfolge_file(&mut bsw_id_to_game, &mut exclude_rounds, &name);
             }
         }
-        println!("Estimated heap size: {}", data_size(&bsw_id_to_game)); // 40644976
+        println!("Estimated heap size: {}", data_size(&bsw_id_to_game)); // 26809536
         println!("Finished parsing! Starting correction!");
         let mut round_count: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game
@@ -465,28 +465,6 @@ impl DataBase {
             let mut trick = Trick::default();
             let trick_type_str = parts.next().unwrap();
             trick.trick_type = trick_type_str_to_trick_type(trick_type_str);
-            let cards_in_trick_type = match trick.trick_type {
-                TRICK_SINGLETON | TRICK_DOG => 1,
-                TRICK_PAIRS => 2,
-                TRICK_TRIPLETS => 3,
-                TRICK_PAIRSTREET4 | TRICK_BOMB4 => 4,
-                TRICK_PAIRSTREET6 => 6,
-                TRICK_PAIRSTREET8 => 8,
-                TRICK_PAIRSTREET10 => 10,
-                TRICK_PAIRSTREET12 => 12,
-                TRICK_PAIRSTREET14 => 14,
-                TRICK_STREET5 | TRICK_BOMB5 | TRICK_FULLHOUSE => 5,
-                TRICK_STREET6 | TRICK_BOMB6 => 6,
-                TRICK_STREET7 | TRICK_BOMB7 => 7,
-                TRICK_STREET8 | TRICK_BOMB8 => 8,
-                TRICK_STREET9 | TRICK_BOMB9 => 9,
-                TRICK_STREET10 | TRICK_BOMB10 => 10,
-                TRICK_STREET11 | TRICK_BOMB11 => 11,
-                TRICK_STREET12 | TRICK_BOMB12 => 12,
-                TRICK_STREET13 | TRICK_BOMB13 => 13,
-                TRICK_STREET14  => 14,
-                _ => unreachable!()
-            };
 
             let trick_length = parts.next().unwrap().parse::<usize>().unwrap();
             trick.trick_log = Vec::with_capacity(trick_length);
@@ -501,12 +479,10 @@ impl DataBase {
                 if trick_hand.len() == 0 {
                     continue;
                 }
-                let mut hand = Vec::with_capacity(cards_in_trick_type);
                 let mut hand_bb = 0u64;
                 let mut chars = trick_hand.chars().peekable();
                 while let Some(c) = chars.next() {
                     let new_card_index = TICHU_ONE_ENCODING[&c];
-                    hand.push(TaggedCardIndex::construct(trick_players[i], new_card_index));
                     let new_card = hand!(new_card_index);
                     assert_eq!(new_card & hand_bb, 0u64);
                     hand_bb ^= new_card;
@@ -529,7 +505,7 @@ impl DataBase {
                         assert!(chars.next().is_none());
                     }
                 }
-                trick.trick_log.push(hand);
+                trick.trick_log.push(TaggedHand::construct(trick_players[i], hand_bb));
             }
 
             assert_eq!(trick.trick_log.len(), trick_length);
