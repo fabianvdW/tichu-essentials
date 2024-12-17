@@ -1,5 +1,5 @@
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDGlobal, Score, PLAYER_0, PLAYER_1, PLAYER_2, PLAYER_3, CALL_TICHU, CALL_GRAND_TICHU, CALL_NONE, PlayerIDInternal, Rank};
-use crate::bsw_binary_format::game::{Game, FLAG_EXCLUDED_ROUND, FLAG_GAME_STOPPED_WITHIN_ROUND, FLAG_NO_WINNER_BSW};
+use crate::bsw_binary_format::game::{Game,  FLAG_EXCLUDED_ROUND, FLAG_GAME_STOPPED_WITHIN_ROUND, FLAG_NO_WINNER_BSW};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_binary_format::round::Round;
 use crate::bsw_binary_format::round_log::RoundLog;
@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
+use crate::bsw_binary_format::{game, round};
 use crate::bsw_binary_format::trick::{TaggeCardIndexT, TaggedCardIndex, Trick};
 use crate::hand;
 
@@ -88,12 +89,11 @@ impl DataBase {
         let mut player_str_to_id: HashMap<String, PlayerIDGlobal> = HashMap::new();
         let mut bsw_id_to_game: HashMap<u32, Game> = HashMap::new();
         let mut round_results: HashMap<u32, Vec<(Score, Score)>> = HashMap::new();
-        //let mut exclude_games: HashMap<u32, bool> = HashMap::new();
         let mut exclude_rounds: HashMap<u32, Vec<usize>> = HashMap::new();
 
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Spiel_1002000") {
+            if name.contains("Spiel_") {
                 DataBase::parse_spiel_file(
                     &mut database,
                     &mut player_str_to_id,
@@ -105,28 +105,32 @@ impl DataBase {
         }
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Runde_1002000") {
+            if name.contains("Runde_") {
                 DataBase::parse_runde_file(&mut bsw_id_to_game, &mut round_results, &mut exclude_rounds, &name);
             }
         }
         for path in fs::read_dir("../tichulog_csv/")? {
             let name = path?.path().display().to_string();
-            if name.contains("Zugfolge_1002000") {
+            if name.contains("Zugfolge_") {
                 DataBase::parse_zugfolge_file(&mut bsw_id_to_game, &mut exclude_rounds, &name);
             }
         }
         let mut round_count: usize = 0;
-        let mut round_count_dw: usize = 0;
-        let mut round_count_own_gift: usize = 0;
-        let mut round_count_own_gift_fixed: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game
         for (game_idx, game) in bsw_id_to_game.iter_mut() {
-            'A: for round_num in 0..game.rounds.len(){
+            for round_num in 0..game.rounds.len(){
+                round_count += 1;
                 let (round, round_log) = game.rounds.get_mut(round_num).unwrap();
                 if exclude_rounds.contains_key(game_idx) && exclude_rounds[game_idx].contains(&round_num) {
                     continue;
                 }
-                round_log.integrity_check(round);
+                if let Some(err) = round_log.integrity_check(round).err() {
+                    //Any of these errors can not be recovered from. The round is trash.
+                    println!("Skipping Game {} round {}: {:?} in round_log integrity check. Printing Trick Log:", game_idx, round_num, err);
+                    println!("{}", round_log.to_debug_str(round));
+                    DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
+                    continue;
+                }
                 let (mut pr0, mut pr1, mut pr2, mut pr3) = (
                     round.player_rounds[0].extras,
                     round.player_rounds[1].extras,
@@ -151,17 +155,20 @@ impl DataBase {
                 round.player_rounds[1].extras = pr1;
                 round.player_rounds[2].extras = pr2;
                 round.player_rounds[3].extras = pr3;
-                round_count += 1;
 
                 let (log_ranks, score, is_double_win) = round_log.play_round(round);
-                assert_eq!(score.iter().sum::<Score>(), 100);
                 //Check that the ranks agree with the calculated ranks.
                 let mut round_log_ranks = 0u64;
                 round_log_ranks |= (log_ranks[PLAYER_0 as usize] as u64) << 0;
                 round_log_ranks |= (log_ranks[PLAYER_1 as usize] as u64) << 2;
                 round_log_ranks |= (log_ranks[PLAYER_2 as usize] as u64) << 4;
                 round_log_ranks |= (log_ranks[PLAYER_3 as usize] as u64) << 6;
-                assert_eq!(ranks, round_log_ranks);
+                if ranks != round_log_ranks{
+                    println!("Skipping Game {} round {}: Calculated ranks do not match parsed ranks. Printing Trick Log:", game_idx, round_num);
+                    println!("{}", round_log.to_debug_str(round));
+                    DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
+                    continue;
+                }
 
                 //We have two different sources of round result.
                 //First is round_results vector
@@ -174,24 +181,38 @@ impl DataBase {
                     || round.player_rounds[0].is_double_win_team_2()
                 {
                     assert!(is_double_win);
-                    assert_eq!(parsed_round_result, round.player_rounds[0].round_score());
-                    round_count_dw += 1;
+                    if parsed_round_result != round.player_rounds[0].round_score(){
+                        println!("Game {} round {}: Parsed round result {:?} does not match calculated round result {:?}(double win). Continuing with our calculated result. Trick Log:", game_idx, round_num, parsed_round_result, round.player_rounds[0].round_score());
+                        println!("{}", round_log.to_debug_str(round));
+                        game.parsing_flags |= game::FLAG_CHANGED_ROUND_SCORE | game::FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON;
+                        round.parsing_flags |= round::FLAG_CHANGED_ROUND_SCORE | round::FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON;
+                    }
                 } else {
                     assert!(!is_double_win);
-                    let mut dragon_gifting_changed: bool = false;
+                    if score.iter().sum::<Score>() != 100{
+                        println!("Skipping Game {} round {}: Card points {:?} do not add up to 100. Printing Trick Log:", game_idx, round_num, score);
+                        println!("{}", round_log.to_debug_str(round));
+                        DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
+                        continue;
+                    }
                     if let Some(fixed) = round_log.try_fix_dragon_gifting(&round) {
-                        round_count_own_gift += 1;
                         if fixed {
-                            //println!("Gifting dragon in Game {} round {}. Fixed!", *game_idx.0, j);
-                            round_count_own_gift_fixed += 1;
                             //Recalculate card_scores
                             let new_score = round_log.play_round(round).1;
-                            assert_eq!(new_score.iter().sum::<Score>(), 100);
+                            if new_score.iter().sum::<Score>() != 100{
+                                println!("Skipping Game {} round {}: (Recalculated) Card points {:?} do not add up to 100. Printing Trick Log:", game_idx, round_num, new_score);
+                                println!("{}", round_log.to_debug_str(round));
+                                DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
+                                continue;
+                            }
+                            game.parsing_flags |= game::FLAG_CHANGED_DRAGON;
+                            round.parsing_flags |= round::FLAG_CHANGED_DRAGON;
                             card_score_team_1 = new_score[PLAYER_0 as usize] + new_score[PLAYER_2 as usize];
-                            dragon_gifting_changed = true;
                         } else {
-                            println!("Gifting dragon in Game {} round {}. Not Fixed!", *game_idx, round_num);
-                            continue 'A;
+                            println!("Skipping Game {} round {}: Dragon gifting can not be fixed. Printing Trick Log:", game_idx, round_num);
+                            println!("{}", round_log.to_debug_str(round));
+                            DataBase::add_skip_round(&mut exclude_rounds, game, round_num);
+                            continue;
                         }
                     }
                     assert!(card_score_team_1 >= -25);
@@ -200,10 +221,17 @@ impl DataBase {
                     round.player_rounds[2].extras |= ((card_score_team_1 + 25) as u64) << 54;
                     round.player_rounds[3].extras |= ((card_score_team_1 + 25) as u64) << 54;
                     if parsed_round_result != round.player_rounds[0].round_score() {
-                        println! {"In game {} round {}, Round result mismatch: parsed {:?} vs calculated {:?}", *game_idx, round_num, parsed_round_result, round.player_rounds[0].round_score()};
+                        let dragon_changed = round.parsing_flags & round::FLAG_CHANGED_DRAGON != 0;
+                        game.parsing_flags |= game::FLAG_CHANGED_ROUND_SCORE;
+                        round.parsing_flags |= round::FLAG_CHANGED_ROUND_SCORE;
+                        if !dragon_changed {
+                            game.parsing_flags |= game::FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON;
+                            round.parsing_flags |= round::FLAG_CHANGED_ROUND_SCORE_WITHOUT_DRAGON;
+                            println!("Game {} round {}: Parsed round result {:?} does not match calculated round result {:?} (no dragon gift change). Continuing with our calculated result. Trick Log:", game_idx, round_num, parsed_round_result, round.player_rounds[0].round_score());
+                            println!("{}", round_log.to_debug_str(round));
+                        }
+
                     }
-                    let calc_score = round.player_rounds[0].round_score();
-                    assert!(dragon_gifting_changed || parsed_round_result == calc_score);
                 }
 
                 if let Some(err) = round.integrity_check().err() {
@@ -214,10 +242,23 @@ impl DataBase {
                 }
             }
         }
-        println!("{}", round_count);
-        println!("{}", round_count_dw);
-        println!("{}", round_count_own_gift);
-        println!("{}", round_count_own_gift_fixed);
+        println!("Correctly parsed {} rounds!", round_count);
+        println!("Starting to delete excluded rounds from database! Excluded rounds: {}", exclude_rounds.iter().fold(0, |acc, inc| acc + inc.1.len()));
+        for (game_idx, exclude_rounds) in exclude_rounds.iter(){
+            let game: &mut Game = bsw_id_to_game.get_mut(game_idx).unwrap();
+            if game.rounds.len() == exclude_rounds.len(){
+                println!("Deleting game {} from database! No more rounds.", *game_idx);
+                bsw_id_to_game.remove(game_idx);
+                continue;
+            }
+            //Assert excluded rounds is sorted.
+            assert!(exclude_rounds.is_sorted());
+            for exclude_idx in exclude_rounds.iter().rev(){
+                game.rounds.remove(*exclude_idx);
+            }
+        }
+        //Collect bsw_id_to_game into database
+        database.games = bsw_id_to_game.into_values().collect();
         Ok(database)
     }
     fn parse_spiel_file(

@@ -49,9 +49,9 @@ impl Round {
         if p3.right_out_exchange_card() != p0.left_in_exchange_card() { return Err(ExchangeCardMismatch { p_out: PLAYER_3, p_in: PLAYER_0 }); }
 
         if p0.left_out_exchange_card() != p3.right_in_exchange_card() { return Err(ExchangeCardMismatch { p_out: PLAYER_0, p_in: PLAYER_3 }); }
-        if p1.left_out_exchange_card() != p2.right_in_exchange_card() { return Err(ExchangeCardMismatch { p_out: PLAYER_1, p_in: PLAYER_2 }); }
+        if p1.left_out_exchange_card() != p0.right_in_exchange_card() { return Err(ExchangeCardMismatch { p_out: PLAYER_1, p_in: PLAYER_0 }); }
         if p2.left_out_exchange_card() != p1.right_in_exchange_card() { return Err(ExchangeCardMismatch { p_out: PLAYER_2, p_in: PLAYER_1 }); }
-        if p3.left_out_exchange_card() != p0.right_in_exchange_card() { return Err(ExchangeCardMismatch { p_out: PLAYER_3, p_in: PLAYER_0 }); }
+        if p3.left_out_exchange_card() != p2.right_in_exchange_card() { return Err(ExchangeCardMismatch { p_out: PLAYER_3, p_in: PLAYER_2 }); }
 
         if p0.partner_out_exchange_card() != p2.partner_in_exchange_card() { return Err(ExchangeCardMismatch { p_out: PLAYER_0, p_in: PLAYER_2 }); }
         if p1.partner_out_exchange_card() != p3.partner_in_exchange_card() { return Err(ExchangeCardMismatch { p_out: PLAYER_1, p_in: PLAYER_3 }); }

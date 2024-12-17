@@ -69,12 +69,11 @@ impl Trick {
         if self.trick_type == TRICK_DOG && self.trick_log.len() != 1 { return Err(DogTrickTooLong); };
         for (i, card_vec) in self.trick_log.iter().enumerate() {
             if card_vec.len() == 0 { return Err(EmptyPlayedHand(i)); };
-            if card_vec.iter().any(|x| x.get_player() == card_vec[0].get_player()) { return Err(PlayedHandPlayerTagMismatch(i)); };
+            if card_vec.iter().any(|x| x.get_player() != card_vec[0].get_player()) { return Err(PlayedHandPlayerTagMismatch(i)); };
         }
         //Check that hand type of every played hand matches the trick type. In case of bombs, trick type can upgrade!
         //Also check that every card that is played can be played by player.
         //checks that no player plays twice in a row unless a bomb is involved.
-        //TODO: Remove assserts for Err!.
         let mut prev_player = None;
         let mut trick_type = self.trick_type;
         let mut prev_hand: Option<HandType> = None;
