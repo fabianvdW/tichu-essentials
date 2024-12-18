@@ -1,0 +1,13 @@
+Excluded rounds: 14918
+GT Excludes: 14453
+PRH Excludes: 9
+RoundNotFinished: 46
+Invalid Round_Log: 357 (347 StartTrick, 8 WrongTT, 2 TwiceInARow)
+DragonGiftNoFix: 53
+Valid Games: 2281451
+Valid Rounds: 21264935
+In which dragon was changed: 784398
+A round result was changed in: 34363
+Without Dragon: 4649
+dragon AND round result changed in :  29714
+Affected games (changed round score, excluded round): 46777
