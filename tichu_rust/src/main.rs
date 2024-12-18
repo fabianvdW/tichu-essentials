@@ -9,6 +9,8 @@ pub mod pair_street_detection_trick;
 pub mod bsw_binary_format;
 pub mod analysis;
 
+use crate::analysis::bomb_stats::evaluate_bomb_stats;
+use crate::analysis::general_stats::evaluate_general_stats;
 use crate::analysis::parsing_stats::evaluate_parsing_stats;
 use crate::tichu_hand::*;
 use crate::bsw_database::DataBase;
@@ -16,7 +18,8 @@ use crate::bsw_database::DataBase;
 fn main() {
     let db = DataBase::read("bsw.db").unwrap();
     println!("Loaded {} games and {} rounds!", db.games.len(), db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len() ));
-    evaluate_parsing_stats(&db);
+    //evaluate_general_stats(&db);
+    evaluate_bomb_stats(&db);
 
     //let db = DataBase::from_bsw().unwrap();
     //db.write("bsw_small.db").unwrap();

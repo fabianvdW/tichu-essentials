@@ -48,9 +48,9 @@ pub const RED: Color = 48;
 
 pub const PHOENIX: CardType = 0; //Currently its important that the phoenix is always the lsb, see for instance hand_type
 
-pub const DOG: CardType = 16;
-pub const DRAGON: CardType = 32;
-pub const MAHJONG: CardType = 48;
+pub const DOG: CardIndex = 16;
+pub const DRAGON: CardIndex = 32;
+pub const MAHJONG: CardIndex = 48;
 
 pub const SPECIAL_CARD: CardType = 0;
 pub const TWO: CardType = 1;

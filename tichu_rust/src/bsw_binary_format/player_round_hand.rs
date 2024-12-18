@@ -72,7 +72,9 @@ impl PlayerRoundHand {
                 self.right_in_exchange_card()
             )
     }
-
+    pub fn player_call(&self, player_id: PlayerIDInternal) -> TichuCall {
+        ((self.extras >> (36 + 2 * player_id)) & 0b11u64) as TichuCall
+    }
     pub fn player_0_call(&self) -> TichuCall {
         ((self.extras & CALL_PLAYER_0_MASK) >> 36) as TichuCall
     }
@@ -87,6 +89,9 @@ impl PlayerRoundHand {
     }
     pub fn player_id(&self) -> PlayerIDInternal {
         ((self.extras & PLAYER_ID_MASK) >> 44) as PlayerIDInternal
+    }
+    pub fn player_rank(&self, player_id: PlayerIDInternal) -> Rank {
+        (self.extras >> (46 + 2 * player_id) & 0b11u64) as Rank
     }
     pub fn player_0_rank(&self) -> Rank {
         ((self.extras & RANK_PLAYER_0_MASK) >> 46) as Rank
@@ -155,7 +160,7 @@ impl PlayerRoundHand {
     }
     pub fn round_score_relative_gain(&self) -> Score {
         let round_score = self.round_score();
-        if self.player_id() == PLAYER_0 || self.player_id() == PLAYER_1 {
+        if self.player_id() == PLAYER_0 || self.player_id() == PLAYER_2 {
             round_score.0 - round_score.1
         } else {
             round_score.1 - round_score.0
