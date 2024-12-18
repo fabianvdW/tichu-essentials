@@ -11,7 +11,7 @@ use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 use crate::bsw_binary_format::{game, round};
-use crate::bsw_binary_format::trick::{TaggedHandT, TaggedHand, Trick};
+use crate::bsw_binary_format::trick::{Trick};
 use crate::hand;
 use datasize::{data_size, DataSize};
 
@@ -117,7 +117,7 @@ impl DataBase {
                 DataBase::parse_zugfolge_file(&mut bsw_id_to_game, &mut exclude_rounds, &name);
             }
         }
-        println!("Estimated heap size: {}", data_size(&bsw_id_to_game)); // 26809536
+        println!("Estimated heap size: {}", data_size(&bsw_id_to_game)); // 9574560 for small dataset. (name.contains Spiel_570)
         println!("Finished parsing! Starting correction!");
         let mut round_count: usize = 0;
         //Fix extra fields for every PlayerRoundHand and every game
@@ -456,12 +456,11 @@ impl DataBase {
                 game.parsing_flags |= FLAG_GAME_STOPPED_WITHIN_ROUND;
                 continue;
             }
-            let trick_num = parts.next().unwrap().parse::<usize>().unwrap() - 1;
+            let _ = parts.next().unwrap().parse::<usize>().unwrap() - 1; //Trick num.
 
             let (_, round_log) = game.rounds.get_mut(round).unwrap();
 
 
-            assert_eq!(round_log.log.len(), trick_num);
             let mut trick = Trick::default();
             let trick_type_str = parts.next().unwrap();
             trick.trick_type = trick_type_str_to_trick_type(trick_type_str);
@@ -505,11 +504,11 @@ impl DataBase {
                         assert!(chars.next().is_none());
                     }
                 }
-                trick.trick_log.push(TaggedHand::construct(trick_players[i], hand_bb));
+                trick.trick_log.push((trick_players[i], hand_bb));
             }
 
             assert_eq!(trick.trick_log.len(), trick_length);
-            round_log.log.push(trick);
+            trick.serialize_into(round_log);
         }
     }
 }

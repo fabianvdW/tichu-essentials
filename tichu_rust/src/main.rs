@@ -12,11 +12,11 @@ use crate::tichu_hand::*;
 use crate::bsw_database::DataBase;
 
 fn main() {
-    let db = DataBase::read("bsw.db").unwrap();
-    println!("Loaded {} games!", db.games.len());
+    //let db = DataBase::read("bsw.db").unwrap();
+    //println!("Loaded {} games!", db.games.len());
 
-    //let db = DataBase::from_bsw().unwrap();
-    //db.write("bsw.db").unwrap();
+    let db = DataBase::from_bsw().unwrap();
+    db.write("bsw.db").unwrap();
 
     //enumeration_results::count_bombs_0_1();
     //enumeration_results::count_straight_bombs_0_1();
