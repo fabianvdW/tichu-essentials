@@ -1,13 +1,12 @@
 use crate::analysis::{format_slice_abs_relative, format_slice_abs_relative2, format_slice_abs_relative2_i64};
-use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, CALL_NONE};
+use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, CALL_NONE, CALL_TICHU};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_database::DataBase;
 use crate::hand;
 use crate::tichu_hand::{get_card_type, CardIndex, CardType, Hand, TichuHand, MASK_FOUR_OF_KIND, SPECIAL_CARD, TWO};
 
 //TODO: Tich Call Rate given bomb Tichu Succes Rate given bomb, Tichu SR Enemy given bomb.
-//TODO: Bomb Rate given Call
-//TODO: Bomb Rate given Call & <= 2 HighCards.
+//TODO: ERS Pair splitting, Bomb % pair splitting
 pub fn evaluate_bomb_stats(db: &DataBase) {
     //Evaluate bomb probability, first 8, first 14, final 14 for each player.
     let rounds = db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len());
@@ -45,9 +44,14 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
 
     //Probability of bomb in opp when calling or having bomb, also Expected round score differences when a bomb is in the team.
     //Probability of own bomb when calling
+    let mut bombs_self_when_call = [0; 4];
+    let mut bombs_self_when_tcall_two_hc_or_less = [0; 4];
+    let mut bombs_opp_when_call_no_bomb = [0; 4];
     let mut bombs_opp_when_call = [0; 4];
     let mut bombs_opp_when_bomb = [0; 4];
     let mut call_rounds = [0; 4];
+    let mut call_rounds_no_bomb = [0; 4];
+    let mut tcall_rounds_two_hc_or_less = [0; 4];
 
     let mut round_score_diff_given_bomb = [0; 2];
     for game in db.games.iter() {
@@ -56,37 +60,50 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
             let p1_bombs = contains_bomb(round.player_rounds[1].final_14());
             let p2_bombs = contains_bomb(round.player_rounds[2].final_14());
             let p3_bombs = contains_bomb(round.player_rounds[3].final_14());
+            let p_bombs = [p0_bombs, p1_bombs, p2_bombs, p3_bombs];
             let bombs_team_1 = (p0_bombs + p2_bombs).min(1);
             let bombs_team_2 = (p1_bombs + p3_bombs).min(1);
             let bombs = [bombs_team_1, bombs_team_2];
             for player_id in 0..4 {
                 if round.player_rounds[0].player_call(player_id) != CALL_NONE {
                     call_rounds[player_id as usize] += 1;
-                    bombs_opp_when_call[player_id as usize] += bombs[((player_id + 1) % 2) as usize]
+                    if p_bombs[player_id as usize] == 0{
+                        call_rounds_no_bomb[player_id as usize] += 1;
+                        bombs_opp_when_call_no_bomb[player_id as usize]+= bombs[((player_id + 1) % 2) as usize];
+                    }
+                    bombs_opp_when_call[player_id as usize] += bombs[((player_id + 1) % 2) as usize];
+                    bombs_self_when_call[player_id as usize] += bombs[(player_id % 2) as usize];
+                    if round.player_rounds[0].player_call(player_id) == CALL_TICHU && round.player_rounds[player_id as usize].final_14().get_high_card_amt() <= 2 {
+                        tcall_rounds_two_hc_or_less[player_id as usize] += 1;
+                        bombs_self_when_tcall_two_hc_or_less[player_id as usize] += bombs[(player_id % 2) as usize];
+                    }
                 }
             }
             if bombs_team_1 > 0 {
                 round_score_diff_given_bomb[0] += round.player_rounds[0].round_score_relative_gain() as i64;
             }
-            if bombs_team_2 > 0{
+            if bombs_team_2 > 0 {
                 round_score_diff_given_bomb[1] += round.player_rounds[1].round_score_relative_gain() as i64;
             }
-            if p0_bombs > 0{
+            if p0_bombs > 0 {
                 bombs_opp_when_bomb[0] += bombs_team_2;
             }
             if p1_bombs > 0 {
                 bombs_opp_when_bomb[1] += bombs_team_1;
             }
-            if p2_bombs> 0 {
+            if p2_bombs > 0 {
                 bombs_opp_when_bomb[2] += bombs_team_2;
             }
-            if p3_bombs > 0{
+            if p3_bombs > 0 {
                 bombs_opp_when_bomb[3] += bombs_team_1;
             }
         }
     }
     println!("ERS given Bomb: {}", format_slice_abs_relative2_i64(&round_score_diff_given_bomb, &bombs_team_rounds));
+    println!("Bomb on hand given Call: {}", format_slice_abs_relative2(&bombs_self_when_call, &call_rounds));
+    println!("Bomb on hand given TCall & <=2 HC: {}", format_slice_abs_relative2(&bombs_self_when_tcall_two_hc_or_less, &tcall_rounds_two_hc_or_less));
     println!("Bomb in opponent given Call: {}", format_slice_abs_relative2(&bombs_opp_when_call, &call_rounds));
+    println!("Bomb in opponent given Call & No-self obmb: {}", format_slice_abs_relative2(&bombs_opp_when_call_no_bomb, &call_rounds_no_bomb));
     println!("Bomb in opponent given Bomb: {}", format_slice_abs_relative2(&bombs_opp_when_bomb, &bombs_final_14));
 
     //Probability of bomb when following even_odd duplicate strategy
@@ -106,17 +123,15 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
             let pr3 = round.player_rounds.get(3).unwrap();
             let team_1_exch = is_even_odd_or_duplicate_strategy((pr0.first_14, pr2.first_14), (lo_card(pr0), ro_card(pr2)), (ro_card(pr0), lo_card(pr2)));
             let team_2_exch = is_even_odd_or_duplicate_strategy((pr1.first_14, pr3.first_14), (lo_card(pr1), ro_card(pr3)), (ro_card(pr1), lo_card(pr3)));
-            if team_1_exch{
+            if team_1_exch {
                 exch_rounds[0] += 1;
                 bombs_opp_when_exch[0] += bombs_team_2;
                 round_score_diff_given_exch[0] += round.player_rounds[0].round_score_relative_gain() as i64;
-
             }
-            if team_2_exch{
+            if team_2_exch {
                 exch_rounds[1] += 1;
                 bombs_opp_when_exch[1] += bombs_team_1;
                 round_score_diff_given_exch[1] += round.player_rounds[1].round_score_relative_gain() as i64;
-
             }
         }
     }
@@ -124,27 +139,27 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     println!("Bomb in opponent given Exchange Strat: {}", format_slice_abs_relative2(&bombs_opp_when_exch, &exch_rounds));
 
     //How many bombs are due to one exchange card in particular?
-    let mut bomb_spawn_team =  [0; 2];
+    let mut bomb_spawn_team = [0; 2];
     let mut bomb_spawn_team_poor_exch = [0; 2];
     let mut bombs_by_partner = [0; 2];
     let mut bombs_by_partner_poor_exch = [0; 2];
-    let mut bombs_with_one_exch_card  = [0; 2];
+    let mut bombs_with_one_exch_card = [0; 2];
     let mut bombs_with_one_exch_card_poor_exch = [0; 2];
 
     let mut bombs_poor_exch = [0; 2];
     for game in db.games.iter() {
         for (round, _) in game.rounds.iter() {
             for team in 0..2 {
-                let bombs_team = (contains_bomb(round.player_rounds[team].final_14()) + contains_bomb(round.player_rounds[2+ team].final_14())).min(1);
-                if bombs_team > 0{
-                    let oteam = 1-team;
+                let bombs_team = (contains_bomb(round.player_rounds[team].final_14()) + contains_bomb(round.player_rounds[2 + team].final_14())).min(1);
+                if bombs_team > 0 {
+                    let oteam = 1 - team;
                     let o1 = round.player_rounds.get(oteam).unwrap();
                     let o2 = round.player_rounds.get(oteam + 2).unwrap();
                     //Check strategy of other team
                     let poor_exch = !is_even_odd_or_duplicate_strategy((o1.first_14, o2.first_14), (lo_card(o1), ro_card(o2)), (ro_card(o1), lo_card(o2))) as usize;
                     bombs_poor_exch[team] += poor_exch;
 
-                    let pr = if contains_bomb(round.player_rounds[team].final_14()) > 0 { round.player_rounds.get(team) } else { round.player_rounds.get(team+2) }.unwrap();
+                    let pr = if contains_bomb(round.player_rounds[team].final_14()) > 0 { round.player_rounds.get(team) } else { round.player_rounds.get(team + 2) }.unwrap();
                     if contains_bomb(pr.first_14) > 0 {
                         bomb_spawn_team[team] += 1;
                         bomb_spawn_team_poor_exch[team] += poor_exch;
@@ -171,9 +186,6 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     println!("% Bomb spawn (relative to Bombs&Poor Opp Exch): {}", format_slice_abs_relative2(&bomb_spawn_team_poor_exch, &bombs_poor_exch));
     println!("% Bomb by partner (relative to Bombs & POE): {}", format_slice_abs_relative2(&bombs_by_partner_poor_exch, &bombs_poor_exch));
     println!("% Bomb by one exch card (relative to Bombs & POE): {}", format_slice_abs_relative2(&bombs_with_one_exch_card_poor_exch, &bombs_poor_exch));
-
-
-
 }
 
 fn is_even_odd_or_duplicate_strategy(p_hands: (Hand, Hand), p_opp_1: (CardType, CardType), p_opp_2: (CardType, CardType)) -> bool {

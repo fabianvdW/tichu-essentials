@@ -1,0 +1,88 @@
+In dieser kleinen Reihe an Posts werde ich Tichu etwas aus statistischer Sicht begutachten.
+Dazu werden, wie sich das in der Statistik halt so gehört, ein Haufen Wahrscheinlichkeiten und Erwartungswerte ausgerechnet.
+Wer davon kein Fan ist, freut sich vielleicht trotzdem an den Interpretationen die ich basierend darauf mache - ab und zu wage ich mich sogar zu echten Schlussfolgerungen.
+Insgesamt ist das Ziel, bisherige Tichu Strategien statistisch zu beurteilen und ggfs. optimales Spielen herzuleiten.
+
+Optimales Spielen - was ist das eigentlich? Mein Definitionsversuch: Die Art des Spielens, mit derer man selbst (vorausgesetzt der Partner kennt die eigene Spielstrategie)
+seine Winrate maximiert.
+
+Etwas leichter zu analysieren ist oft das Spiel, dass den erwarteten Punktegewinn gegenüber des  Gegners maximiert. In dieser Metrik würden also 
+ein 100-0 genausogut abschneiden wie ein 150-50 oder 200-100: In allen Fällen ist der Punktegewinn gegenüber des Gegners 100. Da am Ende des Spiels nur zählt, ob die Differenz der
+eigenen Punkte mit derer der Gegner > 0 ist oder nicht, ist es naheliegend, dass sich optimales Spiel oft mit dieser Art des Spielens deckt.
+
+Häufig gibt es auch Fälle, wo dies klar nicht gilt, da Tichu ein terminiertes Spiel ist (wir kennen es alle, 6 Runden in der App).
+Ich illustriere kurz an einem Beispiel was ich damit meine:
+Es ist die letzte Runde, mein Team liegt 170 Punkte zurück. Ich habe Drache+ Hund unter meinen ersten 8. GT ansagen, ja oder nein?
+Was den erwarteten Punktegewinn angeht, so lautet die Antwort (denke ich zumindest mal) nein, denn ich bin besser dran die Runde einfach normal zu spielen.
+Wenn ich aber meine Gewinnchancen maximieren will, so wäre das GT keine schlechte Idee.
+Ich hoffe man hat den Unterschied verstanden, unabhängig davon ob man mit den exakten Aussagen im Beispiel d'accord geht oder nicht.
+
+Der erwartete Rundengewinn ist insofern leichter zu analysieren, da wir diesen Erwartungswert einfach durch den Durchschnitt schätzen können. Ich werde also im Folgenden oft den erwarteten Rundengewinn
+(ein theoretisches Objekt) synonym zu dem durchschnittlichen Rundengewinn (eine Zahl, ausgewertet auf dem Datensatz) benutzen.
+
+Ideel deckt sich das optimale Spiel mit dem "Rundengewinnmaximierungsspiel" also nur, wenn noch genügend Zeit im Spiel übrig ist und man nicht in starker
+Bedrängnis ist. Das sollte man bei all meinen Analysen im Hinterkopf behalten. 
+Darüber hinaus sollte man sich im klaren sein, dass die folgenden Statistiken  NIE!! den Einzelfall repräsentieren, den man in der Runde vor sich hat. Dafür gibt es schlicht
+nicht genügend Daten. Das heißt nicht, dass wir unser Spielstrategie nicht basierend der Statistiken überdenken und anpassen können - aber wer Stur
+wie ein Roboter spielt und zu viel in die Statistiken reininterpretiert anstatt den menschlich + psychologischen Faktor mit zu berücksichtigen wird im Nachteil bleiben.
+
+Dieser Absatz ist für Mathematiker: Unten berichte ich oft einen Wert einer Wahrscheinlichkeit, bspw. die Wahrscheinlichkeit einer Bombe beim Gegner gegeben eine Ansage meinerseits.
+Korrekterweise müsste ich hier vier Werte berichten: Nämlich einmal für Spieler 0, 1, 2 und 3 jeweils auf dem Datensatz ausgerechnet. Diese Wahrscheinlichkeiten sind nämlich nicht
+unabhängig voneinander. Nichtsdestotrotz vertröste ich den Leser mit dem Mittelwert aller solcher Wahrscheinlichkeiten als Schätzung und man darf mir gerne eine Email schreiben wenn
+man an allen interessiert ist.
+
+Nun zum eigentlichen Inhalt: Wir beginnen mit einer Analyse der Bomben beim Spiel Tichu.
+Die ausgerechneten Wahrscheinlichkeiten sind entweder exakt oder auf dem BSW Datensatz ausgewertet.
+Der BSW Datensatz enthält ca. 21 Millionen Runden von echten Spielern. Wahrscheinlichkeiten die auf diesem Datensatz berechnet wurden, sind mit * markiert.
+Darüber hinaus habe ich einen gefilterten BSW Datensatz, der nur aus Spielen besteht, die von "guten" Spielern gespielt wurden. Ein Spieler ist gut wenn er mehr
+als 100 Spiele mit >= 55% Winrate absolviert hat. Dieser Datensatz enthält immerhin noch ca. 400 000 Runden. Wahrscheinlichkeiten die auf diesem Datensatz berechnet wurden,
+sind mit ** markiert.
+
+== Bomben
+Wie in meinem letzten Post bereits berichtet, beträgt die Wahrscheinlichkeit einer Bombe unter den ersten 8 eines Spielers ca 0.3% und unter den ersten 14 ca 5.1%.
+Das ist zwar nett zu Wissen, bringt aber relativ wenig. Die Wahrscheinlichkeit einer Bombe nach dem Schupfen ist da schon aussagekräftiger: 11.7%(*)/11.8%(**).
+Wenn ich spiele, ist mir eigentlich auch egal, ob jetzt mein linker oder rechter Gegner die Bombe hat. Interessierter bin ich eher daran, ob EINER meiner Gegner eine Bombe hat.
+Diese Wahrscheinlichkeit beträgt 21.7%(*)/21.9%(**). Die Wahrscheinlichkeit einer Bombe in einer Runde ist etwa 37.9%(*)/38.3%(**).
+Natürlich hängt diese Wahrscheinlichkeit auch von meinen eigenen Karten ab - wie in diesem Forum auch schon richtigerweise gemutmaßt, ist die Wahrscheinlichkeit einer Bombe beim Gegner etwas höher,
+wenn ich selbst eine besitze: 25.7%(* und **). Dooferweise steigt die Wahrscheinlichkeit einer Bombe beim Gegner aber auch bei einer Ansage meinerseits: 22.7%(*)/23.0%(*).
+Das kann tatsächlich aber durch Korrelation mit den Bomben die man selbst hat erklärt werden - die Wsk einer Bombe beim Gegner gegeben einer Ansage meinerseits, und keiner Bombe meinerseits
+ist auf beiden Datensätzen nur etwas höher als der Defaultwert: 21.7%(*)/22.4%/**).
+
+Für Kontertichus sind folgende Wahrscheinlichkeiten noch interessant: 
+Wahrscheinlichkeit einer Bombe gegeben einer Ansage:  26%(*)/24.7%(*).
+Wahrscheinlichkeit einer Bombe gegen einer Ansage mit 2 oder weniger Highcards(***): 40.1%(*)/39.8%(**)
+
+Ob man ein Kontertichu also Bombensicher oder überhaupt gestalten möchte würde ich (wie immer) vom Gegnertyp, Puntkestand und und und abhängig machen.
+
+Sind Bomben denn eigentlich gut? :P Ja! Das kann man auch ganz klar nachweisen:
+Der erwartete Rundengewinn gegeben einer Bombe im Team beträgt 70.5(*)/90.7(*).
+
+Das entsteht, wie wir alle wissen, aufgrund der folgenden Faktoren: 
+- Zerstören eines Tichu's:  TODO.
+- Möglichkeit, selbst ein Tichu anzusagen: TODO.
+- ...
+
+Da Bomben also gut sind, ist es naheliegend, die Wahrscheinlichkeit einer Bombe beim Gegner zu minimieren. Die in Tichu.one bekannte Schupfstrategie, gerade rechts,
+ungerade links wurde schließlich auch damit im Hinterkopf entworfen. Doch wie effektiv ist das eigentlich?
+Ich habe die Wahrscheinlichkeit einer Bombe beim Gegner untersucht, gegeben dass man sich an die Schupfstrategie hält. Die Strategie hab ich etwas relaxiert:
+An die Strategie hält man sich, wenn bei jedem Gegner entweder gerade+ ungerade, oder gerade/ungerade+doppelte oder gerade/ungerade+sonderkarte ankommt. Die Sonderkate ist 
+in den meisten Fällen wohl der Hund. (1 Schupfen ist nicht gut [TODO Check this], wird in einem anderen Post nochmal behandelt).
+
+Und tatsächlich: Die Wahrscheinlichkeit einer Bombe beim Gegner reduziert sich damit auf 20.3%(*)/20.7%(**).
+Hier kam meine erste persönliche Überraschung: Das ist weitaus weniger wenig (gegenüber den Default 21.7%/22.4%), als erwartet.
+Tatsächlich ist es so, dass die meisten Bomben entweder bereits unter den ersten 14 waren, oder aus der Karte des Partners in Kombination mit NUR EINER der beiden Schupfkarten der anderen Spieler entstehen.
+Selbst in den Runden, wo sich explizit NICHT an die Schupfstrategie gehalten wurde, entstehen gerade mal 13% aller Bomben erst aus der Kombination ALLER Schupfkarten.
+Die verbleibenden 87% hätte man bereits mit einer der Schupfkarten vom Gegner und der des Partners gehabt.
+
+Einen statischten Nachweis für die Wichtigkeit der Schupfstrategie konnte ich tatsächlich auch nicht liefern: Der erwartete Rundengewinn
+beim befolgen der Schupfstrategie bewegt sich nahe 0 (ist sogar leicht negativ). Das mag aber auch einfach daran liegen, dass fast alle Runden
+eben mit dieser Strategie gespielt wurden und die Auswirkungen auf die Bomben marginal ist. 
+Trotzdem macht es Sinn mit seinem Partner eine solche Strategie zu befolgen - zumindest wenn man Bomben minimieren will. 
+Andere Schupfstrategien werde ich in einem gesonderten Post bezgl. ihres erwarteten Rundengewinns analysieren.
+
+
+
+
+* Ausgewertet auf dem BSW Datensatz
+** Ausgewertet auf dem gefilterten BSW Datensatz(nur gute Spieler)
+*** Highcards sind Asse, Drache, Phönix.

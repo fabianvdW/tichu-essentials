@@ -16,6 +16,8 @@ pub trait TichuHand {
     fn pop_some_card(&mut self) -> CardIndex;
 
     fn get_card_points(&self) -> Score;
+
+    fn get_high_card_amt(&self) -> u32;
 }
 
 // Actual data structure we use is a u64:
@@ -275,8 +277,8 @@ impl HandType {
     pub fn is_bigger_than_same_handtype(&self, other: &HandType) -> bool {
         match (other, self) {
             (HandType::Singleton(c1, c1_idx), HandType::Singleton(c2, c2_idx)) => {
-                c1 < c2 || (*c1 > 0 || *c1_idx == MAHJONG )&& *c2_idx == PHOENIX || *c1 > 0 && *c2_idx == DRAGON || (*c1_idx == PHOENIX || *c1_idx == MAHJONG) && *c2_idx == DRAGON
-            },
+                c1 < c2 || (*c1 > 0 || *c1_idx == MAHJONG) && *c2_idx == PHOENIX || *c1 > 0 && *c2_idx == DRAGON || (*c1_idx == PHOENIX || *c1_idx == MAHJONG) && *c2_idx == DRAGON
+            }
             (HandType::Pairs(c1), HandType::Pairs(c2)) => c1 < c2,
             (HandType::Triplets(c1), HandType::Triplets(c2)) => c1 < c2,
             (HandType::PairStreet(c1, s), HandType::PairStreet(c2, s2)) if s == s2 => c1 < c2,
@@ -417,7 +419,7 @@ impl TichuHand for Hand {
         if first_card != second_card && second_card == third_card {
             return Some(HandType::FullHouse(first_card, third_card));
         }
-        if first_card == third_card && second_card != third_card{
+        if first_card == third_card && second_card != third_card {
             return Some(HandType::FullHouse(second_card, third_card));
         }
         None
@@ -479,5 +481,9 @@ impl TichuHand for Hand {
         (5 * (self & MASK_FIVES).count_ones() + 10 * (self & (MASK_TENS | MASK_KINGS)).count_ones()
             + 25 * (self & hand!(DRAGON)).count_ones()) as Score
             - 25 * (self & hand!(PHOENIX)).count_ones() as Score
+    }
+
+    fn get_high_card_amt(&self) -> u32 {
+        (self & (MASK_KINGS | MASK_ACES | hand!(PHOENIX, DRAGON))).count_ones()
     }
 }
