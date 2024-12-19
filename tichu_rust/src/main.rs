@@ -13,13 +13,14 @@ use std::collections::HashMap;
 use crate::analysis::bomb_stats::evaluate_bomb_stats;
 use crate::analysis::general_stats::evaluate_general_stats;
 use crate::analysis::parsing_stats::evaluate_parsing_stats;
+use crate::bsw_binary_format::binary_format_constants::CALL_GRAND_TICHU;
 use crate::tichu_hand::*;
 use crate::bsw_database::DataBase;
 fn filter_db(db: DataBase){
     let games_wrs = db.collect_winrate_players();
     let mut good_players = HashMap::new();
     for (player, (games, wins)) in games_wrs{
-        if games >= 20 && games as f64 * 0.53 <= wins as f64{
+        if games >= 100 && games as f64 * 0.55 <= wins as f64{
             good_players.insert(player, db.players[player].clone());
         }
     }
@@ -35,11 +36,13 @@ fn main() {
     //let db = DataBase::from_bsw().unwrap();
     //db.write("bsw.db").unwrap();
 
-    let db = DataBase::read("bsw.db").unwrap();
+    let db = DataBase::read("bsw_filtered.db").unwrap();
     println!("Loaded {} games and {} rounds!", db.games.len(), db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len() ));
     //filter_db(db);
+    //evaluate_parsing_stats(&db);
     //evaluate_general_stats(&db);
     //evaluate_bomb_stats(&db);
+
 
 
 

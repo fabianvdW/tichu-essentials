@@ -5,9 +5,9 @@ use crate::bsw_database::DataBase;
 use crate::hand;
 use crate::tichu_hand::{get_card_type, CardIndex, CardType, Hand, TichuHand, MASK_FOUR_OF_KIND, SPECIAL_CARD, TWO};
 
-//TODO: Filter good players
 //TODO: Tich Call Rate given bomb Tichu Succes Rate given bomb, Tichu SR Enemy given bomb.
-
+//TODO: Bomb Rate given Call
+//TODO: Bomb Rate given Call & <= 2 HighCards.
 pub fn evaluate_bomb_stats(db: &DataBase) {
     //Evaluate bomb probability, first 8, first 14, final 14 for each player.
     let rounds = db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len());
@@ -43,7 +43,8 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     ));
     println!("Bomb in round: {}", format_slice_abs_relative(&[bombs_round], rounds));
 
-    //Probability of bomb when calling Tichu or Grand Tichu, also Expected round score differences when a bomb is in the team.
+    //Probability of bomb in opp when calling or having bomb, also Expected round score differences when a bomb is in the team.
+    //Probability of own bomb when calling
     let mut bombs_opp_when_call = [0; 4];
     let mut bombs_opp_when_bomb = [0; 4];
     let mut call_rounds = [0; 4];

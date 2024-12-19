@@ -1,0 +1,7 @@
+Loaded 44794 games and 400881 rounds!
+Dragon changes: 21030
+Round-Result changes: 588
+Round-Result changes without dragon: 127
+Round-Result changes with dragon: 461
+Affected games: 2184
+Rounds: 400881
