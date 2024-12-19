@@ -5,6 +5,9 @@ use crate::bsw_database::DataBase;
 use crate::hand;
 use crate::tichu_hand::{get_card_type, CardIndex, CardType, Hand, TichuHand, MASK_FOUR_OF_KIND, SPECIAL_CARD, TWO};
 
+//TODO: Filter good players
+//TODO: Tich Call Rate given bomb Tichu Succes Rate given bomb, Tichu SR Enemy given bomb.
+
 pub fn evaluate_bomb_stats(db: &DataBase) {
     //Evaluate bomb probability, first 8, first 14, final 14 for each player.
     let rounds = db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len());
@@ -100,15 +103,19 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
             let pr1 = round.player_rounds.get(1).unwrap();
             let pr2 = round.player_rounds.get(2).unwrap();
             let pr3 = round.player_rounds.get(3).unwrap();
-            if is_even_odd_or_duplicate_strategy((pr0.first_14, pr2.first_14), (lo_card(pr0), ro_card(pr2)), (ro_card(pr0), lo_card(pr2))){
+            let team_1_exch = is_even_odd_or_duplicate_strategy((pr0.first_14, pr2.first_14), (lo_card(pr0), ro_card(pr2)), (ro_card(pr0), lo_card(pr2)));
+            let team_2_exch = is_even_odd_or_duplicate_strategy((pr1.first_14, pr3.first_14), (lo_card(pr1), ro_card(pr3)), (ro_card(pr1), lo_card(pr3)));
+            if team_1_exch{
                 exch_rounds[0] += 1;
                 bombs_opp_when_exch[0] += bombs_team_2;
                 round_score_diff_given_exch[0] += round.player_rounds[0].round_score_relative_gain() as i64;
+
             }
-            if is_even_odd_or_duplicate_strategy((pr1.first_14, pr3.first_14), (lo_card(pr1), ro_card(pr3)), (ro_card(pr1), lo_card(pr3))){
+            if team_2_exch{
                 exch_rounds[1] += 1;
                 bombs_opp_when_exch[1] += bombs_team_1;
                 round_score_diff_given_exch[1] += round.player_rounds[1].round_score_relative_gain() as i64;
+
             }
         }
     }

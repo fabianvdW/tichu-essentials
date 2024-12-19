@@ -1,4 +1,5 @@
-use crate::bsw_binary_format::binary_format_constants::{PlayerIDGlobal, Score, PLAYER_0, PLAYER_1, PLAYER_2, PLAYER_3, CALL_TICHU, CALL_GRAND_TICHU, CALL_NONE, PlayerIDInternal, Rank};
+use std::cmp::PartialEq;
+use crate::bsw_binary_format::binary_format_constants::{PlayerIDGlobal, Score, PLAYER_0, PLAYER_1, PLAYER_2, PLAYER_3, CALL_TICHU, CALL_GRAND_TICHU, CALL_NONE, PlayerIDInternal, Rank, Team};
 use crate::bsw_binary_format::game::{Game, FLAG_EXCLUDED_ROUND, FLAG_GAME_STOPPED_WITHIN_ROUND, FLAG_NO_WINNER_BSW};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_binary_format::round::Round;
@@ -64,6 +65,28 @@ pub struct DataBase {
 }
 
 impl DataBase {
+    pub fn collect_winrate_players(&self) -> HashMap<usize, (usize, usize)>{ //PlayerIDGlobal -> (Games, Wins)
+        let mut res = HashMap::new();
+
+        for game in self.games.iter(){
+            let winner = game.get_winner();
+            if winner.is_none(){continue;}
+            let winner = winner.unwrap();
+            for (id_internal, player_id) in game.player_ids.iter().enumerate(){
+                let player_id = *player_id as usize;
+                if !res.contains_key(&player_id){
+                    res.insert(player_id, (0, 0));
+                }
+                let (ref mut games, ref mut wins) = res.get_mut(&player_id).unwrap();
+                *games += 1;
+                if winner == Team::Team1 && id_internal % 2 == 0 || winner == Team::Team2 && id_internal % 2 == 1{
+                    *wins += 1;
+                }
+            }
+        }
+
+        res
+    }
     pub fn write(&self, path: &str) -> std::io::Result<()> {
         let encoded = bitcode::encode(self);
         let mut file = File::create(path)?;
@@ -321,7 +344,7 @@ impl DataBase {
             let mut player_ids: [PlayerIDGlobal; 4] = [0; 4];
             for player in 0..4 {
                 let player_id = {
-                    let player_name = &chunk[0].1;
+                    let player_name = &chunk[player].1;
                     if let Some(x) = player_str_to_id.get(player_name) {
                         *x
                     } else {

@@ -39,6 +39,7 @@ pub const RANK_PLAYER_3_MASK: u64 = 0b11u64 << 52;
 pub type Score = i16;
 pub const CARD_SCORE_MASK: u64 = 0xFFu64 << 54; //8 Bits indicating the value of card point difference collected in the round for team 1 (0-150)
 
+#[derive(PartialEq)]
 pub enum Team {
     Team1,
     Team2,
