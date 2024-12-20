@@ -1,6 +1,8 @@
 In dieser kleinen Reihe an Posts werde ich Tichu etwas aus statistischer Sicht begutachten.
 Dazu werden, wie sich das in der Statistik halt so gehört, ein Haufen Wahrscheinlichkeiten und Erwartungswerte ausgerechnet.
-Wer davon kein Fan ist, freut sich vielleicht trotzdem an den Interpretationen die ich basierend darauf mache - ab und zu wage ich mich sogar zu echten Schlussfolgerungen.
+Dankbarer weise wurde mir von Felix (vielen lieben Dank) dazu ein großer Datensatz zur Verfügung gestellt, mehr dazu unten. 
+Ein paar Wahrscheinlichkeiten sind aber auch theoretisch exakt ausgerechnet.
+Wer von zu viel "Mathe gebrabbel" kein Fan ist, freut sich vielleicht trotzdem an den Interpretationen die ich basierend darauf mache - ab und zu wage ich mich sogar zu echten Schlussfolgerungen.
 Insgesamt ist das Ziel, bisherige Tichu Strategien statistisch zu beurteilen und ggfs. optimales Spielen herzuleiten.
 
 Optimales Spielen - was ist das eigentlich? Mein Definitionsversuch: Die Art des Spielens, mit derer man (vorausgesetzt der Partner kennt die eigene Spielstrategie)
@@ -8,7 +10,7 @@ seine Winrate maximiert.
 Achtung: Das unterscheidet sich also per Definition bereits von einem Spiel, dass man mit einem inkompetenten/weniger aufgeklärten Teampartner spielen müsste.
 So ein Spiel interessiert mich aber auch nicht.
 
-Etwas leichter zu analysieren ist das Spiel, dass den erwarteten Punktegewinn gegenüber des  Gegners maximiert. In dieser Metrik würde also 
+Etwas leichter zu analysieren ist das Spiel, dass den erwarteten Punktegewinn gegenüber des Gegners maximiert. In dieser Metrik würde also 
 ein 100-0 genausogut abschneiden wie ein 150-50 oder 200-100: In allen Fällen ist der Punktegewinn gegenüber des Gegners 100. Da am Ende des Spiels nur zählt, ob die Differenz der
 eigenen Punkte mit derer der Gegner > 0 ist oder nicht, ist es naheliegend, dass sich optimales Spiel oft mit dieser Art des Spielens deckt.
 
@@ -25,9 +27,10 @@ Ich werde also im Folgenden oft den erwarteten Rundengewinn
 
 Ideel deckt sich das optimale Spiel mit dem "Rundengewinnmaximierungsspiel" also nur, wenn noch genügend Zeit im Spiel übrig ist und man nicht in starker
 Bedrängnis ist. Das sollte man bei all meinen Analysen im Hinterkopf behalten. 
-Darüber hinaus sollte man sich im klaren sein, dass die folgenden Statistiken  NIE!! den Einzelfall repräsentieren, den man in der Runde vor sich hat. Dafür gibt es schlicht
-nicht genügend Daten. Das heißt nicht, dass wir unser Spielstrategie nicht basierend der Statistiken überdenken und anpassen können - aber wer stur
+Darüber hinaus sollte man sich im klaren sein, dass die folgenden Statistiken nicht den Einzelfall repräsentieren, den man in der Runde vor sich hat. Dafür gibt es schlicht
+nicht genügend Daten. Das heißt nicht, dass wir unsere Spielstrategie nicht basierend der Statistiken überdenken und anpassen können - aber wer stur
 wie ein Roboter spielt, zu viel in die Statistiken reininterpretiert, und den menschlichen und psychologischen Faktor nicht berücksichtigt, wird im Nachteil bleiben.
+Im Allgemeinen würde ich dem Leser raten, nicht mehr in die Statistiken reinzuinterpretieren, als ich es in meinem geschriebenen Text tue.
 
 Dieser Absatz ist für Mathematiker: Unten berichte ich oft einen Wert einer Wahrscheinlichkeit, bspw. die Wahrscheinlichkeit einer Bombe beim Gegner gegeben eine Ansage meinerseits.
 Korrekterweise müsste ich hier vier Werte berichten: Nämlich einmal für Spieler 0, 1, 2 und 3 jeweils auf dem Datensatz ausgerechnet. Diese Wahrscheinlichkeiten sind nämlich nicht
@@ -36,10 +39,30 @@ man an allen interessiert ist.
 
 Nun zum eigentlichen Inhalt: Wir beginnen mit einer Analyse der Bomben beim Spiel Tichu.
 Die ausgerechneten Wahrscheinlichkeiten sind entweder exakt oder auf dem BSW Datensatz ausgewertet.
-Der BSW Datensatz enthält ca. 21 Millionen Runden von echten Spielern. Wahrscheinlichkeiten die auf diesem Datensatz berechnet wurden, sind mit * markiert.
-Darüber hinaus habe ich einen gefilterten BSW Datensatz, der nur aus Spielen besteht, die von "guten" Spielern gespielt wurden. Ein Spieler ist gut wenn er mehr
+Der BSW Datensatz enthält ca. 21 Millionen Runden von echten Spielern, gespielt auf BrettSpielWelt.
+Dabei wurden von mir bereits alle Runden aussortiert, in denen zwei Spieler eines Teams gleichzeitig ein großes Tichu angesagt haben, da dies in Tichu.one nicht möglich ist
+und auch beim Live Spielen nicht vorkommt. Das sind ca 14000 Stück.
+Wahrscheinlichkeiten die auf diesem Datensatz berechnet wurden, sind mit * markiert.
+Darüber hinaus habe ich einen gefilterten BSW Datensatz erstellt, der nur aus Spielen besteht, die von "guten" Spielern gespielt wurden. Ein Spieler ist gut wenn er mehr
 als 100 Spiele mit >= 55% Winrate absolviert hat. Dieser Datensatz enthält immerhin noch ca. 400 000 Runden. Wahrscheinlichkeiten die auf diesem Datensatz berechnet wurden,
 sind mit ** markiert.
+
+Um uns mit den Datensätzen etwas vertrauter zu machen, habe ich ein paar grundlegende Kennzahlen berechnet:
+- Anzahl Spiele: 2281451(*)/44794(**)
+- Anzahl Runden: 21264935(*)/400881(**)
+- Tichu Call Rate: 13.9%(*)/13.0%(**)
+- Tichu Success Rate: 73.4%(*)/72.2%(**)
+- Große Tichu Call Rate: 7.8%(*)/13.6%(**)
+- Große Tichu Success Rate: 61.8%(*)/59.2%(**)
+- Doppelsiege: 11.8%(*)/11.3%(**)
+
+Wenn man das mit dem Tichu.one Leaderboard vergleicht, sind diese Statistiken direkt extrem aufällig. Die große Tichu Rate ist exorbitant groß! 
+Spieler wie unconscious, die 9.5% GT Call Rate haben, sind bei Tichu.one ja schon eher als exotisch unterwegs bekannt. Auf Brettspielwelt scheint
+eine ganz andere Tichu "Meta" vorherrschend gewesen zu sein. Wir werden später, in einem exklusiv dem großen Tichu gewidmeten Abschnitt, analysieren,
+ob das so sinnvoll ist, oder ob eine seltenere Ansage von großen Tichu's zu mehr Erfolg führen kann.
+
+Zunächst beginnen wir mit einer Analyse der Bomben.
+
 
 == Bomben
 Wie in meinem letzten Post bereits berichtet, beträgt die Wahrscheinlichkeit einer Bombe unter den ersten 8 eines Spielers ca 0.3% und unter den ersten 14 ca 5.1%.
@@ -113,14 +136,22 @@ eben mit dieser Strategie gespielt wurden und die Auswirkungen auf die Bomben eh
 wenn man sich nicht an die Strategie gehalten hätte. Diesen Wert müssten wir davon eigentlich abziehen, und es ist nicht unwahrscheinlich dass dieser auch stärker negativ ist.
 Ich habe also auch keinen Nachweis für die Unwichtigkeit der Strategie.
 
-Insgesamt macht es meines Erachtens nach also Sinn mit seinem Partner eine solche Strategie zu befolgen - zumindest wenn man Bomben minimieren will. Und wir haben ja
-eingesehen, dass Bomben grundsätzlich was gutes sind.
+
  
 Wir betrachten kurz zwei weitere Strategien bezgl. ihrer Bombenchance:
-- Nur doppelte zum Gegner schupfen
-- Kleinere nach links / Größere nach Rechts oder umgekehrt.
+- Nur doppelte zum Gegner schupfen (<=> Ein Team hält sich an diese Strategie, wenn bei beiden Gegner nur gedoppelte Karten vorkommen)
+	+ Die Wahrscheinlichkeit einer Bombe beim Gegner reduziert sich auf 16.3%(*)/16.2%(**)
+- Kleinere nach links / Größere nach Rechts oder umgekehrt. Dabei wird eine Spezialkarte(Hund, 1) als die niedrigste Karte angesehen.
+	+ Die Wahrscheinlichkeit einer Bombe beim Gegner reduziert sich minimal auf 21.1%(*)/21.4%(**)
 
-Andere Schupfstrategien werden ggfs. in einem gesonderten Post bezgl. ihres erwarteten Rundengewinns analysiert - das ist leider weniger leicht.
+Insgesamt macht es meines Erachtens nach also Sinn mit seinem Partner die klassiche gerade/ungerade Strategie zu befolgen
+und auch nicht davor zurückzuscheuen, nur doppelte zu vergeben - zumindest wenn man Bomben minimieren will.
+Und wir haben ja eingesehen, dass Bomben grundsätzlich was gutes sind.
+Die Strategie, nur doppelte zum Gegner zu schupfen, reduziert Bomben (verständlicherweise) drastisch.
+Allerdings ist mir unklar, ob diese Strategie zum optimalen Spiel dazugehört: Der erwartete Rundengewinn beim Befolgen dieser Strategie ist
+negativ: -12.3(*)/-9.6(**) Punkte. Das mag aber auch einfach daran liegen, dass dort schlechtere Karten vorliegen. Wir wissen nicht, wie die Runde verlaufen wäre,
+wenn man eine andere Schupfstrategie gewählt hätte. Diesen Wert müssten wir davon eigentlich abziehen.
+
 
 
 

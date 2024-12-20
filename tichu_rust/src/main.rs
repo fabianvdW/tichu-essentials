@@ -42,7 +42,7 @@ fn main() {
     //filter_db(db);
     //evaluate_parsing_stats(&db);
     //evaluate_general_stats(&db);
-    //evaluate_bomb_stats(&db);
+    evaluate_bomb_stats(&db);
     //evaluate_exchange_stats(&db);
 
 

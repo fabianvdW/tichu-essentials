@@ -149,6 +149,13 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     let mut exch_rounds = [0; 2];
     let mut not_exch_rounds = [0; 2];
     let mut round_score_diff_given_exch = [0; 2];
+
+    let mut double_exch_strat_rounds = [0; 2];
+    let mut bombs_opp_when_double_exch_strat = [0; 2];
+    let mut round_score_diff_given_double_exch = [0; 2];
+
+    let mut small_big_exch_strat_rounds = [0; 2];
+    let mut bombs_opp_when_small_big_exch_strat = [0; 2];
     for game in db.games.iter() {
         for (round, _) in game.rounds.iter() {
             let bombs_team_1 = (contains_bomb(round.player_rounds[0].final_14()) + contains_bomb(round.player_rounds[2].final_14())).min(1);
@@ -176,11 +183,41 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
                 not_exch_rounds[1] += 1;
                 bombs_opp_when_not_exch[1] += bombs_team_1;
             }
+
+            //Other Exchange strategies:
+            let team_1_double_exch_strat = is_duplicate_strategy((pr0.first_14, pr2.first_14), (lo_card(pr0), ro_card(pr2)), (ro_card(pr0), lo_card(pr2)));
+            let team_2_double_exch_strat = is_duplicate_strategy((pr1.first_14, pr3.first_14), (lo_card(pr1), ro_card(pr3)), (ro_card(pr1), lo_card(pr3)));
+            if team_1_double_exch_strat {
+                double_exch_strat_rounds[0] += 1;
+                bombs_opp_when_double_exch_strat[0] += bombs_team_2;
+                round_score_diff_given_double_exch[0] += round.player_rounds[0].round_score_relative_gain() as i64;
+
+            }
+            if team_2_double_exch_strat {
+                double_exch_strat_rounds[1] += 1;
+                bombs_opp_when_double_exch_strat[1] += bombs_team_1;
+                round_score_diff_given_double_exch[1] += round.player_rounds[1].round_score_relative_gain() as i64;
+
+            }
+
+            let team_1_small_big_exch_strat = is_smaller_bigger_strategy((pr0.first_14, pr2.first_14), (lo_card(pr0), ro_card(pr2)), (ro_card(pr0), lo_card(pr2)));
+            let team_2_small_big_exch_strat = is_smaller_bigger_strategy((pr1.first_14, pr3.first_14), (lo_card(pr1), ro_card(pr3)), (ro_card(pr1), lo_card(pr3)));
+            if team_1_small_big_exch_strat {
+                small_big_exch_strat_rounds[0] += 1;
+                bombs_opp_when_small_big_exch_strat[0] += bombs_team_2;
+            }
+            if team_2_small_big_exch_strat {
+                small_big_exch_strat_rounds[1] += 1;
+                bombs_opp_when_small_big_exch_strat[1] += bombs_team_1;
+            }
         }
     }
     println!("ERS given Exchange Strat: {}", format_slice_abs_relative2_i64(&round_score_diff_given_exch, &exch_rounds));
     println!("Bomb in opponent given Exchange Strat: {}", format_slice_abs_relative2(&bombs_opp_when_exch, &exch_rounds));
     println!("Bomb in opponent given ! Exchange Strat: {}", format_slice_abs_relative2(&bombs_opp_when_not_exch, &not_exch_rounds));
+    println!("ERS given Dobule Exchange Strat: {}", format_slice_abs_relative2_i64(&round_score_diff_given_double_exch, &double_exch_strat_rounds));
+    println!("Bomb in opponent given Double Exchange Strat: {}", format_slice_abs_relative2(&bombs_opp_when_double_exch_strat, &double_exch_strat_rounds));
+    println!("Bomb in opponent given small big Exchange Strat: {}", format_slice_abs_relative2(&bombs_opp_when_small_big_exch_strat, &small_big_exch_strat_rounds));
 
     //How many bombs are due to one exchange card in particular?
     let mut bomb_spawn_team = [0; 2];
@@ -262,4 +299,22 @@ fn is_even_odd_or_duplicate_strategy(p_hands: (Hand, Hand), p_opp_1: (CardType, 
     let opp_1 = matches_strategy(p_hands.0, p_hands.1, p_opp_1) || matches_strategy(p_hands.1, p_hands.0, (p_opp_1.1, p_opp_1.0));
     let opp_2 = matches_strategy(p_hands.0, p_hands.1, p_opp_2) || matches_strategy(p_hands.1, p_hands.0, (p_opp_2.1, p_opp_2.0));
     opp_1 & opp_2
+}
+
+fn is_duplicate_strategy(p_hands: (Hand, Hand), p_opp_1: (CardType, CardType), p_opp_2: (CardType, CardType)) -> bool {
+    let is_duplicate = |p_hand: Hand, card_type: CardType| card_type >= TWO && (p_hand & MASK_FOUR_OF_KIND[(card_type - 1) as usize]).count_ones() >= 2;
+    let matches_strategy = |h_1: Hand, h_2: Hand, exch_cards: (CardType, CardType)| {
+        (is_duplicate(h_1, exch_cards.0) || exch_cards.0 == SPECIAL_CARD) &&
+            (is_duplicate(h_2, exch_cards.1) || exch_cards.1 == SPECIAL_CARD)
+    };
+    let opp_1 = matches_strategy(p_hands.0, p_hands.1, p_opp_1) || matches_strategy(p_hands.1, p_hands.0, (p_opp_1.1, p_opp_1.0));
+    let opp_2 = matches_strategy(p_hands.0, p_hands.1, p_opp_2) || matches_strategy(p_hands.1, p_hands.0, (p_opp_2.1, p_opp_2.0));
+    opp_1 & opp_2
+}
+fn is_smaller_bigger_strategy(p_hands: (Hand, Hand), p_opp_1: (CardType, CardType), p_opp_2: (CardType, CardType)) -> bool {
+    //W.l.o.g. p_opp_1.0 <= p_opp_2.0
+    if p_opp_1.0 > p_opp_2.0 {
+        return is_smaller_bigger_strategy((p_hands.1, p_hands.0), p_opp_2, p_opp_1);
+    }
+    p_opp_1.1 >= p_opp_2.1
 }
