@@ -1,0 +1,2 @@
+Loaded 44794 games and 400881 rounds!
+ERS given exchange of Mahjong to enemy: ["-1.4286", "-0.1681", "1.9284", "-21.7773"] (Avg. -5.3614, Abs: [-570, -60, 700, -9190], Div: [399, 357, 363, 422])

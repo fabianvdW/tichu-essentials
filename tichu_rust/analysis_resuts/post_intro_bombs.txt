@@ -78,11 +78,12 @@ Die Tichu Success Rate steigt auf 79.3%(*)/79.4%(**) [von den Default 73.4%(*)/7
 Da Bomben also gut sind, ist es naheliegend, die Wahrscheinlichkeit einer Bombe beim Gegner zu minimieren. Die in Tichu.one bekannte Schupfstrategie, gerade rechts,
 ungerade links wurde schließlich auch damit im Hinterkopf entworfen. Doch wie effektiv ist das eigentlich?
 
-Ich habe die Wahrscheinlichkeit einer Bombe beim Gegner untersucht, gegeben dass man sich an die Schupfstrategie hält oder nicht. Die Strategie hab ich etwas relaxiert:
-An die Strategie hält sich ein Team, wenn bei jedem Gegner entweder gerade + ungerade, oder gerade/ungerade + doppelte oder gerade/ungerade + sonderkarte ankommt. 
+Ich habe die Wahrscheinlichkeit einer Bombe beim Gegner untersucht, gegeben dass man sich an die Schupfstrategie hält oder nicht. Die Strategie habe ich etwas relaxiert:
+An die Strategie hält sich ein Team, wenn bei jedem Gegner entweder gerade + ungerade, oder gerade/ungerade + doppelte oder gerade/ungerade + Sonderkarte ankommt. 
 Das doppelt bezieht sich hier auf die Ursprungshand, aus der die Karte kam, denn das verhindert ja bereits eine Viererbombe beim Gegner.
-Die Sonderkarte ist in den meisten Fällen wohl der Hund. (1 Schupfen ist nicht gut [TODO Check this], wird in einem anderen Post nochmal behandelt). ungerade links, gerade rechts usw. wäre damit also auch legitim.
-Nicht an die Strategie halten ist damit äquivalent dazu, dass bei einem Gegner zwei gerade und nicht gedoppelte oder zwei ungerade und nicht gedoppelte Karten ankommen.
+Die Sonderkarte ist in den meisten Fällen wohl der Hund. (1 Schupfen ist nicht gut, bzw.
+Runden, in denen die 1 zum Gegner geschupft, haben negativen erwarteten Rundengewinn [-13.9(*)/5.3(*) Pkte], wird in einem anderen Post nochmal behandelt).
+Ungerade links, gerade rechts usw. wäre damit also auch legitim. Nicht an die Strategie halten ist damit äquivalent dazu, dass bei einem Gegner zwei gerade und nicht gedoppelte oder zwei ungerade und nicht gedoppelte Karten ankommen.
 
 Und tatsächlich: Die Wahrscheinlichkeit einer Bombe beim Gegner reduziert sich damit auf insgesamt 20.3%(*)/20.7%(**).
 Hier kam meine erste persönliche Überraschung: Das ist weitaus weniger wenig (gegenüber den Default 21.7%/22.4%), als erwartet.
