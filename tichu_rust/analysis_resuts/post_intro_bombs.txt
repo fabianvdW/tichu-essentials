@@ -46,24 +46,32 @@ Wie in meinem letzten Post bereits berichtet, beträgt die Wahrscheinlichkeit ei
 Das ist zwar nett zu Wissen, bringt aber relativ wenig. Die Wahrscheinlichkeit einer Bombe auf meiner Hand nach dem Schupfen ist da schon aussagekräftiger: 11.7%(*)/11.8%(**).
 Wenn ich spiele, ist mir eigentlich auch egal, ob jetzt mein linker oder rechter Gegner die Bombe hat. Interessierter bin ich eher daran, ob EINER meiner Gegner eine Bombe hat.
 Diese Wahrscheinlichkeit beträgt 21.7%(*)/21.9%(**). Die Wahrscheinlichkeit einer Bombe in einer Runde ist etwa 37.9%(*)/38.3%(**).
+
 Natürlich hängt diese Wahrscheinlichkeit auch von meinen eigenen Karten ab - wie in diesem Forum auch schon richtigerweise gemutmaßt, ist die Wahrscheinlichkeit einer Bombe beim Gegner etwas höher,
 wenn ich selbst eine besitze: 25.7%(* und **). Dooferweise steigt die Wahrscheinlichkeit einer Bombe beim Gegner aber auch bei einer Ansage meinerseits: 22.7%(*)/23.0%(*).
 Das kann tatsächlich aber durch Korrelation mit den Bomben die man selbst hat erklärt werden -
 die Wahrscheinlichkeit einer Bombe beim Gegner gegeben einer Ansage meinerseits, und keiner Bombe meinerseits
-ist auf beiden Datensätzen nur etwas höher als der Defaultwert: 21.7%(*)/22.4%/**).
+ist auf beiden Datensätzen nur etwas höher als der Defaultwert: 21.7%(*)/22.4%(**).
 
-Für Kontertichus sind folgende Wahrscheinlichkeiten noch interessant: 
-Wahrscheinlichkeit einer Bombe gegeben einer Ansage:  26%(*)/24.7%(*).
-Wahrscheinlichkeit einer Bombe gegen einer kleinen Tichu Ansage mit 2 oder weniger Highcards(***): 40.1%(*)/39.8%(**)
+Wenn ein Gegner ein Tichu ansagt, ist man manchmal in der glücklichen Lage, selbst gute Karten zu besitzen. 
+Sind sie sehr gut, kann man ggfs.  ein Kontertichu ansagen. Dabei ist folgendes relevant:
+- Wahrscheinlichkeit, dass Gegner Bombe hat, gegeben einer großen Tichu Ansage:  28.4%(*)/28.5%(*).
+- Wahrscheinlichkeit, dass Gegner Bombe hat, gegeben einer Tichu Ansage:  21.7%(*)/21.1%(*).
+- Wahrscheinlichkeit, dass Gegner Bombe hat, gegeben einer  Tichu Ansage mit 2 oder weniger Highcards(***): 40.1%(*)/39.8%(**)
 
+
+Bei einem großen Tichu hat der Gegner genauso wahrscheinlich wie immer eine Bombe. Bei einem kleinen Tichu hingegen erhöht sich die Wahrscheinlichkeit drastisch.
+Hat man selbst 4 High Cards, so hat der Gegner bereits zu 40% eine Bombe. 
 Ob man ein Kontertichu also Bombensicher oder überhaupt gestalten möchte würde ich (wie immer) vom Gegnertyp, Puntkestand und und und abhängig machen.
 
+=== Güte von Bomben
 Sind Bomben denn eigentlich gut? :P Ja! Das kann man auch ganz klar nachweisen:
 Der erwartete Rundengewinn gegeben einer Bombe im Team beträgt 70.5(*)/90.7(*).
 
 Das entsteht, wie wir alle wissen, aufgrund der folgenden Faktoren: 
 - Zerstören eines Tichu's:  TODO.
-- Möglichkeit, selbst ein Tichu anzusagen: TODO.
+- Möglichkeit, selbst ein Tichu anzusagen: Die Call Rate bei besitzen einer Bombe steigt auf 23.7%(*)/21.6%(**) [von den Default 13.9%(*)/13.0%(**)].
+Die Tichu Success Rate steigt auf 79.3%(*)/79.4%(**) [von den Default 73.4%(*)/72.2%(**)].
 - ...
 
 Da Bomben also gut sind, ist es naheliegend, die Wahrscheinlichkeit einer Bombe beim Gegner zu minimieren. Die in Tichu.one bekannte Schupfstrategie, gerade rechts,
@@ -72,13 +80,14 @@ ungerade links wurde schließlich auch damit im Hinterkopf entworfen. Doch wie e
 Ich habe die Wahrscheinlichkeit einer Bombe beim Gegner untersucht, gegeben dass man sich an die Schupfstrategie hält oder nicht. Die Strategie hab ich etwas relaxiert:
 An die Strategie hält sich ein Team, wenn bei jedem Gegner entweder gerade + ungerade, oder gerade/ungerade + doppelte oder gerade/ungerade + sonderkarte ankommt. 
 Das doppelt bezieht sich hier auf die Ursprungshand, aus der die Karte kam, denn das verhindert ja bereits eine Viererbombe beim Gegner.
-Die Sonderkate ist in den meisten Fällen wohl der Hund. (1 Schupfen ist nicht gut [TODO Check this], wird in einem anderen Post nochmal behandelt). ungerade links, gerade rechts usw. wäre damit also auch legitim.
+Die Sonderkarte ist in den meisten Fällen wohl der Hund. (1 Schupfen ist nicht gut [TODO Check this], wird in einem anderen Post nochmal behandelt). ungerade links, gerade rechts usw. wäre damit also auch legitim.
 Nicht an die Strategie halten ist damit äquivalent dazu, dass bei einem Gegner zwei gerade und nicht gedoppelte oder zwei ungerade und nicht gedoppelte Karten ankommen.
 
 Und tatsächlich: Die Wahrscheinlichkeit einer Bombe beim Gegner reduziert sich damit auf insgesamt 20.3%(*)/20.7%(**).
 Hier kam meine erste persönliche Überraschung: Das ist weitaus weniger wenig (gegenüber den Default 21.7%/22.4%), als erwartet.
 Das liegt aber auch daran, dass die Strategie in den meisten Runden angewendet wird. 
-Die Wahrscheinlichkeit einer Bombe beim Gegner wenn man sich nicht an die Schupfstrategie hält beträgt 27.9%(*)/28.1(*) - ca 36% höher als beim daran halten.
+Die Wahrscheinlichkeit einer Bombe beim Gegner wenn man sich nicht an die Schupfstrategie hält, beträgt 27.9%(*)/28.1(*).
+Das ist ca 36% höher gegenüber der Wahrscheinlichkeit, wenn man sich an die Strategie hält.
 
 
 === Aufschlüsselung der Bomben

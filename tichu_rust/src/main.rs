@@ -36,7 +36,7 @@ fn main() {
     //let db = DataBase::from_bsw().unwrap();
     //db.write("bsw.db").unwrap();
 
-    let db = DataBase::read("bsw_filtered.db").unwrap();
+    let db = DataBase::read("bsw.db").unwrap();
     println!("Loaded {} games and {} rounds!", db.games.len(), db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len() ));
     //filter_db(db);
     //evaluate_parsing_stats(&db);

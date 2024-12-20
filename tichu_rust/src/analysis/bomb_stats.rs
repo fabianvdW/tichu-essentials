@@ -1,11 +1,10 @@
 use crate::analysis::{format_slice_abs_relative, format_slice_abs_relative2, format_slice_abs_relative2_i64};
-use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, CALL_NONE, CALL_TICHU};
+use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, CALL_GRAND_TICHU, CALL_NONE, CALL_TICHU, RANK_1};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_database::DataBase;
 use crate::hand;
 use crate::tichu_hand::{get_card_type, CardIndex, CardType, Hand, TichuHand, MASK_FOUR_OF_KIND, SPECIAL_CARD, TWO};
 
-//TODO: Tich Call Rate given bomb Tichu Succes Rate given bomb, Tichu SR Enemy given bomb.
 //TODO: ERS Pair splitting, Bomb % pair splitting
 pub fn evaluate_bomb_stats(db: &DataBase) {
     //Evaluate bomb probability, first 8, first 14, final 14 for each player.
@@ -44,12 +43,20 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
 
     //Probability of bomb in opp when calling or having bomb, also Expected round score differences when a bomb is in the team.
     //Probability of own bomb when calling
-    let mut bombs_self_when_call = [0; 4];
+    let mut bombs_self_when_tcall = [0; 4];
+    let mut bombs_self_when_gtcall = [0; 4];
     let mut bombs_self_when_tcall_two_hc_or_less = [0; 4];
     let mut bombs_opp_when_call_no_bomb = [0; 4];
     let mut bombs_opp_when_call = [0; 4];
     let mut bombs_opp_when_bomb = [0; 4];
+
     let mut call_rounds = [0; 4];
+    let mut gtcall_rounds = [0; 4];
+    let mut tcall_rounds = [0; 4];
+    let mut tcall_and_bomb_rounds = [0; 4];
+    let mut tcall_and_bomb_successes = [0; 4];
+    let mut tcall_and_enemy_bomb_rounds = [0; 4];
+    let mut tcall_and_enemy_bomb_successes = [0; 4];
     let mut call_rounds_no_bomb = [0; 4];
     let mut tcall_rounds_two_hc_or_less = [0; 4];
 
@@ -65,18 +72,35 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
             let bombs_team_2 = (p1_bombs + p3_bombs).min(1);
             let bombs = [bombs_team_1, bombs_team_2];
             for player_id in 0..4 {
-                if round.player_rounds[0].player_call(player_id) != CALL_NONE {
-                    call_rounds[player_id as usize] += 1;
-                    if p_bombs[player_id as usize] == 0 {
-                        call_rounds_no_bomb[player_id as usize] += 1;
-                        bombs_opp_when_call_no_bomb[player_id as usize] += bombs[((player_id + 1) % 2) as usize];
+                let call = round.player_rounds[0].player_call(player_id);
+                if call == CALL_NONE {
+                    continue;
+                }
+                call_rounds[player_id as usize] += 1;
+                if p_bombs[player_id as usize] == 0 {
+                    call_rounds_no_bomb[player_id as usize] += 1;
+                    bombs_opp_when_call_no_bomb[player_id as usize] += bombs[((player_id + 1) % 2) as usize];
+                }
+                bombs_opp_when_call[player_id as usize] += bombs[((player_id + 1) % 2) as usize];
+                if call == CALL_TICHU {
+                    tcall_rounds[player_id as usize] += 1;
+                    bombs_self_when_tcall[player_id as usize] += bombs[(player_id % 2) as usize];
+                    if p_bombs[player_id as usize] == 1 {
+                        tcall_and_bomb_rounds[player_id as usize] += 1;
+                        tcall_and_bomb_successes[player_id as usize] += (round.player_rounds[0].player_rank(player_id) == RANK_1) as usize;
                     }
-                    bombs_opp_when_call[player_id as usize] += bombs[((player_id + 1) % 2) as usize];
-                    bombs_self_when_call[player_id as usize] += bombs[(player_id % 2) as usize];
-                    if round.player_rounds[0].player_call(player_id) == CALL_TICHU && round.player_rounds[player_id as usize].final_14().get_high_card_amt() <= 2 {
-                        tcall_rounds_two_hc_or_less[player_id as usize] += 1;
-                        bombs_self_when_tcall_two_hc_or_less[player_id as usize] += bombs[(player_id % 2) as usize];
+                    if bombs[((player_id + 1) % 2) as usize] == 1 {
+                        tcall_and_enemy_bomb_rounds[player_id as usize] += 1;
+                        tcall_and_enemy_bomb_successes[player_id as usize] += (round.player_rounds[0].player_rank(player_id) == RANK_1) as usize;
                     }
+                }
+                if call == CALL_TICHU && round.player_rounds[player_id as usize].final_14().get_high_card_amt() <= 2 {
+                    tcall_rounds_two_hc_or_less[player_id as usize] += 1;
+                    bombs_self_when_tcall_two_hc_or_less[player_id as usize] += bombs[(player_id % 2) as usize];
+                }
+                if call == CALL_GRAND_TICHU {
+                    gtcall_rounds[player_id as usize] += 1;
+                    bombs_self_when_gtcall[player_id as usize] += bombs[(player_id % 2) as usize];
                 }
             }
             if bombs_team_1 > 0 {
@@ -100,11 +124,15 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
         }
     }
     println!("ERS given Bomb: {}", format_slice_abs_relative2_i64(&round_score_diff_given_bomb, &bombs_team_rounds));
-    println!("Bomb on hand given Call: {}", format_slice_abs_relative2(&bombs_self_when_call, &call_rounds));
+    println!("Bomb on hand given TCall: {}", format_slice_abs_relative2(&bombs_self_when_tcall, &tcall_rounds));
+    println!("Bomb on hand given GTCall: {}", format_slice_abs_relative2(&bombs_self_when_gtcall, &gtcall_rounds));
     println!("Bomb on hand given TCall & <=2 HC: {}", format_slice_abs_relative2(&bombs_self_when_tcall_two_hc_or_less, &tcall_rounds_two_hc_or_less));
-    println!("Bomb in opponent given Call: {}", format_slice_abs_relative2(&bombs_opp_when_call, &call_rounds));
-    println!("Bomb in opponent given Call & No-self obmb: {}", format_slice_abs_relative2(&bombs_opp_when_call_no_bomb, &call_rounds_no_bomb));
+    println!("Bomb in opponent given any Call: {}", format_slice_abs_relative2(&bombs_opp_when_call, &call_rounds));
+    println!("Bomb in opponent given Call & No-self bomb: {}", format_slice_abs_relative2(&bombs_opp_when_call_no_bomb, &call_rounds_no_bomb));
     println!("Bomb in opponent given Bomb: {}", format_slice_abs_relative2(&bombs_opp_when_bomb, &bombs_final_14));
+    println!("Tichu Call Rate given self bomb: {}", format_slice_abs_relative2(&tcall_and_bomb_rounds, &bombs_final_14));
+    println!("Tichu Success Rate given self bomb: {}", format_slice_abs_relative2(&tcall_and_bomb_successes, &tcall_and_bomb_rounds));
+    println!("Tichu Success Rate given enemy bomb: {}", format_slice_abs_relative2(&tcall_and_enemy_bomb_successes, &tcall_and_enemy_bomb_rounds));
 
     //Probability of bomb when following even_odd duplicate strategy
     let lo_card = |prh: &PlayerRoundHand| get_card_type(prh.left_out_exchange_card());
