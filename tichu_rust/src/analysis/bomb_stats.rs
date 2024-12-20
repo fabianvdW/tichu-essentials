@@ -156,6 +156,7 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
 
     let mut small_big_exch_strat_rounds = [0; 2];
     let mut bombs_opp_when_small_big_exch_strat = [0; 2];
+    let mut round_score_diff_given_small_big_exch = [0; 2];
     for game in db.games.iter() {
         for (round, _) in game.rounds.iter() {
             let bombs_team_1 = (contains_bomb(round.player_rounds[0].final_14()) + contains_bomb(round.player_rounds[2].final_14())).min(1);
@@ -205,18 +206,21 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
             if team_1_small_big_exch_strat {
                 small_big_exch_strat_rounds[0] += 1;
                 bombs_opp_when_small_big_exch_strat[0] += bombs_team_2;
+                round_score_diff_given_small_big_exch[0] += round.player_rounds[0].round_score_relative_gain() as i64;
             }
             if team_2_small_big_exch_strat {
                 small_big_exch_strat_rounds[1] += 1;
                 bombs_opp_when_small_big_exch_strat[1] += bombs_team_1;
+                round_score_diff_given_small_big_exch[1] += round.player_rounds[1].round_score_relative_gain() as i64;
             }
         }
     }
     println!("ERS given Exchange Strat: {}", format_slice_abs_relative2_i64(&round_score_diff_given_exch, &exch_rounds));
     println!("Bomb in opponent given Exchange Strat: {}", format_slice_abs_relative2(&bombs_opp_when_exch, &exch_rounds));
     println!("Bomb in opponent given ! Exchange Strat: {}", format_slice_abs_relative2(&bombs_opp_when_not_exch, &not_exch_rounds));
-    println!("ERS given Dobule Exchange Strat: {}", format_slice_abs_relative2_i64(&round_score_diff_given_double_exch, &double_exch_strat_rounds));
+    println!("ERS given Double Exchange Strat: {}", format_slice_abs_relative2_i64(&round_score_diff_given_double_exch, &double_exch_strat_rounds));
     println!("Bomb in opponent given Double Exchange Strat: {}", format_slice_abs_relative2(&bombs_opp_when_double_exch_strat, &double_exch_strat_rounds));
+    println!("ERS given BigSmall Exchange Strat: {}", format_slice_abs_relative2_i64(&round_score_diff_given_small_big_exch, &small_big_exch_strat_rounds));
     println!("Bomb in opponent given small big Exchange Strat: {}", format_slice_abs_relative2(&bombs_opp_when_small_big_exch_strat, &small_big_exch_strat_rounds));
 
     //How many bombs are due to one exchange card in particular?

@@ -139,7 +139,7 @@ Ich habe also auch keinen Nachweis für die Unwichtigkeit der Strategie.
 
  
 Wir betrachten kurz zwei weitere Strategien bezgl. ihrer Bombenchance:
-- Nur doppelte zum Gegner schupfen (<=> Ein Team hält sich an diese Strategie, wenn bei beiden Gegner nur gedoppelte Karten vorkommen)
+- Nur doppelte zum Gegner schupfen (<=> Ein Team hält sich an diese Strategie, wenn bei beiden Gegner nur gedoppelte Karten ankommen)
 	+ Die Wahrscheinlichkeit einer Bombe beim Gegner reduziert sich auf 16.3%(*)/16.2%(**)
 - Kleinere nach links / Größere nach Rechts oder umgekehrt. Dabei wird eine Spezialkarte(Hund, 1) als die niedrigste Karte angesehen.
 	+ Die Wahrscheinlichkeit einer Bombe beim Gegner reduziert sich minimal auf 21.1%(*)/21.4%(**)
@@ -151,6 +151,9 @@ Die Strategie, nur doppelte zum Gegner zu schupfen, reduziert Bomben (verständl
 Allerdings ist mir unklar, ob diese Strategie zum optimalen Spiel dazugehört: Der erwartete Rundengewinn beim Befolgen dieser Strategie ist
 negativ: -12.3(*)/-9.6(**) Punkte. Das mag aber auch einfach daran liegen, dass dort schlechtere Karten vorliegen. Wir wissen nicht, wie die Runde verlaufen wäre,
 wenn man eine andere Schupfstrategie gewählt hätte. Diesen Wert müssten wir davon eigentlich abziehen.
+Eine weitere Alternative ist die dritte Schupfstrategie mit klein links + groß rechts oder umgekehrt. Das erhöht die Bombenwahrscheinlichkeit  leicht gegenüber
+gerade + ungerade. Der erwartete Rundengewinn auf dem Datensatz ist für diese Strategie leicht positiv 2.5(*)/3.1(**). Auch hier wissen wir aber nicht,
+wie die Runde verlaufen wäre, wenn man eine andere Strategie gewählt hätte. Es kann sein, dass man gerade in diesen Runden besonders gute Karten hat.
 
 
 
