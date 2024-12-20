@@ -3,10 +3,12 @@ Dazu werden, wie sich das in der Statistik halt so gehört, ein Haufen Wahrschei
 Wer davon kein Fan ist, freut sich vielleicht trotzdem an den Interpretationen die ich basierend darauf mache - ab und zu wage ich mich sogar zu echten Schlussfolgerungen.
 Insgesamt ist das Ziel, bisherige Tichu Strategien statistisch zu beurteilen und ggfs. optimales Spielen herzuleiten.
 
-Optimales Spielen - was ist das eigentlich? Mein Definitionsversuch: Die Art des Spielens, mit derer man selbst (vorausgesetzt der Partner kennt die eigene Spielstrategie)
+Optimales Spielen - was ist das eigentlich? Mein Definitionsversuch: Die Art des Spielens, mit derer man (vorausgesetzt der Partner kennt die eigene Spielstrategie)
 seine Winrate maximiert.
+Achtung: Das unterscheidet sich also per Definition bereits von einem Spiel, dass man mit einem inkompetenten/weniger aufgeklärten Teampartner spielen müsste.
+So ein Spiel interessiert mich aber auch nicht.
 
-Etwas leichter zu analysieren ist oft das Spiel, dass den erwarteten Punktegewinn gegenüber des  Gegners maximiert. In dieser Metrik würden also 
+Etwas leichter zu analysieren ist das Spiel, dass den erwarteten Punktegewinn gegenüber des  Gegners maximiert. In dieser Metrik würde also 
 ein 100-0 genausogut abschneiden wie ein 150-50 oder 200-100: In allen Fällen ist der Punktegewinn gegenüber des Gegners 100. Da am Ende des Spiels nur zählt, ob die Differenz der
 eigenen Punkte mit derer der Gegner > 0 ist oder nicht, ist es naheliegend, dass sich optimales Spiel oft mit dieser Art des Spielens deckt.
 
@@ -17,14 +19,15 @@ Was den erwarteten Punktegewinn angeht, so lautet die Antwort (denke ich zuminde
 Wenn ich aber meine Gewinnchancen maximieren will, so wäre das GT keine schlechte Idee.
 Ich hoffe man hat den Unterschied verstanden, unabhängig davon ob man mit den exakten Aussagen im Beispiel d'accord geht oder nicht.
 
-Der erwartete Rundengewinn ist insofern leichter zu analysieren, da wir diesen Erwartungswert einfach durch den Durchschnitt schätzen können. Ich werde also im Folgenden oft den erwarteten Rundengewinn
+Der erwartete Rundengewinn ist insofern leichter zu analysieren, da wir diesen Erwartungswert einfach durch den Durchschnitt schätzen können. 
+Ich werde also im Folgenden oft den erwarteten Rundengewinn
 (ein theoretisches Objekt) synonym zu dem durchschnittlichen Rundengewinn (eine Zahl, ausgewertet auf dem Datensatz) benutzen.
 
 Ideel deckt sich das optimale Spiel mit dem "Rundengewinnmaximierungsspiel" also nur, wenn noch genügend Zeit im Spiel übrig ist und man nicht in starker
 Bedrängnis ist. Das sollte man bei all meinen Analysen im Hinterkopf behalten. 
 Darüber hinaus sollte man sich im klaren sein, dass die folgenden Statistiken  NIE!! den Einzelfall repräsentieren, den man in der Runde vor sich hat. Dafür gibt es schlicht
-nicht genügend Daten. Das heißt nicht, dass wir unser Spielstrategie nicht basierend der Statistiken überdenken und anpassen können - aber wer Stur
-wie ein Roboter spielt und zu viel in die Statistiken reininterpretiert anstatt den menschlich + psychologischen Faktor mit zu berücksichtigen wird im Nachteil bleiben.
+nicht genügend Daten. Das heißt nicht, dass wir unser Spielstrategie nicht basierend der Statistiken überdenken und anpassen können - aber wer stur
+wie ein Roboter spielt, zu viel in die Statistiken reininterpretiert, und den menschlichen und psychologischen Faktor nicht berücksichtigt, wird im Nachteil bleiben.
 
 Dieser Absatz ist für Mathematiker: Unten berichte ich oft einen Wert einer Wahrscheinlichkeit, bspw. die Wahrscheinlichkeit einer Bombe beim Gegner gegeben eine Ansage meinerseits.
 Korrekterweise müsste ich hier vier Werte berichten: Nämlich einmal für Spieler 0, 1, 2 und 3 jeweils auf dem Datensatz ausgerechnet. Diese Wahrscheinlichkeiten sind nämlich nicht
@@ -40,17 +43,18 @@ sind mit ** markiert.
 
 == Bomben
 Wie in meinem letzten Post bereits berichtet, beträgt die Wahrscheinlichkeit einer Bombe unter den ersten 8 eines Spielers ca 0.3% und unter den ersten 14 ca 5.1%.
-Das ist zwar nett zu Wissen, bringt aber relativ wenig. Die Wahrscheinlichkeit einer Bombe nach dem Schupfen ist da schon aussagekräftiger: 11.7%(*)/11.8%(**).
+Das ist zwar nett zu Wissen, bringt aber relativ wenig. Die Wahrscheinlichkeit einer Bombe auf meiner Hand nach dem Schupfen ist da schon aussagekräftiger: 11.7%(*)/11.8%(**).
 Wenn ich spiele, ist mir eigentlich auch egal, ob jetzt mein linker oder rechter Gegner die Bombe hat. Interessierter bin ich eher daran, ob EINER meiner Gegner eine Bombe hat.
 Diese Wahrscheinlichkeit beträgt 21.7%(*)/21.9%(**). Die Wahrscheinlichkeit einer Bombe in einer Runde ist etwa 37.9%(*)/38.3%(**).
 Natürlich hängt diese Wahrscheinlichkeit auch von meinen eigenen Karten ab - wie in diesem Forum auch schon richtigerweise gemutmaßt, ist die Wahrscheinlichkeit einer Bombe beim Gegner etwas höher,
 wenn ich selbst eine besitze: 25.7%(* und **). Dooferweise steigt die Wahrscheinlichkeit einer Bombe beim Gegner aber auch bei einer Ansage meinerseits: 22.7%(*)/23.0%(*).
-Das kann tatsächlich aber durch Korrelation mit den Bomben die man selbst hat erklärt werden - die Wsk einer Bombe beim Gegner gegeben einer Ansage meinerseits, und keiner Bombe meinerseits
+Das kann tatsächlich aber durch Korrelation mit den Bomben die man selbst hat erklärt werden -
+die Wahrscheinlichkeit einer Bombe beim Gegner gegeben einer Ansage meinerseits, und keiner Bombe meinerseits
 ist auf beiden Datensätzen nur etwas höher als der Defaultwert: 21.7%(*)/22.4%/**).
 
 Für Kontertichus sind folgende Wahrscheinlichkeiten noch interessant: 
 Wahrscheinlichkeit einer Bombe gegeben einer Ansage:  26%(*)/24.7%(*).
-Wahrscheinlichkeit einer Bombe gegen einer Ansage mit 2 oder weniger Highcards(***): 40.1%(*)/39.8%(**)
+Wahrscheinlichkeit einer Bombe gegen einer kleinen Tichu Ansage mit 2 oder weniger Highcards(***): 40.1%(*)/39.8%(**)
 
 Ob man ein Kontertichu also Bombensicher oder überhaupt gestalten möchte würde ich (wie immer) vom Gegnertyp, Puntkestand und und und abhängig machen.
 
@@ -64,21 +68,48 @@ Das entsteht, wie wir alle wissen, aufgrund der folgenden Faktoren:
 
 Da Bomben also gut sind, ist es naheliegend, die Wahrscheinlichkeit einer Bombe beim Gegner zu minimieren. Die in Tichu.one bekannte Schupfstrategie, gerade rechts,
 ungerade links wurde schließlich auch damit im Hinterkopf entworfen. Doch wie effektiv ist das eigentlich?
-Ich habe die Wahrscheinlichkeit einer Bombe beim Gegner untersucht, gegeben dass man sich an die Schupfstrategie hält. Die Strategie hab ich etwas relaxiert:
-An die Strategie hält man sich, wenn bei jedem Gegner entweder gerade+ ungerade, oder gerade/ungerade+doppelte oder gerade/ungerade+sonderkarte ankommt. Die Sonderkate ist 
-in den meisten Fällen wohl der Hund. (1 Schupfen ist nicht gut [TODO Check this], wird in einem anderen Post nochmal behandelt).
 
-Und tatsächlich: Die Wahrscheinlichkeit einer Bombe beim Gegner reduziert sich damit auf 20.3%(*)/20.7%(**).
+Ich habe die Wahrscheinlichkeit einer Bombe beim Gegner untersucht, gegeben dass man sich an die Schupfstrategie hält oder nicht. Die Strategie hab ich etwas relaxiert:
+An die Strategie hält sich ein Team, wenn bei jedem Gegner entweder gerade + ungerade, oder gerade/ungerade + doppelte oder gerade/ungerade + sonderkarte ankommt. 
+Das doppelt bezieht sich hier auf die Ursprungshand, aus der die Karte kam, denn das verhindert ja bereits eine Viererbombe beim Gegner.
+Die Sonderkate ist in den meisten Fällen wohl der Hund. (1 Schupfen ist nicht gut [TODO Check this], wird in einem anderen Post nochmal behandelt). ungerade links, gerade rechts usw. wäre damit also auch legitim.
+Nicht an die Strategie halten ist damit äquivalent dazu, dass bei einem Gegner zwei gerade und nicht gedoppelte oder zwei ungerade und nicht gedoppelte Karten ankommen.
+
+Und tatsächlich: Die Wahrscheinlichkeit einer Bombe beim Gegner reduziert sich damit auf insgesamt 20.3%(*)/20.7%(**).
 Hier kam meine erste persönliche Überraschung: Das ist weitaus weniger wenig (gegenüber den Default 21.7%/22.4%), als erwartet.
-Tatsächlich ist es so, dass die meisten Bomben entweder bereits unter den ersten 14 waren, oder aus der Karte des Partners in Kombination mit NUR EINER der beiden Schupfkarten der anderen Spieler entstehen.
-Selbst in den Runden, wo sich explizit NICHT an die Schupfstrategie gehalten wurde, entstehen gerade mal 13% aller Bomben erst aus der Kombination ALLER Schupfkarten.
-Die verbleibenden 87% hätte man bereits mit einer der Schupfkarten vom Gegner und der des Partners gehabt.
+Das liegt aber auch daran, dass die Strategie in den meisten Runden angewendet wird. 
+Die Wahrscheinlichkeit einer Bombe beim Gegner wenn man sich nicht an die Schupfstrategie hält beträgt 27.9%(*)/28.1(*) - ca 36% höher als beim daran halten.
 
-Einen statischten Nachweis für die Wichtigkeit der Schupfstrategie konnte ich tatsächlich auch nicht liefern: Der erwartete Rundengewinn
+
+=== Aufschlüsselung der Bomben
+Um das noch etwas besser zu verstehen, schlüsseln wir die Basis Bombenwahrscheinlichkeit von 21.7%(*)/21.9%(**) in vier Kategorien auf: 
+1. Bomben die man unter den ersten 14 hat: 9.13%(* und **)
+2. Bomben, die von der Schupfkarte des Partners kamen: 4.04%(*)/3.98%(**)
+3. Bomben, die von der Schupfkarte des Partners und EINER der beiden Schupfkarten des Gegners kamen: 7.52%(*)/8.05%(**)
+4. Alle verbleibenden Bomben, also die, die aus allen Schupfkarten entstehen: 1.02%(*)/0.76%(**).
+
+Tatsächlich ist es also so, dass die meisten Bomben entweder bereits unter den ersten 14 waren, oder aus der Karte des Partners in Kombination mit NUR EINER der beiden Schupfkarten der anderen Spieler entstehen.
+Hält man sich an die Schupfstrategie, so lautet die Aufschlüsselung [9.09%, 4.11%, 6.75%, 0.32%](*)/[9.06%,4.03%,7.34%,0.3%](**).
+Hält man sich nicht an die Schupfstrategie, so lautet die Aufschlüsselung [9.36%, 3.72%, 10.90%, 4.09%](*)/[9.52%, 3.72%, 11.79%, 3.14%](**).
+
+Wie erwartet ändert sich also mit befolgen/nicht befolgen der Strategie hauptsächlich die Wahrscheinlichkeit für Kategorie 4 Bomben.
+Wieso die Wahrscheinlichkeit größer wird, eine Bombe der Kategorie 3 zu schupfen, wenn man die Schupfstrategie nicht befolgt, ist mir zum jetzigen Zeitpunkt unklar, ist
+aber wohl so.
+
+Einen statistischen Nachweis für die Wichtigkeit der Schupfstrategie konnte ich tatsächlich  nicht liefern: Der erwartete Rundengewinn
 beim befolgen der Schupfstrategie bewegt sich nahe 0 (ist sogar leicht negativ). Das mag aber auch einfach daran liegen, dass fast alle Runden
-eben mit dieser Strategie gespielt wurden und die Auswirkungen auf die Bomben marginal ist. 
-Trotzdem macht es Sinn mit seinem Partner eine solche Strategie zu befolgen - zumindest wenn man Bomben minimieren will. 
-Andere Schupfstrategien werde ich in einem gesonderten Post bezgl. ihres erwarteten Rundengewinns analysieren.
+eben mit dieser Strategie gespielt wurden und die Auswirkungen auf die Bomben eher gering ist. Zudem wissen wir auch nicht, wie die Runden verlaufen wären,
+wenn man sich nicht an die Strategie gehalten hätte. Diesen Wert müssten wir davon eigentlich abziehen, und es ist nicht unwahrscheinlich dass dieser auch stärker negativ ist.
+Ich habe also auch keinen Nachweis für die Unwichtigkeit der Strategie.
+
+Insgesamt macht es meines Erachtens nach also Sinn mit seinem Partner eine solche Strategie zu befolgen - zumindest wenn man Bomben minimieren will. Und wir haben ja
+eingesehen, dass Bomben grundsätzlich was gutes sind.
+ 
+Wir betrachten kurz zwei weitere Strategien bezgl. ihrer Bombenchance:
+- Nur doppelte zum Gegner schupfen
+- Kleinere nach links / Größere nach Rechts oder umgekehrt.
+
+Andere Schupfstrategien werden ggfs. in einem gesonderten Post bezgl. ihres erwarteten Rundengewinns analysiert - das ist leider weniger leicht.
 
 
 
