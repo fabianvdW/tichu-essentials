@@ -78,8 +78,8 @@ ist auf beiden Datensätzen nur etwas höher als der Defaultwert: 21.7%(*)/22.4%
 
 Wenn ein Gegner ein Tichu ansagt, ist man manchmal in der glücklichen Lage, selbst gute Karten zu besitzen. 
 Sind sie sehr gut, kann man ggfs.  ein Kontertichu ansagen. Dabei ist folgendes relevant:
-- Wahrscheinlichkeit, dass Gegner Bombe hat, gegeben einer großen Tichu Ansage:  28.4%(*)/28.5%(*).
-- Wahrscheinlichkeit, dass Gegner Bombe hat, gegeben einer Tichu Ansage:  21.7%(*)/21.1%(*).
+- Wahrscheinlichkeit, dass Gegner Bombe hat, gegeben einer Tichu Ansage:  28.4%(*)/28.5%(*).
+- Wahrscheinlichkeit, dass Gegner Bombe hat, gegeben einer großen Tichu Ansage:  21.7%(*)/21.1%(*).
 - Wahrscheinlichkeit, dass Gegner Bombe hat, gegeben einer  Tichu Ansage mit 2 oder weniger Highcards(***): 40.1%(*)/39.8%(**)
 
 
