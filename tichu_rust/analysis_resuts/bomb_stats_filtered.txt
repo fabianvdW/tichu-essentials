@@ -13,6 +13,8 @@ Bomb in opponent given Call & No-self bomb: ["22.3582", "22.4334", "22.4388", "2
 Bomb in opponent given Bomb: ["25.4607", "25.9296", "25.4981", "25.8445"] (Avg. 25.6832, Abs: [12158, 12203, 12119, 12119], Div: [47752, 47062, 47529, 46892])
 Tichu Call Rate given self bomb: ["22.1059", "21.8881", "21.1450", "21.2318"] (Avg. 21.5927, Abs: [10556, 10301, 10050, 9956], Div: [47752, 47062, 47529, 46892])
 Tichu Success Rate given self bomb: ["80.3903", "78.4778", "79.8706", "78.7465"] (Avg. 79.3713, Abs: [8486, 8084, 8027, 7840], Div: [10556, 10301, 10050, 9956])
+Tichu Success Rate given enemy bomb: ["48.2782", "46.5423", "47.7283", "46.5180"] (Avg. 47.2667, Abs: [5804, 5465, 5452, 5444], Div: [12022, 11742, 11423, 11703])
+GTichu Success Rate given enemy bomb: ["39.3800", "38.0248", "39.0223", "36.3174"] (Avg. 38.1861, Abs: [5043, 5190, 4598, 4787], Div: [12806, 13649, 11783, 13181])
 ERS given Exchange Strat: ["-0.9074", "0.7178"] (Avg. -0.0948, Abs: [-307430, 240940], Div: [338813, 335657])
 Bomb in opponent given Exchange Strat: ["20.5960", "20.8951"] (Avg. 20.7456, Abs: [69782, 70136], Div: [338813, 335657])
 Bomb in opponent given ! Exchange Strat: ["28.1272", "28.1415"] (Avg. 28.1343, Abs: [17458, 18355], Div: [62068, 65224])

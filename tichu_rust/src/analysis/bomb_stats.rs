@@ -52,6 +52,8 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
 
     let mut call_rounds = [0; 4];
     let mut gtcall_rounds = [0; 4];
+    let mut gtcall_and_enemy_bomb_rounds = [0; 4];
+    let mut gtcall_and_enemy_bomb_successes = [0; 4];
     let mut tcall_rounds = [0; 4];
     let mut tcall_and_bomb_rounds = [0; 4];
     let mut tcall_and_bomb_successes = [0; 4];
@@ -101,6 +103,10 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
                 if call == CALL_GRAND_TICHU {
                     gtcall_rounds[player_id as usize] += 1;
                     bombs_self_when_gtcall[player_id as usize] += bombs[(player_id % 2) as usize];
+                    if bombs[((player_id + 1) % 2) as usize] == 1 {
+                        gtcall_and_enemy_bomb_rounds[player_id as usize] += 1;
+                        gtcall_and_enemy_bomb_successes[player_id as usize] += (round.player_rounds[0].player_rank(player_id) == RANK_1) as usize;
+                    }
                 }
             }
             if bombs_team_1 > 0 {
@@ -133,6 +139,7 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     println!("Tichu Call Rate given self bomb: {}", format_slice_abs_relative2(&tcall_and_bomb_rounds, &bombs_final_14));
     println!("Tichu Success Rate given self bomb: {}", format_slice_abs_relative2(&tcall_and_bomb_successes, &tcall_and_bomb_rounds));
     println!("Tichu Success Rate given enemy bomb: {}", format_slice_abs_relative2(&tcall_and_enemy_bomb_successes, &tcall_and_enemy_bomb_rounds));
+    println!("GTichu Success Rate given enemy bomb: {}", format_slice_abs_relative2(&gtcall_and_enemy_bomb_successes, &gtcall_and_enemy_bomb_rounds));
 
     //Probability of bomb when following even_odd duplicate strategy
     let lo_card = |prh: &PlayerRoundHand| get_card_type(prh.left_out_exchange_card());

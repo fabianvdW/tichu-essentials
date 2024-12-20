@@ -69,7 +69,8 @@ Sind Bomben denn eigentlich gut? :P Ja! Das kann man auch ganz klar nachweisen:
 Der erwartete Rundengewinn gegeben einer Bombe im Team beträgt 70.5(*)/90.7(*).
 
 Das entsteht, wie wir alle wissen, aufgrund der folgenden Faktoren: 
-- Zerstören eines Tichu's:  TODO.
+-  Zerstören eines großen Tichu's: Die Große Tichu Success Rate, wenn das Gegnerteam eine Bombe hat, sinkt auf 41.8%(*)/38.2%(**).
+- Zerstören eines Tichu's:  Die Tichu Success Rate, wenn das Gegnerteam eine Bombe hat, sinkt auf 51.4%(*)/47.3%(**).
 - Möglichkeit, selbst ein Tichu anzusagen: Die Call Rate bei besitzen einer Bombe steigt auf 23.7%(*)/21.6%(**) [von den Default 13.9%(*)/13.0%(**)].
 Die Tichu Success Rate steigt auf 79.3%(*)/79.4%(**) [von den Default 73.4%(*)/72.2%(**)].
 - ...
