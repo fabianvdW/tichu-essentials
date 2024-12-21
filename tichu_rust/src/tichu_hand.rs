@@ -18,6 +18,8 @@ pub trait TichuHand {
     fn get_card_points(&self) -> Score;
 
     fn get_high_card_amt(&self) -> u32;
+
+    fn count_triplets(&self) -> u32;
 }
 
 // Actual data structure we use is a u64:
@@ -485,5 +487,13 @@ impl TichuHand for Hand {
 
     fn get_high_card_amt(&self) -> u32 {
         (self & (MASK_KINGS | MASK_ACES | hand!(PHOENIX, DRAGON))).count_ones()
+    }
+
+    fn count_triplets(&self) -> u32 {
+        let normals = self & MASK_NORMAL_CARDS;
+        let true_pairs: Hand = (normals >> BLUE | normals >> GREEN | normals >> RED) & normals;
+        let true_triplets = (true_pairs >> BLUE | true_pairs >> GREEN) & true_pairs;
+        //bombs are counted twice!
+        true_triplets.count_ones()
     }
 }

@@ -62,6 +62,11 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     let mut call_rounds_no_bomb = [0; 4];
     let mut tcall_rounds_two_hc_or_less = [0; 4];
 
+    //Probabilit of bomb given triplet
+    let mut triplet_rounds = [[0; 4]; 4]; //OUter array: triplet count, inner: player_id
+    let mut bomb_self_given_triplet = [[0; 4]; 4]; //OUter array: triplet count, inner: player_id
+    let mut bomb_opp_given_triplet = [[0; 4]; 4]; //OUter array: triplet count, inner: player_id
+
     let mut round_score_diff_given_bomb = [0; 2];
     for game in db.games.iter() {
         for (round, _) in game.rounds.iter() {
@@ -108,6 +113,16 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
                         gtcall_and_enemy_bomb_successes[player_id as usize] += (round.player_rounds[0].player_rank(player_id) == RANK_1) as usize;
                     }
                 }
+                //Triplets
+                if contains_bomb(round.player_rounds[player_id as usize].first_14) > 0{
+                    continue;
+                }
+                let triplets_on_hand = round.player_rounds[player_id as usize].first_14.count_triplets().min(3);
+                triplet_rounds[triplets_on_hand as usize][player_id as usize] += 1;
+                if p_bombs[player_id as usize] == 1 {
+                    bomb_self_given_triplet[triplets_on_hand as usize][player_id as usize] += 1;
+                }
+                bomb_opp_given_triplet[triplets_on_hand as usize][player_id as usize] += bombs[((player_id + 1) % 2) as usize];
             }
             if bombs_team_1 > 0 {
                 round_score_diff_given_bomb[0] += round.player_rounds[0].round_score_relative_gain() as i64;
@@ -140,6 +155,10 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     println!("Tichu Success Rate given self bomb: {}", format_slice_abs_relative2(&tcall_and_bomb_successes, &tcall_and_bomb_rounds));
     println!("Tichu Success Rate given enemy bomb: {}", format_slice_abs_relative2(&tcall_and_enemy_bomb_successes, &tcall_and_enemy_bomb_rounds));
     println!("GTichu Success Rate given enemy bomb: {}", format_slice_abs_relative2(&gtcall_and_enemy_bomb_successes, &gtcall_and_enemy_bomb_rounds));
+    for triplet_amt in 0..4{
+        println!("Bomb on hand given {} triplets on hand before exch: {}",triplet_amt, format_slice_abs_relative2(&bomb_self_given_triplet[triplet_amt], &triplet_rounds[triplet_amt]));
+        println!("Bomb in opponent given {} triplets on hand before exch: {}",triplet_amt, format_slice_abs_relative2(&bomb_opp_given_triplet[triplet_amt], &triplet_rounds[triplet_amt]));
+    }
 
     //Probability of bomb when following even_odd duplicate strategy
     let lo_card = |prh: &PlayerRoundHand| get_card_type(prh.left_out_exchange_card());
@@ -192,13 +211,11 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
                 double_exch_strat_rounds[0] += 1;
                 bombs_opp_when_double_exch_strat[0] += bombs_team_2;
                 round_score_diff_given_double_exch[0] += round.player_rounds[0].round_score_relative_gain() as i64;
-
             }
             if team_2_double_exch_strat {
                 double_exch_strat_rounds[1] += 1;
                 bombs_opp_when_double_exch_strat[1] += bombs_team_1;
                 round_score_diff_given_double_exch[1] += round.player_rounds[1].round_score_relative_gain() as i64;
-
             }
 
             let team_1_small_big_exch_strat = is_smaller_bigger_strategy((pr0.first_14, pr2.first_14), (lo_card(pr0), ro_card(pr2)), (ro_card(pr0), lo_card(pr2)));
