@@ -1,11 +1,10 @@
-TaggedPlayerRoundHand = (PlayerRoundHand)
 PlayerRoundHand:
     GT Hand: Hand
     Hand Pre exch: Hand
-    exch_call_pos_round_score: 8 Byte (Lower 36 bits: Exchange cards, 8 Bit PlayerCalls, 2 Bit PlayerIdent, 8 Bit PlayerRanks, 8 Bit CardScore, )
+    extras: 8 Byte (Lower 36 bits: Exchange cards, 8 Bit PlayerCalls, 2 Bit PlayerIdent, 8 Bit PlayerRanks, 8 Bit CardScore, )
     => 24 Byte
-    fn weggeschupft -> Hand
-    fn zugeschupft -> Hand
+    fn exch_cards_out -> Hand
+    fn exch_cards_in -> Hand
     fn hand_post_exch -> Hand
 Round:
  4 PlayerRoundHands 24 Bytes each
@@ -19,7 +18,7 @@ Round:
     parsing_flags: 1 Byte
 
     148 Byte* rounds + Round Log Bytes
-    => Around 3.37 GB (should implement serialization/de-serialization).
+    => Around 3.37 GB + x
 
  TaggedCardIndex: 2 Bits Player+ 6 Bit CardIndex,
     fn get_player, fn get_card_index> Trait again
@@ -27,4 +26,3 @@ Round:
     mahjong_wis: Option<u8> 2 Byte
     dragon_player_gift: Option<u8> 2 Byte
     Vec<u8> log: 1 Byte per Card (TaggedCardIndex), 1 Byte per new move, 1 Byte per new trick. 56 Byte + #Tricks # Amount of moves
-    Vec<Trick> -> 24 + 60 Byte per Round + some

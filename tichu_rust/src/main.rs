@@ -12,7 +12,7 @@ pub mod analysis;
 use std::collections::HashMap;
 use crate::analysis::bomb_stats::evaluate_bomb_stats;
 use crate::analysis::exchange_stats::evaluate_exchange_stats;
-use crate::analysis::general_stats::evaluate_general_stats;
+use crate::analysis::general_stats::{evaluate_general_stats, evaluate_general_stats_onlyr0};
 use crate::analysis::parsing_stats::evaluate_parsing_stats;
 use crate::bsw_binary_format::binary_format_constants::CALL_GRAND_TICHU;
 use crate::tichu_hand::*;
@@ -42,7 +42,8 @@ fn main() {
     //filter_db(db);
     //evaluate_parsing_stats(&db);
     //evaluate_general_stats(&db);
-    evaluate_bomb_stats(&db);
+    evaluate_general_stats_onlyr0(&db);
+    //evaluate_bomb_stats(&db);
     //evaluate_exchange_stats(&db);
 
 
