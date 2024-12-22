@@ -3,12 +3,37 @@ use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, CALL_G
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_database::DataBase;
 use crate::hand;
-use crate::tichu_hand::{get_card_type, CardIndex, CardType, Hand, TichuHand, MASK_FOUR_OF_KIND, SPECIAL_CARD, TWO};
+use crate::tichu_hand::{get_card_type, CardIndex, CardType, Hand, HandType, TichuHand, MASK_FOUR_OF_KIND, SPECIAL_CARD, TWO};
 
-//TODO: ERS Pair splitting, Bomb % pair splitting
+pub fn evaluate_bombs_in_play(db: &DataBase){
+    let mut bombs_played: usize = 0;
+    let mut four_bombs: usize = 0;
+    let mut straight_bombs: usize = 0;
+    for game in db.games.iter(){
+        for (_, round_log) in game.rounds.iter(){
+            let mut iter = round_log.iter();
+            while let Some(trick) = iter.next_trick(){
+                for (_, hand) in trick.trick_log.iter(){
+                    let hand_type = hand.hand_type().unwrap();
+                    match hand_type{
+                        HandType::Bomb4(_) => {bombs_played +=1; four_bombs += 1;},
+                        HandType::BombStreet(_, _)=>{bombs_played += 1; straight_bombs += 1;},
+                        _=>{}
+                    }
+                }
+            }
+        }
+    }
+    println!("Bombs played: {}", bombs_played);
+    println!("Four of kind bombs: {}", format_slice_abs_relative(&[four_bombs], bombs_played));
+    println!("Straight bombs: {}", format_slice_abs_relative(&[straight_bombs], bombs_played));
+
+}
 pub fn evaluate_bomb_stats(db: &DataBase) {
     //Evaluate bomb probability, first 8, first 14, final 14 for each player.
     let rounds = db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len());
+    let contains_4_bomb = |hand: Hand| hand.contains_four_of_kind_bomb() as usize;
+    let contains_straight_bomb = |hand: Hand| hand.contains_straight_bomb() as usize;
     let contains_bomb = |hand: Hand| (hand.contains_straight_bomb() || hand.contains_four_of_kind_bomb()) as usize;
     let bombs_first_8 = (0..4).map(|player_id| db.games.iter().fold(0, |acc, inc| acc + inc.rounds.iter().fold(
         0, |acc_2, inc_2| acc_2 + contains_bomb(inc_2.0.player_rounds[player_id].first_8),
@@ -19,9 +44,17 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     let bombs_final_14 = (0..4).map(|player_id| db.games.iter().fold(0, |acc, inc| acc + inc.rounds.iter().fold(
         0, |acc_2, inc_2| acc_2 + contains_bomb(inc_2.0.player_rounds[player_id].final_14()),
     ))).collect::<Vec<_>>();
+    let four_bombs_final_14 = (0..4).map(|player_id| db.games.iter().fold(0, |acc, inc| acc + inc.rounds.iter().fold(
+        0, |acc_2, inc_2| acc_2 + contains_4_bomb(inc_2.0.player_rounds[player_id].final_14()),
+    ))).collect::<Vec<_>>();
+    let straight_bombs_final_14 = (0..4).map(|player_id| db.games.iter().fold(0, |acc, inc| acc + inc.rounds.iter().fold(
+        0, |acc_2, inc_2| acc_2 + contains_straight_bomb(inc_2.0.player_rounds[player_id].final_14()),
+    ))).collect::<Vec<_>>();
     println!("Bombs under first 8. {}", format_slice_abs_relative(&bombs_first_8, rounds));
     println!("Bombs under first 14: {}", format_slice_abs_relative(&bombs_first_14, rounds));
     println!("Bombs under final 14: {}", format_slice_abs_relative(&bombs_final_14, rounds));
+    println!("4-Bombs under final 14: {}", format_slice_abs_relative(&four_bombs_final_14, rounds));
+    println!("Straight-Bombs under final 14: {}", format_slice_abs_relative(&straight_bombs_final_14, rounds));
 
     //Probability of bomb in team?
     let bombs_team_rounds = (0..2).map(|team_id| db.games.iter().fold(0, |acc, inc| acc + inc.rounds.iter().fold(
