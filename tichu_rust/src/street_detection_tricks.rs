@@ -60,8 +60,8 @@ pub const fn is_street_slow(mut prepared_hand: u64) -> bool {
     true
 }
 const INDEX_BITS: usize = 15;
-const PACKING_BITS: usize = 6;
-const PACKING_BITS_MASK: u64 = (1 << PACKING_BITS) - 1;
+pub const PACKING_BITS: usize = 6;
+pub const PACKING_BITS_MASK: u64 = (1 << PACKING_BITS) - 1;
 const ARRAY_BITS: usize = INDEX_BITS - PACKING_BITS;
 const ARRAY_ENTRIES: usize = 1 << ARRAY_BITS;
 

@@ -14,6 +14,7 @@ use crate::analysis::bomb_stats::{evaluate_bomb_stats, evaluate_bombs_in_play};
 use crate::analysis::exchange_stats::evaluate_exchange_stats;
 use crate::analysis::general_stats::{evaluate_general_stats, evaluate_general_stats_onlyr0};
 use crate::analysis::parsing_stats::evaluate_parsing_stats;
+use crate::analysis::street_stats::{evaluate_lose_four_to_queen, evaluate_streets_in_play};
 use crate::bsw_binary_format::binary_format_constants::CALL_GRAND_TICHU;
 use crate::tichu_hand::*;
 use crate::bsw_database::DataBase;
@@ -43,8 +44,10 @@ fn main() {
     //evaluate_parsing_stats(&db);
     //evaluate_general_stats(&db);
     //evaluate_general_stats_onlyr0(&db);
-    evaluate_bomb_stats(&db);
+    //evaluate_bomb_stats(&db);
     //evaluate_bombs_in_play(&db);
+    //evaluate_streets_in_play(&db);
+    evaluate_lose_four_to_queen(&db);
     //evaluate_exchange_stats(&db);
 
 
