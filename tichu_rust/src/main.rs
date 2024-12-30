@@ -42,7 +42,7 @@ fn main() {
     //let db = DataBase::from_bsw().unwrap();
     //db.write("bsw.db").unwrap();
 
-    let db = DataBase::read("bsw.db").unwrap();
+    let db = DataBase::read("bsw_filtered.db").unwrap();
     println!("Loaded {} games and {} rounds!", db.games.len(), db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len() ));
     //filter_db(db);
     //evaluate_parsing_stats(&db);
@@ -50,9 +50,9 @@ fn main() {
     //evaluate_general_stats_onlyr0(&db);
     //evaluate_bomb_stats(&db);
     //evaluate_bombs_in_play(&db);
-    evaluate_streets_in_play(&db);
-    evaluate_lose_four_to_queen(&db);
-    //evaluate_exchange_stats(&db);
+    //evaluate_streets_in_play(&db);
+    //evaluate_lose_four_to_queen(&db);
+    evaluate_exchange_stats(&db);
 
 
 
