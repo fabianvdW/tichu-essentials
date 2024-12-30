@@ -95,10 +95,13 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     let mut call_rounds_no_bomb = [0; 4];
     let mut tcall_rounds_two_hc_or_less = [0; 4];
 
-    //Probabilit of bomb given triplet
-    let mut triplet_rounds = [[0; 4]; 4]; //OUter array: triplet count, inner: player_id
-    let mut bomb_self_given_triplet = [[0; 4]; 4]; //OUter array: triplet count, inner: player_id
-    let mut bomb_opp_given_triplet = [[0; 4]; 4]; //OUter array: triplet count, inner: player_id
+    //Probability of bomb given triplet
+    let mut triplet_rounds = [[0; 4]; 5]; //Outer array: triplet count, inner: player_id
+    let mut bomb_self_given_triplet = [[0; 4]; 5]; //Outer array: triplet count, inner: player_id
+    let mut bomb_opp_given_triplet = [[0; 4]; 5]; //OUter array: triplet count, inner: player_id
+
+    let mut triplet_post_exch_rounds = [[0; 4]; 4];
+    let mut bomb_opp_given_post_exch_triplet = [[0; 4]; 4]; //OUter array: triplet count, inner: player_id
 
     let mut round_score_diff_given_bomb = [0; 2];
     for game in db.games.iter() {
@@ -156,6 +159,14 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
                     bomb_self_given_triplet[triplets_on_hand as usize][player_id as usize] += 1;
                 }
                 bomb_opp_given_triplet[triplets_on_hand as usize][player_id as usize] += bombs[((player_id + 1) % 2) as usize];
+
+                //Post exch stats
+                if p_bombs[player_id as usize] == 1 {
+                    continue;
+                }
+                let triplets_on_hand_post_exch = round.player_rounds[player_id as usize].final_14().count_triplets().min(3);
+                triplet_post_exch_rounds[triplets_on_hand_post_exch as usize][player_id as usize] += 1;
+                bomb_opp_given_post_exch_triplet[triplets_on_hand_post_exch as usize][player_id as usize] += bombs[((player_id + 1) % 2) as usize];
             }
             if bombs_team_1 > 0 {
                 round_score_diff_given_bomb[0] += round.player_rounds[0].round_score_relative_gain() as i64;
@@ -191,6 +202,7 @@ pub fn evaluate_bomb_stats(db: &DataBase) {
     for triplet_amt in 0..4{
         println!("Bomb on hand given {} triplets on hand before exch: {}",triplet_amt, format_slice_abs_relative2(&bomb_self_given_triplet[triplet_amt], &triplet_rounds[triplet_amt]));
         println!("Bomb in opponent given {} triplets on hand before exch: {}",triplet_amt, format_slice_abs_relative2(&bomb_opp_given_triplet[triplet_amt], &triplet_rounds[triplet_amt]));
+        println!("Bomb in opponent given {} triplets on hand post exch: {}",triplet_amt, format_slice_abs_relative2(&bomb_opp_given_post_exch_triplet[triplet_amt], &triplet_post_exch_rounds[triplet_amt]));
     }
 
     //Probability of bomb when following even_odd duplicate strategy
