@@ -34,6 +34,11 @@ fn filter_db(db: DataBase){
     new_db.write("bsw_filtered.db").unwrap();
 
 }
+//3. Triplet statistics: More on this
+//7. Make stats english
+//4. GT statistics: Get started
+//5. Misc statistics: Exchange cards given/received (given GT or not)
+//6. Misc statistics: Case studies: Street
 fn main() {
     //let db = DataBase::from_bsw().unwrap();
     //db.write("bsw.db").unwrap();
@@ -47,7 +52,7 @@ fn main() {
     //evaluate_bomb_stats(&db);
     //evaluate_bombs_in_play(&db);
     //evaluate_streets_in_play(&db);
-    evaluate_lose_four_to_queen(&db);
+    //evaluate_lose_four_to_queen(&db);
     //evaluate_exchange_stats(&db);
 
 
@@ -65,7 +70,7 @@ mod tests {
     use crate::enumerate_hands::count_special_card_invariant_property;
     use crate::tichu_hand::*;
     use crate::street_detection_tricks::{is_street_fast, phoenix_used_as_street_extension};
-    use crate::pair_street_detection_trick::{is_pair_street_slow, is_pair_street_fast};
+    use crate::pair_street_detection_trick::{is_pair_street_fast};
     use super::hand;
 
     #[test]
@@ -179,6 +184,8 @@ mod tests {
         assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE)), Some(SPECIAL_CARD));
         assert_eq!(is_street_fast(hand!(TWO+BLUE, MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED)), Some(SPECIAL_CARD));
         assert_eq!(is_street_fast(hand!(TWO+BLUE, FOUR+RED, THREE+RED, FIVE+BLUE, SIX+RED)), Some(TWO));
+        assert_eq!(is_street_fast(hand!(TWO+BLUE, FOUR+RED, THREE+RED, FIVE+RED)), None);
+        assert_eq!(is_street_fast(hand!(TWO+BLUE, FOUR+RED, THREE+RED, FIVE+RED, SEVEN+RED)), None);
         assert_eq!(is_street_fast(hand!(TWO+BLUE, FOUR+RED, THREE+RED, SIX+RED)), None);
         assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, SIX+RED)), None);
         assert_eq!(is_street_fast(hand!(MAHJONG, PHOENIX, THREE+RED, FIVE+BLUE, FIVE+RED)), None);
@@ -213,31 +220,20 @@ mod tests {
         assert!(matches!((hand!(PHOENIX)|MASK_RED).hand_type(), None)); //Phoenix can't subs in for MAHJONG
 
     }
-
-    #[test]
-    fn is_pair_street_slow_test(){
-        assert_eq!(is_pair_street_slow(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW)), true);
-        assert_eq!(is_pair_street_slow(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, MAHJONG)), false);
-        assert_eq!(is_pair_street_slow(hand!(PHOENIX, ACE+YELLOW, DOG, KING+YELLOW)), false);
-        assert_eq!(is_pair_street_slow(hand!(PHOENIX, ACE+YELLOW, KING+RED, KING+YELLOW)), true);
-        assert_eq!(is_pair_street_slow(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW)), true);
-        assert_eq!(is_pair_street_slow(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, QUEEN+YELLOW)), false);
-        assert_eq!(is_pair_street_slow(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, QUEEN+BLUE, QUEEN+RED)), true);
-        assert_eq!(is_pair_street_slow(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, QUEEN+RED)), false);
-        assert_eq!(is_pair_street_slow(hand!(ACE+RED, ACE+YELLOW, ACE+BLUE, KING+YELLOW, KING+RED, KING+BLUE)), false);
-        assert_eq!(is_pair_street_slow(hand!(TWO+RED, TWO+YELLOW, FOUR+BLUE, FOUR+YELLOW, KING+RED, KING+BLUE)), false);
-        assert_eq!(is_pair_street_slow(hand!(TWO+RED, TWO+YELLOW, THREE+RED, THREE+YELLOW, FOUR+BLUE, FOUR+GREEN, FIVE+YELLOW, PHOENIX, SIX+BLUE, SIX+YELLOW)), true);
-    }
     #[test]
     fn is_pair_street_fast_test(){
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW)), Some(KING));
+        assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, KING+RED)), None);
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, MAHJONG)), None);
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, DOG, KING+YELLOW)), None);
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, KING+RED, KING+YELLOW)), Some(KING));
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, QUEEN+YELLOW)), None);
+        assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, KING+BLUE, QUEEN+YELLOW)), None);
+        assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, KING+BLUE, QUEEN+YELLOW, JACK+RED, JACK+BLUE)), None);
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, QUEEN+BLUE, QUEEN+RED)), Some(QUEEN));
         assert_eq!(is_pair_street_fast(hand!(PHOENIX, ACE+YELLOW, ACE+BLUE, KING+YELLOW, QUEEN+RED)), None);
         assert_eq!(is_pair_street_fast(hand!(ACE+RED, ACE+YELLOW, ACE+BLUE, KING+YELLOW, KING+RED, KING+BLUE)), None);
+        assert_eq!(is_pair_street_fast(hand!(TWO+RED, TWO+YELLOW, FOUR+BLUE, FOUR+YELLOW)), None);
         assert_eq!(is_pair_street_fast(hand!(TWO+RED, TWO+YELLOW, FOUR+BLUE, FOUR+YELLOW, KING+RED, KING+BLUE)), None);
         assert_eq!(is_pair_street_fast(hand!(TWO+RED, TWO+YELLOW, THREE+RED, THREE+YELLOW, FOUR+BLUE, FOUR+GREEN, FIVE+YELLOW, PHOENIX, SIX+BLUE, SIX+YELLOW)), Some(TWO));
     }

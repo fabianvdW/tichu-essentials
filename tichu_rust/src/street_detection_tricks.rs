@@ -11,18 +11,14 @@ pub const fn is_street_fast(hand: Hand) -> Option<CardType> { //Returns lowest c
     }
 }
 pub const fn phoenix_used_as_street_extension(hand: Hand) -> bool { //Returns true only for streets that contain the phoenix and for which the phoenix does not fill a hole.
-    if hand & hand!(PHOENIX) == 0{
+    if hand & hand!(PHOENIX) == 0 {
         return false;
     }
     //Also check that hand without phoenix would be a street.
-    let mut prepared = prepare_hand(hand ^ hand!(PHOENIX));
-    let street_length = prepared.count_ones();
-    let mut i = 1;
-    while i < street_length{
-        prepared &= prepared >> 1;
-        i += 1;
-    }
-    prepared > 0
+    let prepared = prepare_hand(hand ^ hand!(PHOENIX));
+    let lsb = prepared.trailing_zeros();
+    let hsb = 64 - prepared.leading_zeros();
+    prepared.count_ones() >= 4 && hsb - lsb == prepared.count_ones()
 }
 
 pub const fn prepare_hand(hand: Hand) -> u64 {
@@ -32,32 +28,19 @@ pub const fn prepare_hand(hand: Hand) -> u64 {
 
 
 pub const fn is_street_slow(mut prepared_hand: u64) -> bool {
+    //TODO: Check if this is actually slower than is_street_fast
     if prepared_hand.count_ones() < 5 {
         return false;
     }
-    let mut has_phoenix: bool = (prepared_hand >> 14) & 0b1 != 0u64; //has_phoenix is turned off at first hole.
+
+    let has_phoenix: bool = (prepared_hand >> 14) & 0b1 != 0u64;
     if has_phoenix && prepared_hand == 0x7FFE { //Phoenix can not substitute in for mahjong.
         return false;
     }
     prepared_hand &= 0x3FFF;
-    let mut current_lsb = prepared_hand.trailing_zeros();
-    //Just count the holes
-    while prepared_hand.count_ones() > 1 {
-        prepared_hand &= prepared_hand - 1;
-        let next_lsb = prepared_hand.trailing_zeros();
-        if next_lsb > current_lsb + 2 {
-            return false;
-        }
-        if current_lsb + 1 != next_lsb && !has_phoenix {
-            return false;
-        }
-        if current_lsb + 1 != next_lsb && has_phoenix {
-            assert!(current_lsb + 2 == next_lsb);
-            has_phoenix = false;
-        }
-        current_lsb = next_lsb;
-    }
-    true
+    let lsb = prepared_hand.trailing_zeros();
+    let hsb = 63 - prepared_hand.leading_zeros();
+    hsb + 1 - lsb <= prepared_hand.count_ones() + has_phoenix as u32
 }
 const INDEX_BITS: usize = 15;
 pub const PACKING_BITS: usize = 6;

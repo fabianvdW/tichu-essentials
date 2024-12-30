@@ -1,7 +1,8 @@
-Loaded 44794 games and 400881 rounds!
 Bombs under first 8. ["0.3021", "0.2866", "0.2963", "0.2968"] (Avg. 0.2955, Abs: [1211, 1149, 1188, 1190], Div: 400881)
 Bombs under first 14: ["5.0998", "5.0481", "5.0182", "5.0494"] (Avg. 5.0539, Abs: [20444, 20237, 20117, 20242], Div: 400881)
 Bombs under final 14: ["11.9118", "11.7396", "11.8561", "11.6972"] (Avg. 11.8012, Abs: [47752, 47062, 47529, 46892], Div: 400881)
+4-Bombs under final 14: ["8.7694", "8.6559", "8.7101", "8.5873"] (Avg. 8.6807, Abs: [35155, 34700, 34917, 34425], Div: 400881)
+Straight-Bombs under final 14: ["3.3424", "3.2965", "3.3491", "3.3000"] (Avg. 3.3220, Abs: [13399, 13215, 13426, 13229], Div: 400881)
 Bomb in team: ["22.0741", "21.7621"] (Avg. 21.9181, Abs: [88491, 87240], Div: 400881)
 Bomb in round: ["38.2986"] (Avg. 38.2986, Abs: [153532], Div: 400881)
 ERS given Bomb: ["91.2458", "90.2816"] (Avg. 90.7637, Abs: [8074430, 7876170], Div: [88491, 87240])
@@ -42,3 +43,6 @@ Bomb in opponent given small big Exchange Strat: ["21.2554", "21.4924"] (Avg. 21
 % Bomb by partner (given POE): ["3.9731", "3.4680"] (Avg. 3.7206, Abs: [2466, 2262], Div: [62068, 65224])
 % Bomb by one exch card (given POE): ["12.2817", "11.3011"] (Avg. 11.7914, Abs: [7623, 7371], Div: [62068, 65224])
 % Bomb by all exch card (given POE): ["3.3109", "2.9621"] (Avg. 3.1365, Abs: [2055, 1932], Div: [62068, 65224])
+Bombs played: 180275
+Four of kind bombs: ["72.8620"] (Avg. 72.8620, Abs: [131352], Div: 180275)
+Straight bombs: ["27.1380"] (Avg. 27.1380, Abs: [48923], Div: 180275)
