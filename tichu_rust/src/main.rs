@@ -34,8 +34,7 @@ fn filter_db(db: DataBase){
     new_db.write("bsw_filtered.db").unwrap();
 
 }
-//3. Triplet statistics: More on this
-//7. Make stats english
+
 //4. GT statistics: Get started
 //5. Misc statistics: Exchange cards given/received (given GT or not)
 //6. Misc statistics: Case studies: Street
@@ -43,16 +42,16 @@ fn main() {
     //let db = DataBase::from_bsw().unwrap();
     //db.write("bsw.db").unwrap();
 
-    let db = DataBase::read("bsw_filtered.db").unwrap();
+    let db = DataBase::read("bsw.db").unwrap();
     println!("Loaded {} games and {} rounds!", db.games.len(), db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len() ));
     //filter_db(db);
     //evaluate_parsing_stats(&db);
     //evaluate_general_stats(&db);
     //evaluate_general_stats_onlyr0(&db);
-    evaluate_bomb_stats(&db);
+    //evaluate_bomb_stats(&db);
     //evaluate_bombs_in_play(&db);
-    //evaluate_streets_in_play(&db);
-    //evaluate_lose_four_to_queen(&db);
+    evaluate_streets_in_play(&db);
+    evaluate_lose_four_to_queen(&db);
     //evaluate_exchange_stats(&db);
 
 
