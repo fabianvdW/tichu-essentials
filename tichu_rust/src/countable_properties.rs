@@ -1,9 +1,11 @@
-use crate::tichu_hand::{Hand, TichuHand};
+use crate::tichu_hand::{Hand, TichuHand, DOG, DRAGON, MAHJONG, MASK_ACES, PHOENIX};
 use std::fmt;
 use std::fmt::Debug;
 use std::ops::{Add, Mul};
 
 use generic_array::{typenum, ArrayLength, GenericArray};
+use crate::analysis::first_8_transition_probability::HandCategory;
+use crate::hand;
 
 pub trait CountableProperty: Debug + Clone {
     type UpperBound: ArrayLength;
@@ -87,6 +89,9 @@ pub struct CountBombsFourOfKind0_1; //Determine if a hand contains at least one 
 #[derive(Debug, Clone)]
 pub struct CountBombsStraights0_1; //Determine if a hand contains a straight bomb.
 
+#[derive(Debug, Clone)]
+pub struct CountHandCategory;
+
 impl CountableProperty for CountAll {
     type UpperBound = typenum::U1;
 
@@ -112,5 +117,17 @@ impl CountableProperty for CountBombsStraights0_1 {
     type UpperBound = typenum::U2;
     fn count(&self, hand: &Hand) -> usize {
         hand.contains_straight_bomb() as usize
+    }
+}
+
+impl CountableProperty for CountHandCategory {
+    type UpperBound = typenum::U80;
+    fn count(&self, hand: &Hand) -> usize {
+        let num_aces = (hand & MASK_ACES).count_ones() as usize;
+        let has_dragon = (hand & hand!(DRAGON)) != 0;
+        let has_phoenix = (hand & hand!(PHOENIX)) != 0;
+        let has_dog = (hand & hand!(DOG)) != 0;
+        let has_mahjong = (hand & hand!(MAHJONG)) != 0;
+        HandCategory::construct(num_aces, has_dragon, has_phoenix, has_dog, has_mahjong).0
     }
 }

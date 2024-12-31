@@ -12,6 +12,7 @@ pub mod analysis;
 use std::collections::HashMap;
 use crate::analysis::bomb_stats::{evaluate_bomb_stats, evaluate_bombs_in_play};
 use crate::analysis::exchange_stats::evaluate_exchange_stats;
+use crate::analysis::first_8_transition_probability::HandCategory;
 use crate::analysis::general_stats::{evaluate_general_stats, evaluate_general_stats_onlyr0};
 use crate::analysis::parsing_stats::evaluate_parsing_stats;
 use crate::analysis::street_stats::{evaluate_lose_four_to_queen, evaluate_streets_in_play};
@@ -42,8 +43,8 @@ fn main() {
     //let db = DataBase::from_bsw().unwrap();
     //db.write("bsw.db").unwrap();
 
-    let db = DataBase::read("bsw_filtered.db").unwrap();
-    println!("Loaded {} games and {} rounds!", db.games.len(), db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len() ));
+    //let db = DataBase::read("bsw_filtered.db").unwrap();
+    //println!("Loaded {} games and {} rounds!", db.games.len(), db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len() ));
     //filter_db(db);
     //evaluate_parsing_stats(&db);
     //evaluate_general_stats(&db);
@@ -52,7 +53,7 @@ fn main() {
     //evaluate_bombs_in_play(&db);
     //evaluate_streets_in_play(&db);
     //evaluate_lose_four_to_queen(&db);
-    evaluate_exchange_stats(&db);
+    //evaluate_exchange_stats(&db);
 
 
 
@@ -61,6 +62,8 @@ fn main() {
     //enumeration_results::count_straight_bombs_0_1();
     //enumeration_results::count_gt_hands();
     //enumeration_results::count_gt_bombs_0_1();
+    enumeration_results::count_gt_hand_category();
+    HandCategory::print_category_lists();
 }
 
 #[cfg(test)]
