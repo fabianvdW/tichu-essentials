@@ -158,6 +158,8 @@ for i, (hand_cat, freq) in enumerate(zip(hand_categories, hand_categories_absolu
 print("----------Third Table ---------------")
 print("|Asse|Dr|Ph|Dog|Ma|1.-2.: **Opportunitätskosten(\*)**|1.-2.: **Opportunitätskosten(\*\*)**|")
 print("|--|--|--|--|--|---|---|")
+
+opp_costs = [[0 for _ in range(80)], [0 for _ in range(80)]]
 for i, (hand_cat) in enumerate(hand_categories):
     res_line = f"{hand_category_to_string(hand_cat)}"
     #----Value of 1. - 2. ---
@@ -170,6 +172,8 @@ for i, (hand_cat) in enumerate(hand_categories):
         for other_cat in range(80):
             value_of_2 += transition_matrix[i][other_cat] * value_of_relative_round_win_non_gt_by_cat[ds][other_cat]
         rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
+        opp_cost = value_of_1-value_of_2
+        opp_costs[ds][i] = opp_cost
         if rounds_num < MIN_ROUNDS:
             res_line += f"**"
         res_line += f"{value_of_1-value_of_2:.2f}"
@@ -177,3 +181,17 @@ for i, (hand_cat) in enumerate(hand_categories):
             res_line += f"**"
     res_line += "|"
     print(res_line)
+
+opp_cutoffs_for_callrate = [0., 5., 10., 15., 20., -5., -10.]
+called_hands = [[0 for _ in range(len(opp_cutoffs_for_callrate))], [0 for _ in range(len(opp_cutoffs_for_callrate))]]
+for i in range(80):
+    for ds in range(2):
+        for j, cutoff_value in enumerate(opp_cutoffs_for_callrate):
+            opp_cost = opp_costs[ds][i]
+            print(ds, opp_cost, i, opp_cost >= cutoff_value)
+            if opp_cost >= cutoff_value:
+                called_hands[ds][j] += hand_categories_absolute_frequencies_gt[i]
+for j, cutoff_value in enumerate(opp_cutoffs_for_callrate):
+    c1, c2 = called_hands[0][j], called_hands[1][j]
+    c1, c2 = c1/num_gt_hands * 100., c2/num_gt_hands*100.
+    print(f"GT Call Rate for cutoff {cutoff_value}: {c1:.2f}(\*)/{c2:.2f}(\*\*)")

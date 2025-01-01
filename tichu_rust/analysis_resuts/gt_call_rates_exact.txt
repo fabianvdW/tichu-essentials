@@ -1,0 +1,4 @@
+GT Call Rate Strat 1(Ace+J or Two J): 0.1268991459890461
+GT Call Rate Strat 2(Ace+J + 1/Dog or Two J + 1/Dog): 0.027870576651296487
+GT Call Rate Strat 3(2Ace+J or Ace+Two J): 0.026218472611369392
+GT Call Rate Strat 4(Custom Formula): 0.09121156313165192

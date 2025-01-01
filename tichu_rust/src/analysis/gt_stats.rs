@@ -1,7 +1,11 @@
+use generic_array::{typenum, GenericArray};
+use generic_array::typenum::U80;
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, CALL_GRAND_TICHU, RANK_1};
 use crate::bsw_database::DataBase;
+use crate::countable_properties::CountableProperty;
+use crate::enumerate_hands::count_special_card_sensitive_property;
 use crate::hand;
-use crate::tichu_hand::{Hand, DOG, DRAGON, MAHJONG, MASK_ACES, PHOENIX};
+use crate::tichu_hand::{Hand, DOG, DRAGON, MAHJONG, MASK_ACES, MASK_KINGS, PHOENIX};
 
 #[derive(Clone)]
 pub struct HandCategory(pub usize);
@@ -89,4 +93,48 @@ pub fn evaluate_gt_stats(db: &DataBase) {
 
     println!("Non-gt Categories abs: {:?}", non_gt_categories);
     println!("Non-gt ERS abs: {:?}", non_gt_round_score_diff);
+}
+
+pub fn evaluate_gt_call_rates(hand_category_count: GenericArray<u64, U80>) {
+    let gt_hands = 1420494075;
+    //1. Strategy: Call GT with Ace + Joker or both Jokers
+    let strat_1_hands = hand_category_count.iter().enumerate().filter(|(cat, _)| {
+        let category = HandCategory(*cat);
+        category.num_aces() >= 1 && (category.has_dragon() || category.has_phoenix()) || category.has_phoenix() && category.has_dragon()
+    }).map(|x| x.1).sum::<u64>();
+    //2. Strategy: Call GT with Ace + Joker + 1. or Dog or both Jokers + 1. or Dog
+    let strat_2_hands = hand_category_count.iter().enumerate().filter(|(cat, _)| {
+        let category = HandCategory(*cat);
+        let dog_or_mahjong = category.has_dog() || category.has_mahjong();
+        (category.num_aces() >= 1 && (category.has_dragon() || category.has_phoenix()) || category.has_phoenix() && category.has_dragon()) && dog_or_mahjong
+    }).map(|x| x.1).sum::<u64>();
+    //2. Strategy: Call GT with 2Ace + Joker or both Ace + Two Jokers
+    let strat_3_hands = hand_category_count.iter().enumerate().filter(|(cat, _)| {
+        let category = HandCategory(*cat);
+        category.num_aces() >= 2 && (category.has_dragon() || category.has_phoenix()) || category.has_phoenix() && category.has_dragon() && category.num_aces() >= 1
+    }).map(|x| x.1).sum::<u64>();
+
+    //3. Strategy is custom formula, which we have to enumerate GT Hands with again.
+    let strat_4_hands = count_special_card_sensitive_property::<CountCustomGTStrategy, 8>(CountCustomGTStrategy).property_counted[1];
+
+    println!("GT Call Rate Strat 1(Ace+J or Two J): {}", strat_1_hands as f64 / gt_hands as f64);
+    println!("GT Call Rate Strat 2(Ace+J + 1/Dog or Two J + 1/Dog): {}", strat_2_hands as f64 / gt_hands as f64);
+    println!("GT Call Rate Strat 3(2Ace+J or Ace+Two J): {}", strat_3_hands as f64 / gt_hands as f64);
+    println!("GT Call Rate Strat 4(Custom Formula): {}", strat_4_hands as f64 / gt_hands as f64);
+}
+
+#[derive(Debug, Clone)]
+pub struct CountCustomGTStrategy;
+impl CountableProperty for CountCustomGTStrategy {
+    type UpperBound = typenum::U2;
+
+    fn count(&self, hand: &Hand) -> usize {
+        let num_aces = (hand & MASK_ACES).count_ones();
+        let num_kings = (hand & MASK_KINGS).count_ones();
+        let num_dragons = (hand & hand!(DRAGON)).count_ones();
+        let num_phoenixs = (hand & hand!(PHOENIX)).count_ones();
+        let num_mahjongs = (hand & hand!(MAHJONG)).count_ones();
+        let num_dogs = (hand & hand!(DOG)).count_ones();
+        (num_aces as f64 + num_kings as f64 * 0.05 + 2. * num_dragons as f64 + 1.9 * num_phoenixs as f64 + num_mahjongs as f64 * 0.01 + num_dogs as f64 * 0.01 >= 3.) as usize
+    }
 }

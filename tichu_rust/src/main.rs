@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use crate::analysis::bomb_stats::{evaluate_bomb_stats, evaluate_bombs_in_play};
 use crate::analysis::exchange_stats::evaluate_exchange_stats;
 use crate::analysis::first_8_transition_probability::calculate_transition_probabilities;
-use crate::analysis::gt_stats::{evaluate_gt_stats, HandCategory};
+use crate::analysis::gt_stats::{evaluate_gt_call_rates, evaluate_gt_stats, HandCategory};
 use crate::analysis::general_stats::{evaluate_general_stats, evaluate_general_stats_onlyr0};
 use crate::analysis::parsing_stats::evaluate_parsing_stats;
 use crate::analysis::street_stats::{evaluate_lose_four_to_queen, evaluate_streets_in_play};
@@ -54,6 +54,7 @@ fn main() {
     //evaluate_lose_four_to_queen(&db);
     //evaluate_exchange_stats(&db);
     //evaluate_gt_stats(&db);
+    evaluate_gt_call_rates(enumeration_results::count_gt_hand_category());
 
 
 
@@ -66,7 +67,7 @@ fn main() {
     //enumeration_results::count_gt_hand_category();
     //enumeration_results::count_first14_hand_category();
     //HandCategory::print_category_lists();
-    calculate_transition_probabilities();
+    //calculate_transition_probabilities();
 }
 
 #[cfg(test)]
