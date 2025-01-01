@@ -63,7 +63,16 @@ for category in range(80):
     for other_category in range(80):
         assert is_contained(hand_categories[category], hand_categories[other_category]) or category == other_category or transitions_from_category[other_category] == 0.
 
+#Check that theoretical probability matches calculated ones:
+for target_category in range(80):
+    theoretical_prob_first14 =hand_categories_absolute_frequencies_all[target_category] / num_hands
+    calculated_prob = 0.
+    for first_8_category in range(80):
+        calculated_prob += hand_categories_absolute_frequencies_gt[first_8_category] / num_gt_hands * transition_matrix[first_8_category][target_category]
+    assert np.isclose(calculated_prob, theoretical_prob_first14)
 
+# print probability of 2 aces +dragon under first 14, if none under first 8
+print("Prob of 2 Ace + dragon in first 14 given None in first 8: ", transition_matrix[0][hand_categories.index((2, True, False, False, False))])
 # --- First table ---------------
 print("|Asse|Dr|Ph|Dog|Ma|Wahrscheinlichkeit unter ersten 8 (exakt)|GT Call Rate (\*)/(\*\*)| GT Success Rate (\*)/(\*\*) |")
 print("|--|--|--|--|--|---|")
@@ -97,6 +106,8 @@ for i, (hand_cat, freq) in enumerate(zip(hand_categories, hand_categories_absolu
     print(res_line)
 
 # --- Second table ---------------
+value_of_1_by_cat = [[0 for _ in range(80)], [0 for _ in range(80)]]
+value_of_relative_round_win_non_gt_by_cat = [[0 for _ in range(80)], [0 for _ in range(80)]]
 print("----------Second Table ---------------")
 print("|Asse|Dr|Ph|Dog|Ma|1. (geschätzt) (\*)/(\*\*)|Wahrscheinlichkeit unter ersten 14 (exakt)| Erwarteter relativer Rundengewinn wenn unter ersten 14 & kein GT |")
 print("|--|--|--|--|--|---|")
@@ -114,6 +125,7 @@ for i, (hand_cat, freq) in enumerate(zip(hand_categories, hand_categories_absolu
             reported_value = replace_hand_category_by_max(hand_cat, gt_ers_by_cat[ds], gt_call_rounds_by_cat[ds])
         else:
             reported_value = round_score_diff / rounds_num
+        value_of_1_by_cat[ds][i] = reported_value
         res_line += f"{reported_value:.2f}"
         res_line += f"(\*{'\*' if ds == 1 else ''})"
         if rounds_num < 100:
@@ -131,9 +143,35 @@ for i, (hand_cat, freq) in enumerate(zip(hand_categories, hand_categories_absolu
             reported_value = replace_hand_category_by_max(hand_cat, non_gt_ers_by_cat[ds], rounds_by_cat_first14[ds])
         else:
             reported_value = round_score_diff / rounds_num
+        value_of_relative_round_win_non_gt_by_cat[ds][i] = reported_value
         res_line += f"{reported_value:.2f}"
         res_line += f"(\*{'\*' if ds == 1 else ''})"
         if rounds_num < 100:
             res_line += f"**"
     res_line+= "|"
+    print(res_line)
+
+# --- Third table ---------------
+print("----------Third Table ---------------")
+print("|Asse|Dr|Ph|Dog|Ma|1.-2.: **Opportunitätskosten(\*)/(\*\*)**|")
+print("|--|--|--|--|--|---|")
+for i, (hand_cat) in enumerate(hand_categories):
+    res_line = f"{hand_category_to_string(hand_cat)}"
+    #----Value of 1. - 2. ---
+    for ds in range(2):
+        if ds == 1:
+            res_line += "/"
+
+        value_of_1 = value_of_1_by_cat[ds][i]
+        value_of_2 = 0.
+        for other_cat in range(80):
+            value_of_2 += transition_matrix[i][other_cat] * value_of_relative_round_win_non_gt_by_cat[ds][other_cat]
+        rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
+        if rounds_num < 100:
+            res_line += f"**"
+        res_line += f"{value_of_1-value_of_2:.2f}"
+        res_line += f"(\*{'\*' if ds == 1 else ''})"
+        if rounds_num < 100:
+            res_line += f"**"
+    res_line += "|"
     print(res_line)
