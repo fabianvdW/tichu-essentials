@@ -77,27 +77,34 @@ labels = ['Dog'] + [str(i) for i in range(2, 11)] + ['J', 'Q', 'K', 'A', 'Ph', '
 db_type = ["Normal", "Filtered"]
 round_types = ["Normal", "GT_Call"]
 card_origin = ["Links", "Partner", "Rechts"]
-for i, db in enumerate(probs):
-    for j, round_type in enumerate(db):
-        for k, prob_array in enumerate(round_type):
-            # Create bar plot
-            plt.figure(figsize=(12, 6))
-            bars = plt.bar(range(len(prob_array)), prob_array)
-            plt.xticks(range(len(labels)), labels, rotation=45)
 
-            # Add value labels on top of each bar
-            for bar in bars:
-                height = bar.get_height()
-                plt.text(bar.get_x() + bar.get_width() / 2., height,
-                         f'{height:.3f}',
-                         ha='center', va='bottom')
+bar_width = 0.45
 
-            plt.title(f'Wahrscheinlichkeitsverteilung für Schupfkarte von {card_origin[k]}')
-            plt.xlabel('Karte')
-            plt.ylabel('Wahrscheinlichkeit')
+for j, round_type in enumerate(probs[0]):  # for each round type
+    for k, prob_array in enumerate(round_type):  # for each card origin
+        # Create figure
+        plt.figure(figsize=(15, 6))
 
-            # Ensure layout fits properly
-            plt.tight_layout()
+        # Position of bars
+        x = np.arange(len(labels))
 
-            # Show plot
-            plt.savefig(f"{db_type[i]}_{round_types[j]}_{card_origin[k]}.png")
+        # Create bars for normal and filtered data
+        plt.bar(x - bar_width/2, probs[0][j][k], bar_width, label='Normal', color='skyblue')
+        plt.bar(x + bar_width/2, probs[1][j][k], bar_width, label='Filtered', color='lightcoral')
+
+        # Customize plot
+        plt.xlabel('Karte')
+        plt.ylabel('Wahrscheinlichkeit')
+        plt.title(f'Wahrscheinlichkeitsverteilung für Schupfkarte von {card_origin[k]} ({round_types[j]})')
+        plt.xticks(x, labels, rotation=45)
+        plt.legend()
+
+        # Add value labels
+        for i, v in enumerate(probs[0][j][k]):
+            plt.text(i - bar_width/2, v, f'{v:.3f}', ha='center', va='bottom', rotation=90)
+        for i, v in enumerate(probs[1][j][k]):
+            plt.text(i + bar_width/2, v, f'{v:.3f}', ha='center', va='bottom', rotation=90)
+
+        plt.tight_layout()
+        plt.savefig(f"Compare_{round_types[j]}_{card_origin[k]}.png")
+        plt.close()
