@@ -4,6 +4,7 @@ pub mod general_stats;
 pub mod exchange_stats;
 pub mod street_stats;
 pub mod first_8_transition_probability;
+pub mod gt_stats;
 
 pub fn format_slice_abs_relative(slice: &[usize], divisor: usize) -> String {
     format!("{:?} (Avg. {:.4}, Abs: {:?}, Div: {})", slice.iter().map(|x| format!("{:.4}", 100.0 * (*x as f64 / divisor as f64))).collect::<Vec<_>>(),

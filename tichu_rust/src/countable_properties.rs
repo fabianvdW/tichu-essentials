@@ -1,10 +1,10 @@
-use crate::tichu_hand::{Hand, TichuHand, DOG, DRAGON, MAHJONG, MASK_ACES, PHOENIX};
+use crate::tichu_hand::{Hand, TichuHand};
 use std::fmt;
 use std::fmt::Debug;
 use std::ops::{Add, Mul};
 
 use generic_array::{typenum, ArrayLength, GenericArray};
-use crate::analysis::first_8_transition_probability::HandCategory;
+use crate::analysis::gt_stats::HandCategory;
 use crate::hand;
 
 pub trait CountableProperty: Debug + Clone {
@@ -123,11 +123,6 @@ impl CountableProperty for CountBombsStraights0_1 {
 impl CountableProperty for CountHandCategory {
     type UpperBound = typenum::U80;
     fn count(&self, hand: &Hand) -> usize {
-        let num_aces = (hand & MASK_ACES).count_ones() as usize;
-        let has_dragon = (hand & hand!(DRAGON)) != 0;
-        let has_phoenix = (hand & hand!(PHOENIX)) != 0;
-        let has_dog = (hand & hand!(DOG)) != 0;
-        let has_mahjong = (hand & hand!(MAHJONG)) != 0;
-        HandCategory::construct(num_aces, has_dragon, has_phoenix, has_dog, has_mahjong).0
+        HandCategory::categorize_hand(hand).0
     }
 }

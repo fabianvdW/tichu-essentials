@@ -32,3 +32,6 @@ pub fn count_gt_bombs_0_1() {
 pub fn count_gt_hand_category() -> GenericArray<u64, U80> {
     count_special_card_sensitive_property::<CountHandCategory, 8>(CountHandCategory).property_counted
 }
+pub fn count_first14_hand_category() -> GenericArray<u64, U80> {
+    count_special_card_sensitive_property::<CountHandCategory, 14>(CountHandCategory).property_counted
+}
