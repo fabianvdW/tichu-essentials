@@ -53,7 +53,9 @@ impl HandCategory {
 pub fn evaluate_gt_stats(db: &DataBase) {
     let mut gt_categories = [[0; 4]; 80];
     let mut gt_round_score_diff_by_cat = [[0i64; 4]; 80];
+    let mut gt_round_score_diff_by_first14_cat = [[0i64; 4]; 80];
     let mut gt_calls = [[0; 4]; 80];
+    let mut gt_calls_first14 = [[0;4]; 80];
     let mut gt_successes = [[0; 4]; 80];
 
     for game in db.games.iter() {
@@ -66,12 +68,17 @@ pub fn evaluate_gt_stats(db: &DataBase) {
                     gt_calls[category.0][player_id] += 1;
                     gt_successes[category.0][player_id] += (prh.player_rank(player_id as PlayerIDInternal) == RANK_1) as usize;
                     gt_round_score_diff_by_cat[category.0][player_id] += prh.round_score_relative_gain() as i64;
+                    let cat_14 = HandCategory::categorize_hand(&prh.first_14);
+                    gt_round_score_diff_by_first14_cat[cat_14.0][player_id] += prh.round_score_relative_gain() as i64;
+                    gt_calls_first14[cat_14.0][player_id] += 1;
                 }
             }
         }
     }
     println!("GT Calls abs: {:?}", gt_calls);
+    println!("GT Calls_14 abs: {:?}", gt_calls_first14);
     println!("GT Round scoree diff abs: {:?}", gt_round_score_diff_by_cat);
+    println!("GT Round score diff (first 14) abs: {:?}", gt_round_score_diff_by_first14_cat);
     println!("GT Categories abs: {:?}", gt_categories);
     println!("GT Successes abs: {:?}", gt_successes);
 
