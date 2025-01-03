@@ -1,6 +1,6 @@
 use generic_array::{typenum, GenericArray};
 use generic_array::typenum::U80;
-use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, CALL_GRAND_TICHU, RANK_1};
+use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, Score, CALL_GRAND_TICHU, RANK_1};
 use crate::bsw_database::DataBase;
 use crate::countable_properties::CountableProperty;
 use crate::enumerate_hands::count_special_card_sensitive_property;
@@ -102,6 +102,43 @@ pub fn evaluate_gt_stats(db: &DataBase) {
     println!("Non-gt ERS abs: {:?}", non_gt_round_score_diff);
 }
 
+pub fn evaluate_gt_win_probs(db: &DataBase){
+    let mut gt_round_score_diff_by_cat14 = [[[0usize; 4]; 93]; 80];
+    let mut nongt_round_score_diff_by_cat14 = [[[0usize; 4]; 93]; 80];
+
+    let round_score_diff_to_index = |diff: Score|{
+        if diff < -50 {
+            0
+        }else if diff > 400 {
+            92
+        }else{
+            (diff+55)/5
+        }
+    };
+
+    for game in db.games.iter() {
+        for (round, _) in game.rounds.iter() {
+            for player_id in 0..4 {
+                let prh = &round.player_rounds[player_id];
+                let category = HandCategory::categorize_hand(&prh.first_14);
+                let round_diff = prh.round_score_relative_gain();
+                let round_diff_idx = round_score_diff_to_index(round_diff);
+                if prh.player_call(player_id as PlayerIDInternal) == CALL_GRAND_TICHU {
+                    //gt_calls_bycat14[category.0][player_id] += 1;
+                    gt_round_score_diff_by_cat14[category.0][round_diff_idx][player_id] += 1;
+                }else{
+                    //nongt_calls_bycat14[category.0][player_id] += 1;
+                    nongt_round_score_diff_by_cat14[category.0][round_diff_idx][player_id] += 1;
+                }
+            }
+        }
+    }
+
+    println!("Round Score count cat14 given GT: {:?}", gt_round_score_diff_by_cat14);
+    println!("Round Score count cat14 given non GT: {:?}", nongt_round_score_diff_by_cat14);
+
+
+}
 pub fn evaluate_gt_call_rates(hand_category_count: GenericArray<u64, U80>) {
     let gt_hands = 1420494075;
     //1. Strategy: Call GT with Ace + Joker or both Jokers

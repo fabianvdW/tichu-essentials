@@ -81,40 +81,43 @@ for target_category in range(80):
     for first_8_category in range(80):
         calculated_prob += hand_categories_absolute_frequencies_gt[first_8_category] / num_gt_hands * transition_matrix[first_8_category][target_category]
     assert np.isclose(calculated_prob, theoretical_prob_first14)
+def print_aux_probability():
+    # print probability of 2 aces +dragon under first 14, if none under first 8
+    print("Prob of 2 Ace + dragon in first 14 given None in first 8: ", transition_matrix[0][hand_categories.index((2, True, False, False, False))])
 
-# print probability of 2 aces +dragon under first 14, if none under first 8
-print("Prob of 2 Ace + dragon in first 14 given None in first 8: ", transition_matrix[0][hand_categories.index((2, True, False, False, False))])
-# --- First table ---------------
-print("|Asse|Dr|Ph|Dog|Ma|Wahrscheinlichkeit unter ersten 8 (exakt)|GT Call Rate (\*)/(\*\*)| GT Success Rate (\*)/(\*\*) |")
-print("|--|--|--|--|--|---|")
-for i, (hand_cat, freq) in enumerate(zip(hand_categories, hand_categories_absolute_frequencies_gt)):
-    percentage = 100*freq/num_gt_hands
-    res_line = f"{hand_category_to_string(hand_cat)}{'<0.00001' if percentage < 0.00001 else f'{percentage:.5f}'}%|"
+def print_first_table():
+    # --- First table ---------------
+    print("|Asse|Dr|Ph|Dog|Ma|Wahrscheinlichkeit unter ersten 8 (exakt)|GT Call Rate (\*)/(\*\*)| GT Success Rate (\*)/(\*\*) |")
+    print("|--|--|--|--|--|---|")
+    for i, (hand_cat, freq) in enumerate(zip(hand_categories, hand_categories_absolute_frequencies_gt)):
+        percentage = 100*freq/num_gt_hands
+        res_line = f"{hand_category_to_string(hand_cat)}{'<0.00001' if percentage < 0.00001 else f'{percentage:.5f}'}%|"
 
-    for ds in range(2):
-        if ds == 1:
-            res_line += "/"
-        cat_num = np.sum(rounds_by_cat_first8[ds][i])
-        rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
-        if rounds_num < MIN_ROUNDS:
-            res_line += f"-"
-        else:
-            res_line += f"{rounds_num / cat_num * 100 : .2f}%"
-        res_line += f"(\*{'\*' if ds == 1 else ''})"
-    res_line += "|"
-    for ds in range(2):
-        if ds == 1:
-            res_line += "/"
-        succ_num = np.sum(gt_successes_abs[ds][i])
-        rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
-        if rounds_num < MIN_ROUNDS:
-            res_line += f"-"
-        else:
-            res_line += f"{succ_num / rounds_num * 100 : .2f}%"
-        res_line += f"(\*{'\*' if ds == 1 else ''})"
-    res_line += "|"
+        for ds in range(2):
+            if ds == 1:
+                res_line += "/"
+            cat_num = np.sum(rounds_by_cat_first8[ds][i])
+            rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
+            if rounds_num < MIN_ROUNDS:
+                res_line += f"-"
+            else:
+                res_line += f"{rounds_num / cat_num * 100 : .2f}%"
+            res_line += f"(\*{'\*' if ds == 1 else ''})"
+        res_line += "|"
+        for ds in range(2):
+            if ds == 1:
+                res_line += "/"
+            succ_num = np.sum(gt_successes_abs[ds][i])
+            rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
+            if rounds_num < MIN_ROUNDS:
+                res_line += f"-"
+            else:
+                res_line += f"{succ_num / rounds_num * 100 : .2f}%"
+            res_line += f"(\*{'\*' if ds == 1 else ''})"
+        res_line += "|"
 
-    print(res_line)
+        print(res_line)
+
 
 # --- Second table ---------------
 
@@ -123,171 +126,168 @@ value_of_1_alt_marked = [[False for _ in range(80)], [False for _ in range(80)]]
 
 value_of_relative_round_win_non_gt_by_cat = [[0 for _ in range(80)], [0 for _ in range(80)]]
 value_of_relative_round_win_marked = [[False for _ in range(80)],[False for _ in range(80)]]
-print("----------Second Table ---------------")
-print("|Asse|Dr|Ph|Dog|Ma|Erwarteter relativer Rundengewinn wenn unter ersten 14 & GT (\*)/(\*\*)|Wahrscheinlichkeit unter ersten 14 (exakt)| Erwarteter relativer Rundengewinn wenn unter ersten 14 & kein GT |")
-print("|--|--|--|--|--|---|")
-for i, (hand_cat, freq) in enumerate(zip(hand_categories, hand_categories_absolute_frequencies_all)):
-    percentage = 100*freq/num_hands
-    res_line = f"{hand_category_to_string(hand_cat)}"
-    #----Value of 1. (Expected relative round score gain given GT and category in first 14) ---
-    for ds in range(2):
-        if ds == 1:
-            res_line += "/"
-        #round_score_diff = np.sum(gt_ers_by_cat[ds][i])
-        #rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
-        #if rounds_num < MIN_ROUNDS:
-        #    res_line += f"**"
-        #    reported_value = replace_hand_category_by_max(hand_cat, gt_ers_by_cat[ds], gt_call_rounds_by_cat[ds])
-        #else:
-        #    reported_value = round_score_diff / rounds_num
-        #value_of_1_by_cat[ds][i] = reported_value
-        #res_line += f"{reported_value:.2f}"
-        #res_line += f"(\*{'\*' if ds == 1 else ''})"
-        #if rounds_num < MIN_ROUNDS:
-        #    res_line += f"**"
 
-        rounds_num = np.sum(gt_calls_first14_by_cat[ds][i])
-        round_score_diff = np.sum(gt_ers_first14_by_cat[ds][i])
-        if rounds_num < MIN_ROUNDS:
-            res_line += f"**"
-            value_of_1_alt_by_cat[ds][i] = replace_hand_category_by_max(hand_cat, gt_ers_first14_by_cat[ds], gt_calls_first14_by_cat[ds])
-            value_of_1_alt_marked[ds][i] = True
-        else:
-            value_of_1_alt_by_cat[ds][i] = round_score_diff / rounds_num
-        res_line += f"{value_of_1_alt_by_cat[ds][i]:.2f}"
-        res_line += f"(\*{'\*' if ds == 1 else ''})"
-        if rounds_num < MIN_ROUNDS:
-            res_line += f"**"
+def print_second_table():
+    print("----------Second Table ---------------")
+    print("|Asse|Dr|Ph|Dog|Ma|Erwarteter relativer Rundengewinn wenn unter ersten 14 & GT (\*)/(\*\*)|Wahrscheinlichkeit unter ersten 14 (exakt)| Erwarteter relativer Rundengewinn wenn unter ersten 14 & kein GT |")
+    print("|--|--|--|--|--|---|")
+    for i, (hand_cat, freq) in enumerate(zip(hand_categories, hand_categories_absolute_frequencies_all)):
+        percentage = 100*freq/num_hands
+        res_line = f"{hand_category_to_string(hand_cat)}"
+        #----Value of 1. (Expected relative round score gain given GT and category in first 14) ---
+        for ds in range(2):
+            if ds == 1:
+                res_line += "/"
+            rounds_num = np.sum(gt_calls_first14_by_cat[ds][i])
+            round_score_diff = np.sum(gt_ers_first14_by_cat[ds][i])
+            if rounds_num < MIN_ROUNDS:
+                res_line += f"**"
+                value_of_1_alt_by_cat[ds][i] = replace_hand_category_by_max(hand_cat, gt_ers_first14_by_cat[ds], gt_calls_first14_by_cat[ds])
+                value_of_1_alt_marked[ds][i] = True
+            else:
+                value_of_1_alt_by_cat[ds][i] = round_score_diff / rounds_num
+            res_line += f"{value_of_1_alt_by_cat[ds][i]:.2f}"
+            res_line += f"(\*{'\*' if ds == 1 else ''})"
+            if rounds_num < MIN_ROUNDS:
+                res_line += f"**"
 
-    # --- Theortical probability of occuring in first 14.
-    res_line += f"|{'<0.00001' if percentage < 0.00001 else f'{percentage:.5f}'}%|"
-    # --- Value of relative round score gain given NON-GT and category in first 14.
-    for ds in range(2):
-        if ds == 1:
-            res_line += "/"
-        round_score_diff = np.sum(non_gt_ers_by_cat[ds][i])
-        rounds_num = np.sum(rounds_by_cat_first14[ds][i])
-        if rounds_num < MIN_ROUNDS:
-            res_line += f"**"
-            reported_value = replace_hand_category_by_max(hand_cat, non_gt_ers_by_cat[ds], rounds_by_cat_first14[ds])
-            value_of_relative_round_win_marked[ds][i] = True
-        else:
-            reported_value = round_score_diff / rounds_num
-        value_of_relative_round_win_non_gt_by_cat[ds][i] = reported_value
-        res_line += f"{reported_value:.2f}"
-        res_line += f"(\*{'\*' if ds == 1 else ''})"
-        if rounds_num < MIN_ROUNDS:
-            res_line += f"**"
-    res_line+= "|"
-    print(res_line)
+        # --- Theortical probability of occuring in first 14.
+        res_line += f"|{'<0.00001' if percentage < 0.00001 else f'{percentage:.5f}'}%|"
+        # --- Value of relative round score gain given NON-GT and category in first 14.
+        for ds in range(2):
+            if ds == 1:
+                res_line += "/"
+            round_score_diff = np.sum(non_gt_ers_by_cat[ds][i])
+            rounds_num = np.sum(rounds_by_cat_first14[ds][i])
+            if rounds_num < MIN_ROUNDS:
+                res_line += f"**"
+                reported_value = replace_hand_category_by_max(hand_cat, non_gt_ers_by_cat[ds], rounds_by_cat_first14[ds])
+                value_of_relative_round_win_marked[ds][i] = True
+            else:
+                reported_value = round_score_diff / rounds_num
+            value_of_relative_round_win_non_gt_by_cat[ds][i] = reported_value
+            res_line += f"{reported_value:.2f}"
+            res_line += f"(\*{'\*' if ds == 1 else ''})"
+            if rounds_num < MIN_ROUNDS:
+                res_line += f"**"
+        res_line+= "|"
+        print(res_line)
 
-# --- Third table ---------------
-print("----------Third Table ---------------")
-print("|Asse|Dr|Ph|Dog|Ma|1.-2.: **Opportunitätskosten(\*)**|1.-2.: **Opportunitätskosten(\*\*)**|")
-print("|--|--|--|--|--|---|---|")
-
-#opp_costs = [[0 for _ in range(80)], [0 for _ in range(80)]]
 opp_costs_alt = [[0 for _ in range(80)], [0 for _ in range(80)]]
 value_of_1_by_cat = [[0 for _ in range(80)], [0 for _ in range(80)]]
 marked_1_by_cat = [[False for _ in range(80)], [False for _ in range(80)]]
 value_of_2_by_cat = [[0 for _ in range(80)], [0 for _ in range(80)]]
 marked_2_by_cat = [[False for _ in range(80)], [False for _ in range(80)]]
-for i, (hand_cat) in enumerate(hand_categories):
-    res_line = f"{hand_category_to_string(hand_cat)}"
-    #----Value of 1. - 2. ---
-    for ds in range(2):
-        if ds == 1:
-            res_line += "|"
+def print_third_table():
+    # --- Third table ---------------
+    print("----------Third Table ---------------")
+    print("|Asse|Dr|Ph|Dog|Ma|1.-2.: **Opportunitätskosten(\*)**|1.-2.: **Opportunitätskosten(\*\*)**|")
+    print("|--|--|--|--|--|---|---|")
 
-        #value_of_1 = value_of_1_by_cat[ds][i]
-        value_of_1_alt = 0.
-        should_mark_1_alt = 0.
-        for other_cat in range(80):
-            value_of_1_alt += transition_matrix[i][other_cat] * value_of_1_alt_by_cat[ds][other_cat]
-            if value_of_1_alt_marked[ds][other_cat]:
-                should_mark_1_alt += transition_matrix[i][other_cat]
-        value_of_1_by_cat[ds][i] = value_of_1_alt
+    #opp_costs = [[0 for _ in range(80)], [0 for _ in range(80)]]
 
-        value_of_2 = 0.
-        should_mark_2_alt = 0.
-        for other_cat in range(80):
-            value_of_2 += transition_matrix[i][other_cat] * value_of_relative_round_win_non_gt_by_cat[ds][other_cat]
-            if value_of_relative_round_win_marked[ds][other_cat]:
-                should_mark_2_alt += transition_matrix[i][other_cat]
+    for i, (hand_cat) in enumerate(hand_categories):
+        res_line = f"{hand_category_to_string(hand_cat)}"
+        #----Value of 1. - 2. ---
+        for ds in range(2):
+            if ds == 1:
+                res_line += "|"
 
-        value_of_2_by_cat[ds][i] = value_of_2
+            #value_of_1 = value_of_1_by_cat[ds][i]
+            value_of_1_alt = 0.
+            should_mark_1_alt = 0.
+            for other_cat in range(80):
+                value_of_1_alt += transition_matrix[i][other_cat] * value_of_1_alt_by_cat[ds][other_cat]
+                if value_of_1_alt_marked[ds][other_cat]:
+                    should_mark_1_alt += transition_matrix[i][other_cat]
+            value_of_1_by_cat[ds][i] = value_of_1_alt
 
-        #rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
-        #opp_cost = value_of_1-value_of_2
-        opp_cost_alt = value_of_1_alt - value_of_2
-        #opp_costs[ds][i] = opp_cost
-        opp_costs_alt[ds][i] = opp_cost_alt
-        #if rounds_num < MIN_ROUNDS:
-        #    res_line += f"**"
-        #res_line += f"{opp_cost:.2f}"
-        #if rounds_num < MIN_ROUNDS:
-        #    res_line += f"**"
-        #res_line += "|"
-        mark_percentage = 0.2
-        if should_mark_1_alt >= mark_percentage:
-            marked_1_by_cat[ds][i] = True
-        if should_mark_2_alt >= mark_percentage:
-            marked_2_by_cat[ds][i] = True
-        if should_mark_1_alt >= mark_percentage or should_mark_2_alt >= mark_percentage:
-            res_line += "**"
-        res_line += f"{opp_cost_alt:.2f}"
-        if should_mark_1_alt >= mark_percentage or should_mark_2_alt >= mark_percentage:
-            res_line += "**"
-    res_line += "|"
-    print(res_line)
+            value_of_2 = 0.
+            should_mark_2_alt = 0.
+            for other_cat in range(80):
+                value_of_2 += transition_matrix[i][other_cat] * value_of_relative_round_win_non_gt_by_cat[ds][other_cat]
+                if value_of_relative_round_win_marked[ds][other_cat]:
+                    should_mark_2_alt += transition_matrix[i][other_cat]
 
-# --- Fourth table ---------------
-print("----------Fourth Table ---------------")
-print("|Asse|Dr|Ph|Dog|Ma|1.(\*/\*\*)|2. (\*/\*\*)|")
-print("|--|--|--|--|--|---|---|")
+            value_of_2_by_cat[ds][i] = value_of_2
 
-#opp_costs = [[0 for _ in range(80)], [0 for _ in range(80)]]
-opp_costs_alt = [[0 for _ in range(80)], [0 for _ in range(80)]]
-for i, (hand_cat) in enumerate(hand_categories):
-    res_line = f"{hand_category_to_string(hand_cat)}"
-    #----Value of 1. --
-    for ds in range(2):
-        if ds == 1:
-            res_line += "/"
-        value_of_1 = value_of_1_by_cat[ds][i]
-        marked = marked_1_by_cat[ds][i]
+            #rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
+            #opp_cost = value_of_1-value_of_2
+            opp_cost_alt = value_of_1_alt - value_of_2
+            #opp_costs[ds][i] = opp_cost
+            opp_costs_alt[ds][i] = opp_cost_alt
+            #if rounds_num < MIN_ROUNDS:
+            #    res_line += f"**"
+            #res_line += f"{opp_cost:.2f}"
+            #if rounds_num < MIN_ROUNDS:
+            #    res_line += f"**"
+            #res_line += "|"
+            mark_percentage = 0.2
+            if should_mark_1_alt >= mark_percentage:
+                marked_1_by_cat[ds][i] = True
+            if should_mark_2_alt >= mark_percentage:
+                marked_2_by_cat[ds][i] = True
+            if should_mark_1_alt >= mark_percentage or should_mark_2_alt >= mark_percentage:
+                res_line += "**"
+            res_line += f"{opp_cost_alt:.2f}"
+            if should_mark_1_alt >= mark_percentage or should_mark_2_alt >= mark_percentage:
+                res_line += "**"
+        res_line += "|"
+        print(res_line)
 
-        if marked:
-            res_line += "**"
-        res_line += f"{value_of_1:.2f}"
-        if marked:
-            res_line += "**"
-    res_line += "|"
-    #----Value of 2. --
-    for ds in range(2):
-        if ds == 1:
-            res_line += "/"
-        value_of_2 = value_of_2_by_cat[ds][i]
-        marked = marked_2_by_cat[ds][i]
+def print_fourth_table():
+    # --- Fourth table ---------------
+    print("----------Fourth Table ---------------")
+    print("|Asse|Dr|Ph|Dog|Ma|1.(\*/\*\*)|2. (\*/\*\*)|")
+    print("|--|--|--|--|--|---|---|")
 
-        if marked:
-            res_line += "**"
-        res_line += f"{value_of_2:.2f}"
-        if marked:
-            res_line += "**"
-    res_line += "|"
-    print(res_line)
+    for i, (hand_cat) in enumerate(hand_categories):
+        res_line = f"{hand_category_to_string(hand_cat)}"
+        #----Value of 1. --
+        for ds in range(2):
+            if ds == 1:
+                res_line += "/"
+            value_of_1 = value_of_1_by_cat[ds][i]
+            marked = marked_1_by_cat[ds][i]
 
+            if marked:
+                res_line += "**"
+            res_line += f"{value_of_1:.2f}"
+            if marked:
+                res_line += "**"
+        res_line += "|"
+        #----Value of 2. --
+        for ds in range(2):
+            if ds == 1:
+                res_line += "/"
+            value_of_2 = value_of_2_by_cat[ds][i]
+            marked = marked_2_by_cat[ds][i]
 
-opp_cutoffs_for_callrate = [0., 5., 10., 15., 20., -5., -10.]
-called_hands = [[0 for _ in range(len(opp_cutoffs_for_callrate))], [0 for _ in range(len(opp_cutoffs_for_callrate))]]
-for i in range(80):
-    for ds in range(2):
-        for j, cutoff_value in enumerate(opp_cutoffs_for_callrate):
-            opp_cost = opp_costs_alt[ds][i]
-            if opp_cost >= cutoff_value:
-                called_hands[ds][j] += hand_categories_absolute_frequencies_gt[i]
-for j, cutoff_value in enumerate(opp_cutoffs_for_callrate):
-    c1, c2 = called_hands[0][j], called_hands[1][j]
-    c1, c2 = c1/num_gt_hands * 100., c2/num_gt_hands*100.
-    print(f"GT Call Rate for cutoff {cutoff_value}: {c1:.2f}(\*)/{c2:.2f}(\*\*)")
+            if marked:
+                res_line += "**"
+            res_line += f"{value_of_2:.2f}"
+            if marked:
+                res_line += "**"
+        res_line += "|"
+        print(res_line)
+
+def print_callrates():
+    opp_cutoffs_for_callrate = [0., 5., 10., 15., 20., -5., -10.]
+    called_hands = [[0 for _ in range(len(opp_cutoffs_for_callrate))], [0 for _ in range(len(opp_cutoffs_for_callrate))]]
+    for i in range(80):
+        for ds in range(2):
+            for j, cutoff_value in enumerate(opp_cutoffs_for_callrate):
+                opp_cost = opp_costs_alt[ds][i]
+                if opp_cost >= cutoff_value:
+                    called_hands[ds][j] += hand_categories_absolute_frequencies_gt[i]
+    for j, cutoff_value in enumerate(opp_cutoffs_for_callrate):
+        c1, c2 = called_hands[0][j], called_hands[1][j]
+        c1, c2 = c1/num_gt_hands * 100., c2/num_gt_hands*100.
+        print(f"GT Call Rate for cutoff {cutoff_value}: {c1:.2f}(\*)/{c2:.2f}(\*\*)")
+
+if __name__ == "__main__":
+    print_first_table()
+    print_second_table()
+    print_third_table()
+    print_fourth_table()
+    print_callrates()
