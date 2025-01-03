@@ -103,8 +103,8 @@ pub fn evaluate_gt_stats(db: &DataBase) {
 }
 
 pub fn evaluate_gt_win_probs(db: &DataBase){
-    let mut gt_round_score_diff_by_cat14 = [[[0usize; 4]; 93]; 80];
-    let mut nongt_round_score_diff_by_cat14 = [[[0usize; 4]; 93]; 80];
+    let mut gt_round_score_diff_by_cat14 = [[0usize; 93]; 80];
+    let mut nongt_round_score_diff_by_cat14 = [[0usize; 93]; 80];
 
     let round_score_diff_to_index = |diff: Score|{
         if diff < -50 {
@@ -112,7 +112,7 @@ pub fn evaluate_gt_win_probs(db: &DataBase){
         }else if diff > 400 {
             92
         }else{
-            (diff+55)/5
+            ((diff+55)/5) as usize
         }
     };
 
@@ -125,10 +125,10 @@ pub fn evaluate_gt_win_probs(db: &DataBase){
                 let round_diff_idx = round_score_diff_to_index(round_diff);
                 if prh.player_call(player_id as PlayerIDInternal) == CALL_GRAND_TICHU {
                     //gt_calls_bycat14[category.0][player_id] += 1;
-                    gt_round_score_diff_by_cat14[category.0][round_diff_idx][player_id] += 1;
+                    gt_round_score_diff_by_cat14[category.0][round_diff_idx] += 1;
                 }else{
                     //nongt_calls_bycat14[category.0][player_id] += 1;
-                    nongt_round_score_diff_by_cat14[category.0][round_diff_idx][player_id] += 1;
+                    nongt_round_score_diff_by_cat14[category.0][round_diff_idx] += 1;
                 }
             }
         }
