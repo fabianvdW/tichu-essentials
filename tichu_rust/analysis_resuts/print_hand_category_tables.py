@@ -188,6 +188,10 @@ print("|--|--|--|--|--|---|---|")
 
 #opp_costs = [[0 for _ in range(80)], [0 for _ in range(80)]]
 opp_costs_alt = [[0 for _ in range(80)], [0 for _ in range(80)]]
+value_of_1_by_cat = [[0 for _ in range(80)], [0 for _ in range(80)]]
+marked_1_by_cat = [[False for _ in range(80)], [False for _ in range(80)]]
+value_of_2_by_cat = [[0 for _ in range(80)], [0 for _ in range(80)]]
+marked_2_by_cat = [[False for _ in range(80)], [False for _ in range(80)]]
 for i, (hand_cat) in enumerate(hand_categories):
     res_line = f"{hand_category_to_string(hand_cat)}"
     #----Value of 1. - 2. ---
@@ -202,13 +206,18 @@ for i, (hand_cat) in enumerate(hand_categories):
             value_of_1_alt += transition_matrix[i][other_cat] * value_of_1_alt_by_cat[ds][other_cat]
             if value_of_1_alt_marked[ds][other_cat]:
                 should_mark_1_alt += transition_matrix[i][other_cat]
+        value_of_1_by_cat[ds][i] = value_of_1_alt
+
         value_of_2 = 0.
         should_mark_2_alt = 0.
         for other_cat in range(80):
             value_of_2 += transition_matrix[i][other_cat] * value_of_relative_round_win_non_gt_by_cat[ds][other_cat]
             if value_of_relative_round_win_marked[ds][other_cat]:
                 should_mark_2_alt += transition_matrix[i][other_cat]
-        rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
+
+        value_of_2_by_cat[ds][i] = value_of_2
+
+        #rounds_num = np.sum(gt_call_rounds_by_cat[ds][i])
         #opp_cost = value_of_1-value_of_2
         opp_cost_alt = value_of_1_alt - value_of_2
         #opp_costs[ds][i] = opp_cost
@@ -220,6 +229,10 @@ for i, (hand_cat) in enumerate(hand_categories):
         #    res_line += f"**"
         #res_line += "|"
         mark_percentage = 0.2
+        if should_mark_1_alt >= mark_percentage:
+            marked_1_by_cat[ds][i] = True
+        if should_mark_2_alt >= mark_percentage:
+            marked_2_by_cat[ds][i] = True
         if should_mark_1_alt >= mark_percentage or should_mark_2_alt >= mark_percentage:
             res_line += "**"
         res_line += f"{opp_cost_alt:.2f}"
@@ -227,6 +240,44 @@ for i, (hand_cat) in enumerate(hand_categories):
             res_line += "**"
     res_line += "|"
     print(res_line)
+
+# --- Fourth table ---------------
+print("----------Fourth Table ---------------")
+print("|Asse|Dr|Ph|Dog|Ma|1.(\*/\*\*)|2. (\*/\*\*)|")
+print("|--|--|--|--|--|---|---|")
+
+#opp_costs = [[0 for _ in range(80)], [0 for _ in range(80)]]
+opp_costs_alt = [[0 for _ in range(80)], [0 for _ in range(80)]]
+for i, (hand_cat) in enumerate(hand_categories):
+    res_line = f"{hand_category_to_string(hand_cat)}"
+    #----Value of 1. --
+    for ds in range(2):
+        if ds == 1:
+            res_line += "/"
+        value_of_1 = value_of_1_by_cat[ds][i]
+        marked = marked_1_by_cat[ds][i]
+
+        if marked:
+            res_line += "**"
+        res_line += f"{value_of_1:.2f}"
+        if marked:
+            res_line += "**"
+    res_line += "|"
+    #----Value of 2. --
+    for ds in range(2):
+        if ds == 1:
+            res_line += "/"
+        value_of_2 = value_of_2_by_cat[ds][i]
+        marked = marked_2_by_cat[ds][i]
+
+        if marked:
+            res_line += "**"
+        res_line += f"{value_of_2:.2f}"
+        if marked:
+            res_line += "**"
+    res_line += "|"
+    print(res_line)
+
 
 opp_cutoffs_for_callrate = [0., 5., 10., 15., 20., -5., -10.]
 called_hands = [[0 for _ in range(len(opp_cutoffs_for_callrate))], [0 for _ in range(len(opp_cutoffs_for_callrate))]]
