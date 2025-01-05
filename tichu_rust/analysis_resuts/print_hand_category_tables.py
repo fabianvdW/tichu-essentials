@@ -325,7 +325,8 @@ def get_probability_of_round_diff(hand_cat_idx, p_index, gt, ds ):
 
 def print_round_diff_table1(p_index):
     print(f"\n Wahrscheinlichkeit von relativem Rundengewinn für p={-round_scores[p_index]}, wenn Kategorie unter ersten 14 vorliegt\n")
-    print("|Asse|Dr|Ph|Dog|Ma|Wsk Rundengewinn > -p  bei GT (\*/\*\*)|Wsk Rundengewinn = p bei GT(\*/\*\*)|Wsk Rundengewinn > -p  bei nicht GT (\*/\*\*)|Wsk Rundengewinn = p bei nicht GT(\*/\*\*)|")
+    print("<script>\ncreateFilterableTable(`")
+    print("|Asse|Dr|Ph|Dog|Ma|Wsk Rundengewinn > -p  bei GT (\*/\*\*)|Wsk Rundengewinn = -p bei GT(\*/\*\*)|Wsk Rundengewinn > -p  bei nicht GT (\*/\*\*)|Wsk Rundengewinn = -p bei nicht GT(\*/\*\*)|")
     for i, (hand_cat) in enumerate(hand_categories):
         res_line = f"{hand_category_to_string(hand_cat)}"
         for gt in [True, False]:
@@ -362,9 +363,11 @@ def print_round_diff_table1(p_index):
                     res_line += "**"
             res_line += "|"
         print(res_line)
+    print(f"`, 'gt-probs-roundscore-gr-{-round_scores[p_index]}-bycat14', false);\n</script>")
 
 def print_round_diff_table2(p_index):
     print(f"\n Wahrscheinlichkeit von Sieg für p={-round_scores[p_index]}, wenn Kategorie unter ersten 8 vorliegt\n")
+    print("<script>\ncreateFilterableTable(`")
     print("|Asse|Dr|Ph|Dog|Ma|Wsk Sieg bei GT (\*/\*\*)|Wsk Sieg bei nicht GT (\*/\*\*)|")
     for i, (hand_cat) in enumerate(hand_categories):
         res_line = f"{hand_category_to_string(hand_cat)}"
@@ -395,6 +398,7 @@ def print_round_diff_table2(p_index):
                     res_line += "**"
             res_line += "|"
         print(res_line)
+    print(f"`, 'gt-probs-roundscore-gr-{-round_scores[p_index]}-bycat8', false);\n</script>")
 
 if __name__ == "__main__":
     #print_first_table()
