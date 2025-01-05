@@ -2,8 +2,8 @@ use crate::analysis::{format_slice_abs_relative, format_slice_abs_relative2, for
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, CALL_GRAND_TICHU, RANK_1};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_database::DataBase;
-use crate::hand;
-use crate::tichu_hand::{Hand, CardIndex, MAHJONG, SPECIAL_CARD, PHOENIX, DRAGON, DOG};
+use crate::{hand, tichu_hand};
+use crate::tichu_hand::{Hand, CardIndex, MAHJONG, SPECIAL_CARD, PHOENIX, DRAGON, DOG, ACE, MASK_ACES, TichuHand};
 
 pub fn evaluate_exchange_stats(db: &DataBase) {
     let exchanged_mahjong_to_enemy = |prh: &PlayerRoundHand| prh.right_out_exchange_card() == MAHJONG || prh.left_out_exchange_card() == MAHJONG;
@@ -43,7 +43,7 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
     let mut gt_rounds_no_dog_first14_dogfinal14 = [0; 4];
     let mut gt_rounds_no_dog_first14 = [0; 4];
 
-    let mut ers_gt_rounds = [0;4];
+    let mut ers_gt_rounds = [0; 4];
     let mut gt_rounds = [0; 4];
     let mut double_wins_gt_rounds = [0; 4];
 
@@ -57,7 +57,7 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
         for (round, _) in game.rounds.iter() {
             for player_id in 0..4 {
                 let prh = &round.player_rounds[player_id];
-                let is_double_win = if player_id % 2 == 0 {prh.is_double_win_team_1()}else{prh.is_double_win_team_2()};
+                let is_double_win = if player_id % 2 == 0 { prh.is_double_win_team_1() } else { prh.is_double_win_team_2() };
                 let is_gt_call = prh.player_call(player_id as PlayerIDInternal) == CALL_GRAND_TICHU;
                 let no_dog_first14 = prh.first_14 & hand!(DOG) == 0;
                 let dog_final14 = prh.final_14() & hand!(DOG) != 0;
@@ -150,8 +150,43 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
     ));
     println!("Exchange card in from partner given GT call: {:?}", receiv_partner_cards_gt.map(|x| x.iter().zip(gt_rounds.iter()).fold(
         0., |acc, inc| acc + (*inc.0 as f64) / (*inc.1 as f64)) / 4.
-    ));println!("Exchange card in from right given GT call: {:?}", receiv_right_cards_gt.map(|x| x.iter().zip(gt_rounds.iter()).fold(
+    ));
+    println!("Exchange card in from right given GT call: {:?}", receiv_right_cards_gt.map(|x| x.iter().zip(gt_rounds.iter()).fold(
         0., |acc, inc| acc + (*inc.0 as f64) / (*inc.1 as f64)) / 4.
     ));
+
+    //Swapping away Aces...
+    let mut swap_ace_to_partner_no_gt = [0; 4];
+    let mut no_gt_rounds = [0; 4];
+
+    let mut rounds_ace_only_high_card_no_gt = [0; 4];
+    let mut swap_ace_to_partner_only_high_card_no_gt = [0; 4];
+
+    let mut swap_ace_to_partner_with_two_aces_no_gt = [0; 4];
+    for game in db.games.iter() {
+        for (round, _) in game.rounds.iter() {
+            for player_id in 0..4 {
+                let prh = &round.player_rounds[player_id as usize];
+                if prh.player_call((player_id + 2) % 4) == CALL_GRAND_TICHU {
+                    continue;
+                }
+                let ace_to_partner = tichu_hand::get_card_type(prh.partner_out_exchange_card()) == ACE;
+                let two_aces = (prh.first_14 & MASK_ACES).count_ones() >= 2;
+                let ace_only_high_card = prh.first_14.get_high_card_amt() == 1 && prh.first_14 & MASK_ACES != 0;
+
+                no_gt_rounds[player_id as usize] += 1;
+                swap_ace_to_partner_no_gt[player_id as usize] += ace_to_partner as usize;
+
+                swap_ace_to_partner_with_two_aces_no_gt[player_id as usize] += (ace_to_partner & two_aces) as usize;
+
+                rounds_ace_only_high_card_no_gt[player_id as usize] += ace_only_high_card as usize;
+                swap_ace_to_partner_only_high_card_no_gt[player_id as usize] += (ace_only_high_card & ace_to_partner) as usize;
+            }
+        }
+    }
+
+    println!("Pr of giving Partner Ace given no GT call: {}", format_slice_abs_relative2(&swap_ace_to_partner_no_gt, &no_gt_rounds));
+    println!("Pr of giving Partner Ace given no GT call & only high card: {}", format_slice_abs_relative2(&swap_ace_to_partner_only_high_card_no_gt, &rounds_ace_only_high_card_no_gt));
+    println!("Pr of having two Aces given Partner has received Ace from me & no gt call: {}", format_slice_abs_relative2(&swap_ace_to_partner_with_two_aces_no_gt, &swap_ace_to_partner_no_gt));
 
 }
