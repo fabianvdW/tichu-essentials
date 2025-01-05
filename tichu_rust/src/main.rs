@@ -52,9 +52,9 @@ fn main() {
     //evaluate_bombs_in_play(&db);
     //evaluate_streets_in_play(&db);
     //evaluate_lose_four_to_queen(&db);
-    //evaluate_exchange_stats(&db);
+    evaluate_exchange_stats(&db);
     //evaluate_gt_stats(&db);
-    evaluate_gt_win_probs(&db);
+    //evaluate_gt_win_probs(&db);
     //evaluate_gt_call_rates(enumeration_results::count_gt_hand_category());
 
 

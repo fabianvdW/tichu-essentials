@@ -1,8 +1,9 @@
-use crate::analysis::{format_slice_abs_relative, format_slice_abs_relative2_i64};
-use crate::bsw_binary_format::binary_format_constants::CALL_GRAND_TICHU;
+use crate::analysis::{format_slice_abs_relative, format_slice_abs_relative2, format_slice_abs_relative2_i64};
+use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, CALL_GRAND_TICHU, RANK_1};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_database::DataBase;
-use crate::tichu_hand::{CardIndex, MAHJONG, SPECIAL_CARD, PHOENIX, DRAGON, DOG};
+use crate::hand;
+use crate::tichu_hand::{Hand, CardIndex, MAHJONG, SPECIAL_CARD, PHOENIX, DRAGON, DOG};
 
 pub fn evaluate_exchange_stats(db: &DataBase) {
     let exchanged_mahjong_to_enemy = |prh: &PlayerRoundHand| prh.right_out_exchange_card() == MAHJONG || prh.left_out_exchange_card() == MAHJONG;
@@ -19,6 +20,79 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
             })
         })).collect::<Vec<_>>();
     println!("ERS given exchange of Mahjong to enemy: {}", &format_slice_abs_relative2_i64(&ers_exchange_1_to_enemy, &exchange_1_to_enemy_rounds));
+
+    let exchanged_dog_to_enemy = |prh: &PlayerRoundHand| prh.right_out_exchange_card() == DOG || prh.left_out_exchange_card() == DOG;
+    let exchange_dog_to_enemy_rounds = (0..4).map(|player_id| db.games.iter().fold(
+        0, |acc, game| {
+            acc + game.rounds.iter().fold(0, |acc_2, round| {
+                acc_2 + exchanged_dog_to_enemy(&round.0.player_rounds[player_id]) as usize
+            })
+        })).collect::<Vec<_>>();
+    let ers_exchange_dog_to_enemy = (0..4).map(|player_id| db.games.iter().fold(
+        0i64, |acc, game| {
+            acc + game.rounds.iter().fold(0i64, |acc_2, round| {
+                acc_2 + if exchanged_dog_to_enemy(&round.0.player_rounds[player_id]) { round.0.player_rounds[player_id].round_score_relative_gain() as i64 } else { 0 }
+            })
+        })).collect::<Vec<_>>();
+    println!("ERS given exchange of Dog to enemy: {}", &format_slice_abs_relative2_i64(&ers_exchange_dog_to_enemy, &exchange_dog_to_enemy_rounds));
+
+    //Dog+GT, Dog+Double Wins
+    let mut ers_gt_rounds_no_dog_first14_dogfinal14 = [0; 4];
+    let mut gt_successes_no_dog_first14_dogfinal14 = [0; 4];
+    let mut double_wins_gt_rounds_no_dog_first14_dogfinal14 = [0; 4];
+    let mut gt_rounds_no_dog_first14_dogfinal14 = [0; 4];
+    let mut gt_rounds_no_dog_first14 = [0; 4];
+
+    let mut ers_gt_rounds = [0;4];
+    let mut gt_rounds = [0; 4];
+    let mut double_wins_gt_rounds = [0; 4];
+
+    let mut double_wins_rounds_dogfromenemy = [0; 4];
+    let mut rounds_dogfromenemy = [0; 4];
+
+    let mut double_wins = [0; 4];
+    let rounds = db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len());
+
+    for game in db.games.iter() {
+        for (round, _) in game.rounds.iter() {
+            for player_id in 0..4 {
+                let prh = &round.player_rounds[player_id];
+                let is_double_win = if player_id % 2 == 0 {prh.is_double_win_team_1()}else{prh.is_double_win_team_2()};
+                let is_gt_call = prh.player_call(player_id as PlayerIDInternal) == CALL_GRAND_TICHU;
+                let no_dog_first14 = prh.first_14 & hand!(DOG) == 0;
+                let dog_final14 = prh.final_14() & hand!(DOG) != 0;
+                let dog_from_enemy = prh.left_in_exchange_card() == DOG || prh.right_in_exchange_card() == DOG;
+                let round_score_diff = prh.round_score_relative_gain();
+                let gt_success = is_gt_call && prh.player_rank(player_id as PlayerIDInternal) == RANK_1;
+
+                double_wins[player_id] += is_double_win as usize;
+                rounds_dogfromenemy[player_id] += dog_from_enemy as usize;
+                double_wins_rounds_dogfromenemy[player_id] += (dog_from_enemy & is_double_win) as usize;
+
+                double_wins_gt_rounds[player_id] += (is_double_win & is_gt_call) as usize;
+                gt_rounds[player_id] += is_gt_call as usize;
+                ers_gt_rounds[player_id] += is_gt_call as i64 * round_score_diff as i64;
+
+                gt_rounds_no_dog_first14[player_id] += (is_gt_call & no_dog_first14) as usize;
+                gt_rounds_no_dog_first14_dogfinal14[player_id] += (is_gt_call & no_dog_first14 & dog_final14) as usize;
+                double_wins_gt_rounds_no_dog_first14_dogfinal14[player_id] += (is_gt_call & no_dog_first14 & dog_final14 & is_double_win) as usize;
+                gt_successes_no_dog_first14_dogfinal14[player_id] += (no_dog_first14 & dog_final14 & gt_success) as usize;
+                ers_gt_rounds_no_dog_first14_dogfinal14[player_id] += (is_gt_call & no_dog_first14 & dog_final14) as i64 * round_score_diff as i64;
+            }
+        }
+    }
+
+    println!("Double Wins: {}", format_slice_abs_relative(&double_wins, rounds));
+    println!("Double Wins if dog from enemy: {}", format_slice_abs_relative2(&double_wins_rounds_dogfromenemy, &rounds_dogfromenemy));
+    println!("Double Wins if GT call: {}", format_slice_abs_relative2(&double_wins_gt_rounds, &gt_rounds));
+    println!("Double Wins if GT call & Caller gets dog: {}", format_slice_abs_relative2(&double_wins_gt_rounds_no_dog_first14_dogfinal14, &gt_rounds_no_dog_first14_dogfinal14));
+
+    println!("ERS if GT call: {}", format_slice_abs_relative2_i64(&ers_gt_rounds, &gt_rounds));
+    println!("ERS if GT call & Caller gets dog: {}", format_slice_abs_relative2_i64(&ers_gt_rounds_no_dog_first14_dogfinal14, &gt_rounds_no_dog_first14_dogfinal14));
+
+    println!("Pr of  Caller gets dog given Caller has no dog in first14: {}", format_slice_abs_relative2(&gt_rounds_no_dog_first14_dogfinal14, &gt_rounds_no_dog_first14));
+    println!("Pr of  GT Success if Caller gets dog: {}", format_slice_abs_relative2(&gt_successes_no_dog_first14_dogfinal14, &gt_rounds_no_dog_first14_dogfinal14));
+
 
     //Swap away cards
     let get_card_type = |card: CardIndex| {
