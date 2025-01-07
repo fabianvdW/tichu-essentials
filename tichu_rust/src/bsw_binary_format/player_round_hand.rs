@@ -5,7 +5,7 @@ use crate::hand;
 use crate::tichu_hand::{CardIndex, Hand, MASK_ALL};
 use self::PlayerRoundHandIntegrityError::*;
 
-#[derive(Encode, Decode, Default, Debug, DataSize)]
+#[derive(Encode, Decode, Default, Debug, Clone, DataSize)]
 pub struct PlayerRoundHand {
     pub first_8: Hand,
     pub first_14: Hand,
