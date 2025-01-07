@@ -9,6 +9,8 @@ pub mod pair_street_detection_trick;
 pub mod bsw_binary_format;
 pub mod analysis;
 
+pub mod export_to_python;
+
 use std::collections::HashMap;
 use crate::analysis::bomb_stats::{evaluate_bomb_stats, evaluate_bombs_in_play};
 use crate::analysis::exchange_stats::evaluate_exchange_stats;
