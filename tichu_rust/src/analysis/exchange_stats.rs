@@ -46,6 +46,9 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
     let mut ers_gt_rounds = [0; 4];
     let mut gt_rounds = [0; 4];
     let mut double_wins_gt_rounds = [0; 4];
+    let mut gt_rounds_dog_to_partner_if_spawn = [0; 4];
+    let mut gt_rounds_caller_spawns_dog = [0; 4];
+    let mut double_wins_gt_rounds_caller_spawns_dog = [0; 4];
 
     let mut double_wins_rounds_dogfromenemy = [0; 4];
     let mut rounds_dogfromenemy = [0; 4];
@@ -60,6 +63,7 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
                 let is_double_win = if player_id % 2 == 0 { prh.is_double_win_team_1() } else { prh.is_double_win_team_2() };
                 let is_gt_call = prh.player_call(player_id as PlayerIDInternal) == CALL_GRAND_TICHU;
                 let no_dog_first14 = prh.first_14 & hand!(DOG) == 0;
+                let dog_to_partner = prh.partner_out_exchange_card() == DOG;
                 let dog_final14 = prh.final_14() & hand!(DOG) != 0;
                 let dog_from_enemy = prh.left_in_exchange_card() == DOG || prh.right_in_exchange_card() == DOG;
                 let round_score_diff = prh.round_score_relative_gain();
@@ -70,6 +74,9 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
                 double_wins_rounds_dogfromenemy[player_id] += (dog_from_enemy & is_double_win) as usize;
 
                 double_wins_gt_rounds[player_id] += (is_double_win & is_gt_call) as usize;
+                double_wins_gt_rounds_caller_spawns_dog[player_id] += (is_gt_call & !no_dog_first14 & is_double_win) as usize;
+                gt_rounds_dog_to_partner_if_spawn[player_id] += (is_gt_call & dog_to_partner) as usize;
+                gt_rounds_caller_spawns_dog[player_id] += (is_gt_call & !no_dog_first14) as usize;
                 gt_rounds[player_id] += is_gt_call as usize;
                 ers_gt_rounds[player_id] += is_gt_call as i64 * round_score_diff as i64;
 
@@ -86,6 +93,8 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
     println!("Double Wins if dog from enemy: {}", format_slice_abs_relative2(&double_wins_rounds_dogfromenemy, &rounds_dogfromenemy));
     println!("Double Wins if GT call: {}", format_slice_abs_relative2(&double_wins_gt_rounds, &gt_rounds));
     println!("Double Wins if GT call & Caller gets dog: {}", format_slice_abs_relative2(&double_wins_gt_rounds_no_dog_first14_dogfinal14, &gt_rounds_no_dog_first14_dogfinal14));
+    println!("Double Wins if GT call & Caller spawns with dog: {}", format_slice_abs_relative2(&double_wins_gt_rounds_caller_spawns_dog, &gt_rounds_caller_spawns_dog));
+    println!("Pr of exch Dog to Partner if GT call & Caller Spawns with dog: {} ", format_slice_abs_relative2(&gt_rounds_dog_to_partner_if_spawn, &gt_rounds_caller_spawns_dog));
 
     println!("ERS if GT call: {}", format_slice_abs_relative2_i64(&ers_gt_rounds, &gt_rounds));
     println!("ERS if GT call & Caller gets dog: {}", format_slice_abs_relative2_i64(&ers_gt_rounds_no_dog_first14_dogfinal14, &gt_rounds_no_dog_first14_dogfinal14));

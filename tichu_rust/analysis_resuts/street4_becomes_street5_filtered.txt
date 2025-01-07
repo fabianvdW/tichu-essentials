@@ -1,0 +1,12 @@
+Loaded 44794 games and 400881 rounds!
+Street starting at 1 is a 5street after exchange: ["25.1841", "25.7018", "26.7634", "24.9493"] (Avg. 25.6497, Abs: [992, 998, 1051, 985], Div: [3939, 3883, 3927, 3948])
+Street starting at 2 is a 5street after exchange: ["29.3126", "29.1682", "28.5270", "28.3008"] (Avg. 28.8271, Abs: [1599, 1543, 1559, 1464], Div: [5455, 5290, 5465, 5173])
+Street starting at 3 is a 5street after exchange: ["59.2176", "59.3551", "58.8698", "59.6489"] (Avg. 59.2729, Abs: [4057, 4105, 4042, 4213], Div: [6851, 6916, 6866, 7063])
+Street starting at 4 is a 5street after exchange: ["50.2825", "50.9570", "51.3221", "49.9053"] (Avg. 50.6167, Abs: [3204, 3248, 3416, 3161], Div: [6372, 6374, 6656, 6334])
+Street starting at 5 is a 5street after exchange: ["44.4817", "44.8005", "44.1110", "43.8231"] (Avg. 44.3041, Abs: [2656, 2684, 2749, 2586], Div: [5971, 5991, 6232, 5901])
+Street starting at 6 is a 5street after exchange: ["38.3463", "38.5121", "39.0603", "38.4979"] (Avg. 38.6042, Abs: [2458, 2459, 2544, 2445], Div: [6410, 6385, 6513, 6351])
+Street starting at 7 is a 5street after exchange: ["34.4972", "34.5383", "36.4669", "35.6871"] (Avg. 35.2974, Abs: [2381, 2293, 2568, 2441], Div: [6902, 6639, 7042, 6840])
+Street starting at 8 is a 5street after exchange: ["32.2590", "32.6595", "32.8733", "33.8875"] (Avg. 32.9198, Abs: [2262, 2278, 2358, 2385], Div: [7012, 6975, 7173, 7038])
+Street starting at 9 is a 5street after exchange: ["32.0128", "32.7056", "33.6544", "31.7155"] (Avg. 32.5220, Abs: [2400, 2466, 2551, 2470], Div: [7497, 7540, 7580, 7788])
+Street starting at T is a 5street after exchange: ["38.4110", "38.3460", "36.9911", "37.8655"] (Avg. 37.9034, Abs: [3505, 3371, 3462, 3445], Div: [9125, 8791, 9359, 9098])
+Street starting at J is a 5street after exchange: ["12.7652", "12.5627", "13.0354", "12.4410"] (Avg. 12.7011, Abs: [1865, 1879, 1896, 1871], Div: [14610, 14957, 14545, 15039])

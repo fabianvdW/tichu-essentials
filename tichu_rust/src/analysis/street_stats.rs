@@ -2,8 +2,47 @@ use crate::analysis::{format_slice_abs_relative, format_slice_abs_relative2};
 use crate::bsw_database::DataBase;
 use crate::hand;
 use crate::street_detection_tricks::{prepare_hand, PACKING_BITS, PACKING_BITS_MASK, STREET_DATA_ARRAY};
-use crate::tichu_hand::{Hand, HandType, TichuHand, ACE, EIGHT, FIVE, FOUR, JACK, KING, MASK_ACES, NINE, PHOENIX, QUEEN, SEVEN, SIX, TEN, TRICK_STREET5, TRICK_STREET6, TRICK_STREET7, TRICK_STREET8, TRICK_STREET9};
+use crate::tichu_hand::{card_to_colored_string, CardType, Hand, HandType, TichuHand, ACE, EIGHT, FIVE, FOUR, JACK, KING, MAHJONG, MASK_ACES, NINE, PHOENIX, QUEEN, SEVEN, SIX, TEN, THREE, TRICK_STREET5, TRICK_STREET6, TRICK_STREET7, TRICK_STREET8, TRICK_STREET9, TWO};
 
+pub fn evaluate_streets_size_four_become_real_streets(db: &DataBase) {
+    let possible_start_cards = [0, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK];
+    let hand_contains_street_size_four = |prep_hand: Hand, start_card: CardType| {
+        assert_eq!(prep_hand & (1 << 14), 0);
+        let s_4 = prep_hand & (prep_hand >> 1) & (prep_hand >> 2) & (prep_hand >> 3);
+        s_4 & (1 << start_card) != 0
+    };
+    let hand_contains_street_size_five = |prep_hand: Hand, start_card: CardType| {
+        assert_eq!(prep_hand & (1 << 14), 0);
+        let s_4 = prep_hand & (prep_hand >> 1) & (prep_hand >> 2) & (prep_hand >> 3) & (prep_hand >> 4);
+        s_4 & (1 << start_card) != 0
+    };
+    let mut rounds_contains_street_five_given_start_final14 = [[0; 4]; 11];
+    let mut rounds_contains_street_four_given_start_first14 = [[0; 4]; 11]; //We also check that it does not contain a street of size 5 containing start card from the beginning on
+    for game in db.games.iter() {
+        for (round, _) in game.rounds.iter() {
+            for player_id in 0..4 {
+                let prh = &round.player_rounds[player_id];
+                let prep_first14 = prepare_hand(prh.first_14 & !hand!(PHOENIX) & !hand!(prh.left_out_exchange_card(), prh.partner_out_exchange_card(), prh.right_out_exchange_card()));
+                let prep_final14 = prepare_hand(prh.final_14() & !hand!(PHOENIX));
+                for (s_idx, start_card) in possible_start_cards.iter().enumerate() {
+                    if !hand_contains_street_size_four(prep_first14, *start_card) {
+                        continue;
+                    }
+                    if hand_contains_street_size_five(prep_first14, *start_card) || *start_card > 0 && hand_contains_street_size_five(prep_first14, *start_card - 1) {
+                        continue;
+                    }
+                    rounds_contains_street_four_given_start_first14[s_idx][player_id] += 1;
+                    let contains_s5_after = hand_contains_street_size_five(prep_final14, *start_card) || *start_card > 0 && hand_contains_street_size_five(prep_final14, *start_card - 1);
+                    rounds_contains_street_five_given_start_final14[s_idx][player_id] += contains_s5_after as usize;
+                }
+            }
+        }
+    }
+    for (s_idx, start_card) in possible_start_cards.iter().enumerate() {
+        let start_card_str = if *start_card != 0 { card_to_colored_string(*start_card) } else { card_to_colored_string(MAHJONG) };
+        println!("Street starting at {} is a 5street after exchange: {}", start_card_str, format_slice_abs_relative2(&rounds_contains_street_five_given_start_final14[s_idx], &rounds_contains_street_four_given_start_first14[s_idx]));
+    }
+}
 pub fn evaluate_streets_in_play(db: &DataBase) {
     let mut s5_played_by_other_3 = [0; 4];
     let mut s6_played_by_other_3 = [0; 4];
