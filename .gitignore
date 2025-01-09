@@ -4,3 +4,5 @@ target
 *.lock
 *.zip
 *.db
+.ipynb_checkpoints
+__pycache__

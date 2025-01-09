@@ -11,7 +11,7 @@ pub mod analysis;
 
 use pyo3::prelude::*;
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, Rank, Score, TichuCall, CALL_PLAYER_0_MASK, CALL_PLAYER_1_MASK, CALL_PLAYER_2_MASK, CALL_PLAYER_3_MASK, CARD_SCORE_MASK, LEFT_IN_EXCHANGE_MASK, LEFT_OUT_EXCHANGE_MASK, PARTNER_IN_EXCHANGE_MASK, PARTNER_OUT_EXCHANGE_MASK, PLAYER_0, PLAYER_2, PLAYER_ID_MASK, RANK_1, RANK_2, RANK_PLAYER_0_MASK, RANK_PLAYER_1_MASK, RANK_PLAYER_2_MASK, RANK_PLAYER_3_MASK, RIGHT_IN_EXCHANGE_MASK, RIGHT_OUT_EXCHANGE_MASK};
-use crate::tichu_hand::{CardIndex, Hand};
+use crate::tichu_hand::{CardIndex, Hand, MASK_ALL, TichuHand};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_database::DataBase;
 
@@ -19,6 +19,17 @@ use crate::bsw_database::DataBase;
 // of the limited amount of functions we export to Python, which is what I currently prefer.
 // An alternative appraoch would be to feature gate #[pyclass] #[pymethods] directly
 // into the Rust code by a python feature.
+#[pyfunction]
+pub fn print_hand(hand: Hand) -> String {
+    hand.pretty_print()
+}
+#[pyfunction]
+pub fn transform_hand_to_lower_56_bits(hand: Hand) -> u64{
+    unsafe {
+        use std::arch::x86_64::_pext_u64;
+        _pext_u64(hand, MASK_ALL)
+    }
+}
 #[pyclass]
 #[derive(Clone)]
 pub struct PyPlayerRoundHand(PlayerRoundHand);
@@ -113,6 +124,9 @@ impl BSWSimple {
         }
         BSWSimple { rounds: rounds }
     }
+    fn len(&self) -> usize {
+        self.rounds.len()
+    }
     fn get_round(&self, index: usize) -> Option<[PyPlayerRoundHand; 4]> {
         self.rounds.get(index).cloned()
     }
@@ -123,7 +137,8 @@ impl BSWSimple {
 fn tichu_rustipy(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyPlayerRoundHand>()?;
     m.add_class::<BSWSimple>()?;
-    //m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+    m.add_function(wrap_pyfunction!(print_hand, m)?)?;
+    m.add_function(wrap_pyfunction!(transform_hand_to_lower_56_bits, m)?)?;
 
     Ok(())
 }
