@@ -6,3 +6,5 @@ target
 *.db
 .ipynb_checkpoints
 __pycache__
+*.npy
+*.pkl

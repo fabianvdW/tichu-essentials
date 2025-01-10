@@ -5,6 +5,20 @@ use crate::bsw_database::DataBase;
 use crate::{hand, tichu_hand};
 use crate::tichu_hand::{Hand, CardIndex, MAHJONG, SPECIAL_CARD, PHOENIX, DRAGON, DOG, ACE, MASK_ACES, TichuHand};
 
+pub fn get_exchange_card_type(card: CardIndex) -> u8 {
+    let res = card & 0b1111;
+    if res == SPECIAL_CARD {
+        match card {
+            PHOENIX => 14,
+            DRAGON => 15,
+            MAHJONG => 16,
+            DOG => 0,
+            _ => unreachable!()
+        }
+    } else {
+        res
+    }
+}
 pub fn evaluate_exchange_stats(db: &DataBase) {
     let exchanged_mahjong_to_enemy = |prh: &PlayerRoundHand| prh.right_out_exchange_card() == MAHJONG || prh.left_out_exchange_card() == MAHJONG;
     let exchange_1_to_enemy_rounds = (0..4).map(|player_id| db.games.iter().fold(
@@ -104,20 +118,6 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
 
 
     //Swap away cards
-    let get_card_type = |card: CardIndex| {
-        let res = card & 0b1111;
-        if res == SPECIAL_CARD {
-            match card {
-                PHOENIX => 14,
-                DRAGON => 15,
-                MAHJONG => 16,
-                DOG => 0,
-                _ => unreachable!()
-            }
-        } else {
-            res
-        }
-    };
     let mut receiv_left_cards = [[0; 4]; 17];
     let mut receiv_partner_cards = [[0; 4]; 17];
     let mut receiv_right_cards = [[0; 4]; 17];
@@ -132,9 +132,9 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
         for (round, _) in game.rounds.iter() {
             for player_id in 0..4 {
                 let prh = &round.player_rounds[player_id as usize];
-                let receiv_left = get_card_type(prh.left_in_exchange_card());
-                let receiv_partner = get_card_type(prh.partner_in_exchange_card());
-                let receiv_right = get_card_type(prh.right_in_exchange_card());
+                let receiv_left = get_exchange_card_type(prh.left_in_exchange_card());
+                let receiv_partner = get_exchange_card_type(prh.partner_in_exchange_card());
+                let receiv_right = get_exchange_card_type(prh.right_in_exchange_card());
 
                 receiv_left_cards[receiv_left as usize][player_id as usize] += 1;
                 receiv_partner_cards[receiv_partner as usize][player_id as usize] += 1;
@@ -197,5 +197,4 @@ pub fn evaluate_exchange_stats(db: &DataBase) {
     println!("Pr of giving Partner Ace given no GT call: {}", format_slice_abs_relative2(&swap_ace_to_partner_no_gt, &no_gt_rounds));
     println!("Pr of giving Partner Ace given no GT call & only high card: {}", format_slice_abs_relative2(&swap_ace_to_partner_only_high_card_no_gt, &rounds_ace_only_high_card_no_gt));
     println!("Pr of having two Aces given Partner has received Ace from me & no gt call: {}", format_slice_abs_relative2(&swap_ace_to_partner_with_two_aces_no_gt, &swap_ace_to_partner_no_gt));
-
 }
