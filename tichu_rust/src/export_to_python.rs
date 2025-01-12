@@ -9,11 +9,11 @@ pub mod pair_street_detection_trick;
 pub mod bsw_binary_format;
 pub mod analysis;
 
-use numpy::{PyArray2, PyArrayMethods, ToPyArray};
+use numpy::{PyArray2, PyArrayMethods, ToPyArray, PyReadwriteArray2};
 use pyo3::prelude::*;
 use pyo3::PyResult;
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, Rank, Score, TichuCall, CALL_PLAYER_0_MASK, CALL_PLAYER_1_MASK, CALL_PLAYER_2_MASK, CALL_PLAYER_3_MASK, CARD_SCORE_MASK, LEFT_IN_EXCHANGE_MASK, LEFT_OUT_EXCHANGE_MASK, PARTNER_IN_EXCHANGE_MASK, PARTNER_OUT_EXCHANGE_MASK, PLAYER_0, PLAYER_2, PLAYER_ID_MASK, RANK_1, RANK_2, RANK_PLAYER_0_MASK, RANK_PLAYER_1_MASK, RANK_PLAYER_2_MASK, RANK_PLAYER_3_MASK, RIGHT_IN_EXCHANGE_MASK, RIGHT_OUT_EXCHANGE_MASK};
-use crate::tichu_hand::{CardIndex, Hand, MASK_ALL, TichuHand, SPECIAL_CARD, PHOENIX, DRAGON, MAHJONG, DOG, YELLOW, BLUE, GREEN, RED};
+use crate::tichu_hand::{CardIndex, Hand, MASK_ALL, TichuHand, SPECIAL_CARD, PHOENIX, DRAGON, MAHJONG, DOG, YELLOW, BLUE, GREEN, RED, MASK_FOUR_OF_KIND};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_database::DataBase;
 use crate::analysis::exchange_stats::get_exchange_card_type;
@@ -51,6 +51,20 @@ pub fn get_legal_outgoing_card_combinations(hand: Hand) -> Vec<(Hand, u8)> {
         }
     }
     res
+}
+#[pyfunction]
+pub fn could_get_street_bomb(hand: Hand, out_hand: Hand, incoming_card_types: (u8, u8, u8)) -> bool{
+    let to_card_bb = |card| {
+        match card{
+            0 => 0,
+            14 => 0,
+            15 => 0,
+            16 => 0,
+            x => MASK_FOUR_OF_KIND[x as usize -1]
+        }
+    };
+    let hand_all = !out_hand &(hand | to_card_bb(incoming_card_types.0) | to_card_bb(incoming_card_types.1) | to_card_bb(incoming_card_types.2));
+    hand_all.contains_straight_bomb()
 }
 #[pyfunction]
 pub fn get_legal_incoming_card_combinations(hand: Hand, incoming_card_types: (u8, u8, u8)) -> Vec<Hand> {
@@ -153,10 +167,10 @@ pub fn bulk_transform_db_into_np90_array(db: &BSWSimple) -> PyResult<Py<PyArray2
                 for bit_pos in 0..56 {
                     buffer[[row_idx, bit_pos]] = ((transformed >> bit_pos) & 1) as u8;
                 }
-                in_partner = get_exchange_card_type(round[player_id].partner_in_exchange_card());
-                out_partner = get_exchange_card_type(round[player_id].partner_out_exchange_card());
-                buffer[[0, 56+in_partner as usize]] = 1;
-                buffer[[0, 73+out_partner as usize]] = 1;
+                let in_partner = get_exchange_card_type(round[player_id].partner_in_exchange_card());
+                let out_partner = get_exchange_card_type(round[player_id].partner_out_exchange_card());
+                buffer[[row_idx, 56+in_partner as usize]] = 1;
+                buffer[[row_idx, 73+out_partner as usize]] = 1;
             }
         }
         let owned_arr: Py<PyArray2<u8>> = arr.to_owned().into();
@@ -164,11 +178,36 @@ pub fn bulk_transform_db_into_np90_array(db: &BSWSimple) -> PyResult<Py<PyArray2
     })
 }
 #[pyfunction]
+pub fn prepare_batch_np90_array(
+    stripped_hand: Hand,
+    in_partner: u8,
+    out_partner: u8,
+    in_hands: Vec<Hand>,
+    mut existing_array: PyReadwriteArray2<u8>
+) -> PyResult<()> {
+    Python::with_gil(|_py| {
+        for (idx, in_hand) in in_hands.iter().enumerate() {
+            let final_hand = stripped_hand ^ in_hand;
+            let transformed = transform_hand_to_lower_56_bits(final_hand);
+
+            // Write all 56 bits at once using bit operations
+            for bit_pos in 0..56 {
+                *existing_array.get_mut([idx, bit_pos]).unwrap() = ((transformed >> bit_pos) & 1) as u8;
+            }
+            *existing_array.get_mut([idx, 56+in_partner as usize]).unwrap() = 1;
+            *existing_array.get_mut([idx, 73+out_partner as usize]).unwrap() = 1;
+
+        }
+
+        Ok(())
+    })
+}
+#[pyfunction]
 pub fn transform_into_np90_array(final_hand: Hand, in_partner: u8, out_partner: u8) -> PyResult<Py<PyArray2<u8>>>{
     Python::with_gil(|py| {
         let arr = PyArray2::<u8>::zeros(py, [1, 90], false);
         let mut buffer = unsafe { arr.as_array_mut() };
-        let transformed = transform_hand_to_lower_56_bits(hand);
+        let transformed = transform_hand_to_lower_56_bits(final_hand);
 
         // Write all 56 bits at once using bit operations
         for bit_pos in 0..56 {
@@ -256,6 +295,57 @@ impl PyPlayerRoundHand {
     pub fn round_score_relative_gain(&self) -> Score {
         self.0.round_score_relative_gain()
     }
+
+    pub fn round_score_relative_gain_gt_as_t(&self) -> Score {
+        //Reported absolute to Team1;
+        let mut score_team_1: Score = 0;
+        let mut score_team_2: Score = 0;
+        score_team_1 += self.0.player_0_call().min(1) as Score * 100 * {
+            if self.0.player_0_rank() == RANK_1 {
+                1
+            } else {
+                -1
+            }
+        };
+        score_team_1 += self.0.player_2_call().min(1) as Score * 100 * {
+            if self.0.player_2_rank() == RANK_1 {
+                1
+            } else {
+                -1
+            }
+        };
+        score_team_2 += self.0.player_1_call().min(1) as Score * 100 * {
+            if self.0.player_1_rank() == RANK_1 {
+                1
+            } else {
+                -1
+            }
+        };
+        score_team_2 += self.0.player_3_call().min(1) as Score * 100 * {
+            if self.0.player_3_rank() == RANK_1 {
+                1
+            } else {
+                -1
+            }
+        };
+        //Double Win or Card Points
+        if self.is_double_win_team_1() {
+            //Double Win for Team 1
+            score_team_1 += 200;
+        } else if self.is_double_win_team_2() {
+            //Double Win for Team 2
+            score_team_2 += 200;
+        } else {
+            let card_score: Score = ((self.0.extras & CARD_SCORE_MASK) >> 54) as Score;
+            score_team_1 += card_score - 25;
+            score_team_2 += 125 - card_score;
+        }
+        if self.player_id() == PLAYER_0 || self.player_id() == PLAYER_2 {
+            score_team_1 - score_team_2
+        } else {
+            score_team_2 - score_team_1
+        }
+    }
 }
 
 #[pyclass]
@@ -298,7 +388,9 @@ fn tichu_rustipy(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(bulk_transform_db_into_np56_array, m)?)?;
     m.add_function(wrap_pyfunction!(transform_into_np56_array, m)?)?;
     m.add_function(wrap_pyfunction!(bulk_transform_db_into_np90_array, m)?)?;
+    m.add_function(wrap_pyfunction!(could_get_street_bomb, m)?)?;
     m.add_function(wrap_pyfunction!(transform_into_np90_array, m)?)?;
+    m.add_function(wrap_pyfunction!(prepare_batch_np90_array, m)?)?;
     m.add_function(wrap_pyfunction!(prh_to_incoming_cards, m)?)?;
     m.add_function(wrap_pyfunction!(get_legal_incoming_card_combinations, m)?)?;
     m.add_function(wrap_pyfunction!(get_legal_outgoing_card_combinations, m)?)?;
