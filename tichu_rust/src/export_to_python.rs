@@ -13,7 +13,7 @@ use numpy::{PyArray2, PyArrayMethods, ToPyArray};
 use pyo3::prelude::*;
 use pyo3::PyResult;
 use crate::bsw_binary_format::binary_format_constants::{PlayerIDInternal, Rank, Score, TichuCall, CALL_PLAYER_0_MASK, CALL_PLAYER_1_MASK, CALL_PLAYER_2_MASK, CALL_PLAYER_3_MASK, CARD_SCORE_MASK, LEFT_IN_EXCHANGE_MASK, LEFT_OUT_EXCHANGE_MASK, PARTNER_IN_EXCHANGE_MASK, PARTNER_OUT_EXCHANGE_MASK, PLAYER_0, PLAYER_2, PLAYER_ID_MASK, RANK_1, RANK_2, RANK_PLAYER_0_MASK, RANK_PLAYER_1_MASK, RANK_PLAYER_2_MASK, RANK_PLAYER_3_MASK, RIGHT_IN_EXCHANGE_MASK, RIGHT_OUT_EXCHANGE_MASK};
-use crate::tichu_hand::{CardIndex, Hand, MASK_ALL, TichuHand, SPECIAL_CARD, PHOENIX, DRAGON, MAHJONG, DOG};
+use crate::tichu_hand::{CardIndex, Hand, MASK_ALL, TichuHand, SPECIAL_CARD, PHOENIX, DRAGON, MAHJONG, DOG, YELLOW, BLUE, GREEN, RED};
 use crate::bsw_binary_format::player_round_hand::PlayerRoundHand;
 use crate::bsw_database::DataBase;
 use crate::analysis::exchange_stats::get_exchange_card_type;
@@ -22,19 +22,82 @@ use crate::analysis::exchange_stats::get_exchange_card_type;
 // of the limited amount of functions we export to Python, which is what I currently prefer.
 // An alternative appraoch would be to feature gate #[pyclass] #[pymethods] directly
 // into the Rust code by a python feature.
+pub const COMBINATIONS_TO_2_14_WITH_3_BITS_SET: [u64; 364] = {
+    let mut res = [0; 364];
+    let mut combination_idx = 0;
+    let mut i: u64 = 0;
+    while i < (1 << 14) {
+        if i.count_ones() == 3 {
+            res[combination_idx] = i;
+            combination_idx += 1;
+        }
+        i += 1;
+    }
+    res
+};
+#[pyfunction]
+pub fn get_legal_outgoing_card_combinations(hand: Hand) -> Vec<(Hand, u8)> {
+    let mut res = Vec::with_capacity(1092);
+    for combination in COMBINATIONS_TO_2_14_WITH_3_BITS_SET.iter() {
+        let deposited_combination_in_hand = unsafe {
+            use std::arch::x86_64::_pdep_u64;
+            _pdep_u64(*combination, hand)
+        };
+        let mut temp: Hand = deposited_combination_in_hand;
+        while temp != 0 {
+            let lsb_card = temp.get_lsb_card();
+            res.push((deposited_combination_in_hand, get_exchange_card_type(lsb_card)));
+            temp ^= hand!(lsb_card);
+        }
+    }
+    res
+}
+#[pyfunction]
+pub fn get_legal_incoming_card_combinations(hand: Hand, incoming_card_types: (u8, u8, u8)) -> Vec<Hand> {
+    let mut res = vec![];
+    let (l, r, p) = incoming_card_types;
+    let get_possibilites = |card| {
+        match card {
+            0 => vec![DOG],
+            14 => vec![PHOENIX],
+            15 => vec![DRAGON],
+            16 => vec![MAHJONG],
+            x => vec![
+                x + YELLOW, x + BLUE, x + GREEN, x + RED
+            ]
+        }
+    };
+    for possible_l in get_possibilites(l) {
+        for possible_r in get_possibilites(r) {
+            for possible_p in get_possibilites(p) {
+                if hand!(possible_l) & hand != 0 {
+                    continue;
+                }
+                if hand!(possible_r) & (hand | hand!(possible_l)) != 0 {
+                    continue;
+                }
+                if hand!(possible_p) & (hand | hand!(possible_l, possible_r)) != 0 {
+                    continue;
+                }
+                res.push(hand!(possible_l, possible_p, possible_r));
+            }
+        }
+    }
+    res
+}
 #[pyfunction]
 pub fn print_hand(hand: Hand) -> String {
     hand.pretty_print()
 }
 
 #[pyfunction]
-pub fn prh_to_incoming_cards(prh: &PyPlayerRoundHand) -> (u8, u8, u8){
+pub fn prh_to_incoming_cards(prh: &PyPlayerRoundHand) -> (u8, u8, u8) {
     let left = get_exchange_card_type(prh.left_in_exchange_card());
     let right = get_exchange_card_type(prh.right_in_exchange_card());
     let partner = get_exchange_card_type(prh.partner_in_exchange_card());
-    if left < right{
+    if left < right {
         (left, right, partner)
-    }else{
+    } else {
         (right, left, partner)
     }
 }
@@ -43,7 +106,7 @@ pub fn bulk_transform_db_into_np56_array(db: &BSWSimple) -> PyResult<Py<PyArray2
     Python::with_gil(|py| {
         let n_samples = db.len() * 4;
         let arr = PyArray2::<u8>::zeros(py, [n_samples, 56], false);
-        let mut buffer = unsafe{arr.as_array_mut()};
+        let mut buffer = unsafe { arr.as_array_mut() };
         for (round_idx, round) in db.rounds.iter().enumerate() {
             for player_id in 0..4 {
                 let transformed = transform_hand_to_lower_56_bits(round[player_id].first_14());
@@ -59,7 +122,66 @@ pub fn bulk_transform_db_into_np56_array(db: &BSWSimple) -> PyResult<Py<PyArray2
         Ok(owned_arr)
     })
 }
-pub fn transform_hand_to_lower_56_bits(hand: Hand) -> u64{
+#[pyfunction]
+pub fn transform_into_np56_array(hand: Hand) -> PyResult<Py<PyArray2<u8>>>{
+    Python::with_gil(|py| {
+        let arr = PyArray2::<u8>::zeros(py, [1, 56], false);
+        let mut buffer = unsafe { arr.as_array_mut() };
+        let transformed = transform_hand_to_lower_56_bits(hand);
+
+        // Write all 56 bits at once using bit operations
+        for bit_pos in 0..56 {
+            buffer[[0, bit_pos]] = ((transformed >> bit_pos) & 1) as u8;
+        }
+        let owned_arr: Py<PyArray2<u8>> = arr.to_owned().into();
+        Ok(owned_arr)
+    })
+}
+
+#[pyfunction]
+pub fn bulk_transform_db_into_np90_array(db: &BSWSimple) -> PyResult<Py<PyArray2<u8>>> {
+    Python::with_gil(|py| {
+        let n_samples = db.len() * 4;
+        let arr = PyArray2::<u8>::zeros(py, [n_samples, 90], false);
+        let mut buffer = unsafe { arr.as_array_mut() };
+        for (round_idx, round) in db.rounds.iter().enumerate() {
+            for player_id in 0..4 {
+                let transformed = transform_hand_to_lower_56_bits(round[player_id].final_14());
+                let row_idx = round_idx * 4 + player_id;
+
+                // Write all 56 bits at once using bit operations
+                for bit_pos in 0..56 {
+                    buffer[[row_idx, bit_pos]] = ((transformed >> bit_pos) & 1) as u8;
+                }
+                in_partner = get_exchange_card_type(round[player_id].partner_in_exchange_card());
+                out_partner = get_exchange_card_type(round[player_id].partner_out_exchange_card());
+                buffer[[0, 56+in_partner as usize]] = 1;
+                buffer[[0, 73+out_partner as usize]] = 1;
+            }
+        }
+        let owned_arr: Py<PyArray2<u8>> = arr.to_owned().into();
+        Ok(owned_arr)
+    })
+}
+#[pyfunction]
+pub fn transform_into_np90_array(final_hand: Hand, in_partner: u8, out_partner: u8) -> PyResult<Py<PyArray2<u8>>>{
+    Python::with_gil(|py| {
+        let arr = PyArray2::<u8>::zeros(py, [1, 90], false);
+        let mut buffer = unsafe { arr.as_array_mut() };
+        let transformed = transform_hand_to_lower_56_bits(hand);
+
+        // Write all 56 bits at once using bit operations
+        for bit_pos in 0..56 {
+            buffer[[0, bit_pos]] = ((transformed >> bit_pos) & 1) as u8;
+        }
+        buffer[[0, 56+in_partner as usize]] = 1;
+        buffer[[0, 73+out_partner as usize]] = 1;
+        let owned_arr: Py<PyArray2<u8>> = arr.to_owned().into();
+        Ok(owned_arr)
+    })
+}
+
+pub fn transform_hand_to_lower_56_bits(hand: Hand) -> u64 {
     unsafe {
         use std::arch::x86_64::_pext_u64;
         _pext_u64(hand, MASK_ALL)
@@ -174,6 +296,12 @@ fn tichu_rustipy(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<BSWSimple>()?;
     m.add_function(wrap_pyfunction!(print_hand, m)?)?;
     m.add_function(wrap_pyfunction!(bulk_transform_db_into_np56_array, m)?)?;
+    m.add_function(wrap_pyfunction!(transform_into_np56_array, m)?)?;
+    m.add_function(wrap_pyfunction!(bulk_transform_db_into_np90_array, m)?)?;
+    m.add_function(wrap_pyfunction!(transform_into_np90_array, m)?)?;
     m.add_function(wrap_pyfunction!(prh_to_incoming_cards, m)?)?;
+    m.add_function(wrap_pyfunction!(get_legal_incoming_card_combinations, m)?)?;
+    m.add_function(wrap_pyfunction!(get_legal_outgoing_card_combinations, m)?)?;
+
     Ok(())
 }
