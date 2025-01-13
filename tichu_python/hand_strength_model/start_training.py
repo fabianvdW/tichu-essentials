@@ -36,5 +36,6 @@ if __name__ == '__main__':
         train_loader=train_loader,
         val_loader=val_loader,
         epochs=100,
-        learning_rate=0.001
+        learning_rate=0.001,
+        save_file="best_model2.pt"
     )

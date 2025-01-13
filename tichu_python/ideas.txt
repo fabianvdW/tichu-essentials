@@ -1,0 +1,6 @@
+-Different model architecture for CNN for model_exchange/CardNet
+-Different Model altogether (SVM, DTree)
+-AutoEncoder might boost performance?
+-Exchange Bot: Build a GUI, allow for selecting fixed cards.
+
+-Optimize Exchange Bot runtime (perhaps quantization of model?!)

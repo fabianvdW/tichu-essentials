@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import time
 
-def train_model(model, train_loader, val_loader, epochs=100, learning_rate=0.001):
+def train_model(model, train_loader, val_loader, epochs=100, learning_rate=0.001, save_file="best_model.pt"):
     """
     Train model with data already on GPU
     """
@@ -57,7 +57,7 @@ def train_model(model, train_loader, val_loader, epochs=100, learning_rate=0.001
 
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
-            torch.save(model.state_dict(), 'best_model.pt')
+            torch.save(model.state_dict(), save_file)
 
         print(f'Epoch {epoch + 1}/{epochs}:')
         print(f'Train Loss (MSE): {avg_train_loss:.4f}')
