@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 from data_loader import prepare_data_gpu, create_data_loaders
-from model import HandStrengthNet
+from model import HandStrengthNet, HandStrengthNet2
 from trainer import train_model
 
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     )
 
     # Initialize model
-    model = HandStrengthNet().cuda()
+    model = HandStrengthNet2().cuda()
 
     # Train the model
     train_model(

@@ -5,9 +5,18 @@ import itertools
 
 
 class ColorInvariantConv(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size):
+    def __init__(self, in_channels, out_channels, kernel_size, use_padding=False):
         super().__init__()
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size)
+
+        # Calculate padding if enabled
+        padding = "same" if use_padding else (0, 0)
+
+        self.conv = nn.Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size,
+            padding=padding
+        )
 
         # Generate all possible color permutations (4! = 24)
         self.color_perms = list(itertools.permutations(range(4)))
@@ -99,26 +108,45 @@ class HandStrengthNet(nn.Module):
         x = self.fc3(x).relu()
         return self.fc_out(x).squeeze(-1)
 
+
+class DoubleConvBlock(nn.Module):
+    def __init__(self, in_channels, mid_channels, out_channels, kernel_size):
+        super().__init__()
+
+        # First layer is always ColorInvariantConv, with optional padding
+        self.conv1 = ColorInvariantConv(in_channels, mid_channels, kernel_size, use_padding=True)
+
+        # Second conv layer with no padding to maintain original output dimensions
+        self.conv2 = nn.Conv2d(
+            mid_channels,
+            out_channels,
+            kernel_size=kernel_size,
+        )
+
+    def forward(self, x):
+        x = self.conv1(x)  # ReLU is already applied in ColorInvariantConv
+        return self.conv2(x).relu()
+
 class HandStrengthNet2(nn.Module):
     def __init__(self):
         super().__init__()
 
         # Define the filter configurations
         self.filter_configs = [
-            ((4, 5), 8),  # Streets across colors length 5
-            ((4, 6), 4),  # Streets across colors length 6
-            ((4, 7), 4),  # Streets across colors length 7
-            ((1, 5), 4),  # Single color streets
-            ((4, 2), 8),  # Pair streets length 2
-            ((4, 3), 4),  # Pair streets length 3
-            ((4, 4), 4),  # Pair streets length 4
-            ((4, 1), 8),  # Same value across colors
+            ((4, 5), 16, 8),  # Streets across colors length 5 (mid_channels, out_channels)
+            ((4, 6), 8, 4),   # Streets across colors length 6
+            ((4, 7), 8, 4),   # Streets across colors length 7
+            ((1, 5), 8, 4),   # Single color streets
+            ((4, 2), 16, 8),  # Pair streets length 2
+            ((4, 3), 8, 4),   # Pair streets length 3
+            ((4, 4), 8, 4),   # Pair streets length 4
+            ((4, 1), 16, 8),  # Same value across colors
         ]
 
         # Create ColorInvariantConv layers for each filter type
         self.conv_layers = nn.ModuleList([
-            ColorInvariantConv(1, n_filters, size)
-            for size, n_filters in self.filter_configs
+            DoubleConvBlock(1, mid_channels, out_channels, size)
+            for size, mid_channels, out_channels in self.filter_configs
         ])
 
         # Dense layer for special cards
@@ -127,7 +155,7 @@ class HandStrengthNet2(nn.Module):
         # Calculate total features
         self.total_features = sum([
             n_filters * (5 - size[0]) * (14 - size[1])
-            for size, n_filters in self.filter_configs
+            for size, _, n_filters in self.filter_configs
         ]) + 64
 
         # Dense layers
