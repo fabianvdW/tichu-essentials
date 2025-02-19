@@ -6,3 +6,4 @@ Street 8 played by some other player: ["8.6599", "8.8021", "8.6719", "8.8061"] (
 Street 9 played by some other player: ["5.1913", "5.2579", "5.2342", "5.3188"] (Avg. 5.2506, Abs: [20811, 21078, 20983, 21322], Div: 400881)
 Street 9 4-Q beaten by enemy with ph in enemy team: ["18.6838", "18.6022", "19.3684", "18.8766"] (Avg. 18.8828, Abs: [1147, 1078, 1202, 1146], Div: [6139, 5795, 6206, 6071])
 Street 9 4-Q beaten by enemy with ph in enemy team or bomb: ["29.2067", "29.4909", "29.6326", "29.5668"] (Avg. 29.4743, Abs: [1793, 1709, 1839, 1795], Div: [6139, 5795, 6206, 6071])
+Special case lost: ["38.3333", "50.0000", "53.8462", "52.6316"] (Avg. 48.7028, Abs: [23, 29, 21, 30], Div: [60, 58, 39, 57])

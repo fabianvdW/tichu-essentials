@@ -1,8 +1,9 @@
+use numpy::ndarray::s;
 use crate::analysis::{format_slice_abs_relative, format_slice_abs_relative2};
 use crate::bsw_database::DataBase;
 use crate::hand;
 use crate::street_detection_tricks::{prepare_hand, PACKING_BITS, PACKING_BITS_MASK, STREET_DATA_ARRAY};
-use crate::tichu_hand::{card_to_colored_string, CardType, Hand, HandType, TichuHand, ACE, EIGHT, FIVE, FOUR, JACK, KING, MAHJONG, MASK_ACES, NINE, PHOENIX, QUEEN, SEVEN, SIX, TEN, THREE, TRICK_STREET5, TRICK_STREET6, TRICK_STREET7, TRICK_STREET8, TRICK_STREET9, TWO};
+use crate::tichu_hand::{card_to_colored_string, CardType, Hand, HandType, TichuHand, ACE, EIGHT, FIVE, FOUR, JACK, KING, MAHJONG, MASK_TWOS, MASK_ACES, MASK_EIGHTS, MASK_FIVES, MASK_FOURS, MASK_SEVENS, MASK_SIXS, MASK_THREES, NINE, PHOENIX, QUEEN, SEVEN, SIX, TEN, THREE, TRICK_STREET5, TRICK_STREET6, TRICK_STREET7, TRICK_STREET8, TRICK_STREET9, TWO};
 
 pub fn evaluate_streets_size_four_become_real_streets(db: &DataBase) {
     let possible_start_cards = [0, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK];
@@ -86,6 +87,43 @@ pub fn evaluate_streets_in_play(db: &DataBase) {
     println!("Street 7 played by some other player: {}", format_slice_abs_relative(&s7_played_by_other_3, rounds));
     println!("Street 8 played by some other player: {}", format_slice_abs_relative(&s8_played_by_other_3, rounds));
     println!("Street 9 played by some other player: {}", format_slice_abs_relative(&s9_played_by_other_3, rounds));
+}
+pub fn evaluate_lose_tichujana_hand(db: &DataBase) {
+    let mut rounds_with_prereq = [0; 4];
+    let mut rounds_lost_with_prereq = [0; 4];
+    for game in db.games.iter() {
+        for (round, _) in game.rounds.iter() {
+            'A: for player in 0..4 {
+                let player_hand = round.player_rounds[player].final_14();
+                let street_hand = prepare_hand(player_hand);
+                let first_street = hand!(TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT) | 1 << 14;
+                if street_hand & first_street != first_street || player_hand & MASK_ACES != 0 {
+                    continue;
+                }
+                //Check if player to the left has 1-7
+                let player_left = round.player_rounds[(player + 3) % 4].final_14();
+                let one_to_seven = hand!(0, TWO, THREE, FOUR, FIVE, SIX, SEVEN);
+                if prepare_hand(player_left) & one_to_seven != one_to_seven {
+                    continue;
+                }
+                rounds_with_prereq[player] += 1;
+                //We lose if player to the right has 3-9, 4-10, 5-J, 6-Q, 7-K, 8-A or mate or enemy has AAAA or mate has 8-A
+                let player_right = round.player_rounds[(player + 1) % 4].final_14();
+                let three_to_nine = hand!(THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE);
+                for shift in 0..6 {
+                    if prepare_hand(player_right) & (three_to_nine << shift) == (three_to_nine << shift) {
+                        rounds_lost_with_prereq[player] += 1;
+                        continue 'A;
+                    }
+                }
+                let player_mate = round.player_rounds[(player + 2) % 4].final_14();
+                if prepare_hand(player_mate) & (three_to_nine << 5) == (three_to_nine << 5) || (player_mate & MASK_ACES).count_ones() == 4 || (player_right & MASK_ACES).count_ones() == 4 || (player_left & MASK_ACES).count_ones() == 4 {
+                    rounds_lost_with_prereq[player] += 1;
+                }
+            }
+        }
+    }
+    println!("Special case lost: {}", format_slice_abs_relative2(&rounds_lost_with_prereq, &rounds_with_prereq));
 }
 
 //Odds of losing 4-Q if enemy has phoenix
