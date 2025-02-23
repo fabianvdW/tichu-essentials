@@ -42,8 +42,8 @@ fn main() {
     //let db = DataBase::from_bsw().unwrap();
     //db.write("bsw.db").unwrap();
 
-    let db = DataBase::read("bsw_filtered.db").unwrap();
-    println!("Loaded {} games and {} rounds!", db.games.len(), db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len() ));
+    //let db = DataBase::read("bsw_filtered.db").unwrap();
+    //println!("Loaded {} games and {} rounds!", db.games.len(), db.games.iter().fold(0, |acc, inc| acc + inc.rounds.len() ));
     //filter_db(db);
     //evaluate_parsing_stats(&db);
     //evaluate_general_stats(&db);
@@ -52,7 +52,7 @@ fn main() {
     //evaluate_bombs_in_play(&db);
     //evaluate_streets_in_play(&db);
     //evaluate_streets_size_four_become_real_streets(&db);
-    evaluate_lose_tichujana_hand(&db);
+    //evaluate_lose_tichujana_hand(&db);
     //evaluate_lose_four_to_queen(&db);
     //evaluate_exchange_stats(&db);
     //evaluate_gt_stats(&db);
@@ -66,9 +66,10 @@ fn main() {
     //enumeration_results::count_straight_bombs_0_1();
     //enumeration_results::count_gt_hands();
     //enumeration_results::count_gt_bombs_0_1();
-
+    //enumeration_results::count_gt_hand_has_four_aces();
     //enumeration_results::count_gt_hand_category();
     //enumeration_results::count_first14_hand_category();
+    enumeration_results::count_bombs_0_1();
     //HandCategory::print_category_lists();
     //calculate_transition_probabilities();
 }

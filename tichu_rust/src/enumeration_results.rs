@@ -1,6 +1,6 @@
 use generic_array::GenericArray;
 use generic_array::typenum::U80;
-use crate::countable_properties::{CountAll, CountBombs0_1, CountBombsFourOfKind0_1, CountBombsStraights0_1, CountHandCategory};
+use crate::countable_properties::{CountAll, CountBombs0_1, CountBombsFourOfKind0_1, CountBombsStraights0_1, CountHandCategory, CountHasFourAces0_1};
 use crate::enumerate_hands::{count_special_card_invariant_property, count_special_card_sensitive_property};
 
 pub fn count_tichu_hands() {
@@ -29,6 +29,9 @@ pub fn count_gt_bombs_0_1() {
     // 4229667 out of 1420494075 (0.0029776027048898)
 }
 
+pub fn count_gt_hand_has_four_aces() {
+    count_special_card_invariant_property::<CountHasFourAces0_1, 8>(CountHasFourAces0_1);
+}
 pub fn count_gt_hand_category() -> GenericArray<u64, U80> {
     count_special_card_sensitive_property::<CountHandCategory, 8>(CountHandCategory).property_counted
 }

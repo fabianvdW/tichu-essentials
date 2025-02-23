@@ -1,4 +1,4 @@
-use crate::tichu_hand::{Hand, TichuHand};
+use crate::tichu_hand::{Hand, TichuHand, MASK_ACES};
 use std::fmt;
 use std::fmt::Debug;
 use std::ops::{Add, Mul};
@@ -90,6 +90,9 @@ pub struct CountBombsFourOfKind0_1; //Determine if a hand contains at least one 
 pub struct CountBombsStraights0_1; //Determine if a hand contains a straight bomb.
 
 #[derive(Debug, Clone)]
+pub struct CountHasFourAces0_1;
+
+#[derive(Debug, Clone)]
 pub struct CountHandCategory;
 
 impl CountableProperty for CountAll {
@@ -124,5 +127,11 @@ impl CountableProperty for CountHandCategory {
     type UpperBound = typenum::U80;
     fn count(&self, hand: &Hand) -> usize {
         HandCategory::categorize_hand(hand).0
+    }
+}
+impl CountableProperty for CountHasFourAces0_1 {
+    type UpperBound = typenum::U2;
+    fn count(&self, hand: &Hand) -> usize {
+        ((hand & MASK_ACES).count_ones() == 4) as usize
     }
 }
