@@ -69,7 +69,9 @@ fn main() {
     //enumeration_results::count_gt_hand_has_four_aces();
     //enumeration_results::count_gt_hand_category();
     //enumeration_results::count_first14_hand_category();
-    enumeration_results::count_bombs_0_1();
+    //enumeration_results::count_bombs_0_1();
+    //enumeration_results::count_longest_straight_distribution();
+    enumeration_results::count_longest_straight_flush_distribution();
     //HandCategory::print_category_lists();
     //calculate_transition_probabilities();
 }

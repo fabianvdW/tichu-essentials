@@ -1,4 +1,4 @@
-use crate::tichu_hand::{Hand, TichuHand, MASK_ACES};
+use crate::tichu_hand::{Hand, TichuHand, BLUE, GREEN, MASK_ACES, MASK_NORMAL_CARDS, MASK_YELLOW, RED};
 use std::fmt;
 use std::fmt::Debug;
 use std::ops::{Add, Mul};
@@ -89,11 +89,18 @@ pub struct CountBombsFourOfKind0_1; //Determine if a hand contains at least one 
 #[derive(Debug, Clone)]
 pub struct CountBombsStraights0_1; //Determine if a hand contains a straight bomb.
 
+
+#[derive(Debug, Clone)]
+pub struct CountHandCategory;
+
 #[derive(Debug, Clone)]
 pub struct CountHasFourAces0_1;
 
 #[derive(Debug, Clone)]
-pub struct CountHandCategory;
+pub struct CountLongestStraight;
+
+#[derive(Debug, Clone)]
+pub struct CountLongestStraightFlush;
 
 impl CountableProperty for CountAll {
     type UpperBound = typenum::U1;
@@ -133,5 +140,31 @@ impl CountableProperty for CountHasFourAces0_1 {
     type UpperBound = typenum::U2;
     fn count(&self, hand: &Hand) -> usize {
         ((hand & MASK_ACES).count_ones() == 4) as usize
+    }
+}
+
+impl CountableProperty for CountLongestStraight {
+    type UpperBound = typenum::U13;
+    fn count(&self, hand: &Hand) -> usize {
+        let mut hand_in_yellow = ((hand >> BLUE) | (hand >> GREEN) | (hand >> RED) | hand) & MASK_YELLOW;
+        let mut straight_length = 1;
+        while hand_in_yellow & (hand_in_yellow >> 1) != 0 {
+            straight_length += 1;
+            hand_in_yellow = hand_in_yellow & (hand_in_yellow >> 1);
+        }
+        straight_length - 1
+    }
+}
+
+impl CountableProperty for CountLongestStraightFlush {
+    type UpperBound = typenum::U13;
+    fn count(&self, hand: &Hand) -> usize {
+        let mut hand = hand & MASK_NORMAL_CARDS;
+        let mut straight_length = 1;
+        while hand & (hand >> 1) != 0 {
+            straight_length += 1;
+            hand = hand & (hand >> 1);
+        }
+        straight_length - 1
     }
 }
