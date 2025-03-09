@@ -77,7 +77,7 @@ impl DataBase {
                 if !res.contains_key(&player_id){
                     res.insert(player_id, (0, 0));
                 }
-                let (ref mut games, ref mut wins) = res.get_mut(&player_id).unwrap();
+                let (games, wins) = res.get_mut(&player_id).unwrap();
                 *games += 1;
                 if winner == Team::Team1 && id_internal % 2 == 0 || winner == Team::Team2 && id_internal % 2 == 1{
                     *wins += 1;
