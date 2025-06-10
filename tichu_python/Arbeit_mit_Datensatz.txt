@@ -1,0 +1,27 @@
+Die Arbeit mit dem Datensatz ist in Tichu-Example.ipynb skizziert. Dafür müssen folgende Dinge vorliegen:
+
+- Eine Python Umgebung mit installierter tichu_rustipy Bibliothek
+- Ein Datensatz im vorliegenden Format der Bibliothek.
+
+Ein kleiner, bereits vorgefilterter, Datensatz ist im Olat-Kurs unter Downloads zu finden (bsw_filtered.db). Er enthält ca. 400 000 Runden von Spielern, die erfahren sind.
+Für den Originaldatensatz mit 21 Millionen Runden bitte eine Email an vdwarth@rptu.de
+
+Die Einrichtung der Python-Bibliothek ist etwas umfassender. Tichu_rustipy ist eine Bibliothek, die ich (Fabian) selbst entwickelt habe, genau wie das ganze Datenformat des Datensatzes. Zur effizienten Umsetzung ist die Bibliothek in Rust implementiert und besitzt lediglich Bindings in Python.
+
+Zur Installation sind folgende Dinge also notwendig:
+
+- Rust Compiler: https://www.rust-lang.org/
+- Der Source Code: https://github.com/fabianvdW/tichu-essentials/tree/modwo
+- Funktionierende Python Umgebung: https://www.python.org/ (empfohlen: Miniconda https://www.anaconda.com/download/success)
+
+Dann folgende Schritte:
+- In Python Umgebung Python Bibliothek maturin installieren (`pip install maturin`)
+- In tichu-essentials zu Ordner tichu-rust navigieren
+- `maturin develop`
+-> Die Bibliothek sollte installiert sein. Zum Test:
+`python`
+`import tichu_rustipy`
+
+Die Benutzung kann alternativ über das Jupyter Notebook getestet werden. Ggfs. muss dazu die Python Bibliothek jupyter installiert werden.
+
+Bei Rückfragen oder mehr Hilfestellung gerne an vdwarth@rptu.de wenden.
